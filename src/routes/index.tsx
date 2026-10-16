@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { CalendarDays, Phone, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { completionPlan, WORKING_DAYS_PER_WEEK, type Rates } from "@/lib/gci";
+import { completionPlan, gciPerDeal, WORKING_DAYS_PER_WEEK, type Rates } from "@/lib/gci";
 
 export const Route = createFileRoute("/")({
   head: () => ({
