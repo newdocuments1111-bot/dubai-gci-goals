@@ -71,9 +71,12 @@ function Index() {
             <h1 className="text-3xl font-bold sm:text-4xl">Dubai AI GCI</h1>
             <p className="mt-1 text-muted-foreground">Your goal. Your daily calls. Your timeline.</p>
           </div>
-          {session.email
+           <div className="flex flex-wrap justify-end gap-2">
+           {isOwnerEmail(session.email) && <Button asChild variant="outline" size="sm"><Link to="/listings">My listings</Link></Button>}
+           {session.email
             ? <Button variant="outline" size="sm" onClick={async () => { await supabase.auth.signOut(); }}>Sign out</Button>
-            : <Button asChild variant="outline" size="sm"><Link to="/auth">Owner login</Link></Button>}
+             : <Button asChild variant="outline" size="sm"><Link to="/auth">Owner login</Link></Button>}
+           </div>
         </header>
 
         <div className="mb-5 grid grid-cols-2 rounded-lg bg-muted p-1 sm:inline-flex">
