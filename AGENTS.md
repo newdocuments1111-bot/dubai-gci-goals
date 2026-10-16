@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Keep GCI and completion-time calculations in the browser-safe `src/lib/gci.ts` module with unit tests; the page uses the same calculations for both input modes to avoid inconsistent targets.
