@@ -13,6 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAiReplyRulesRouteImport } from './routes/_authenticated/ai-reply-rules'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedFollowUpsRouteImport } from './routes/_authenticated/follow-ups'
 import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
 import { Route as AuthenticatedListingsRouteImport } from './routes/_authenticated/listings'
 import { Route as AuthenticatedMarketDataRouteImport } from './routes/_authenticated/market-data'
@@ -20,6 +22,7 @@ import { Route as AuthenticatedOwnersRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedTestChatRouteImport } from './routes/_authenticated/test-chat'
 import { Route as AuthenticatedUaeKnowledgeRouteImport } from './routes/_authenticated/uae-knowledge'
+import { Route as AuthenticatedViewingsRouteImport } from './routes/_authenticated/viewings'
 import { Route as AuthenticatedLeadLeadIdRouteImport } from './routes/_authenticated/lead.$leadId'
 import { Route as AuthenticatedListingListingIdRouteImport } from './routes/_authenticated/listing.$listingId'
 
@@ -43,6 +46,16 @@ const AuthenticatedAiReplyRulesRoute =
     path: '/ai-reply-rules',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedFollowUpsRoute = AuthenticatedFollowUpsRouteImport.update({
+  id: '/follow-ups',
+  path: '/follow-ups',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedLeadsRoute = AuthenticatedLeadsRouteImport.update({
   id: '/leads',
   path: '/leads',
@@ -79,6 +92,11 @@ const AuthenticatedUaeKnowledgeRoute =
     path: '/uae-knowledge',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedViewingsRoute = AuthenticatedViewingsRouteImport.update({
+  id: '/viewings',
+  path: '/viewings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedLeadLeadIdRoute = AuthenticatedLeadLeadIdRouteImport.update({
   id: '/lead/$leadId',
   path: '/lead/$leadId',
@@ -95,6 +113,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/ai-reply-rules': typeof AuthenticatedAiReplyRulesRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/follow-ups': typeof AuthenticatedFollowUpsRoute
   '/leads': typeof AuthenticatedLeadsRoute
   '/listings': typeof AuthenticatedListingsRoute
   '/market-data': typeof AuthenticatedMarketDataRoute
@@ -102,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/test-chat': typeof AuthenticatedTestChatRoute
   '/uae-knowledge': typeof AuthenticatedUaeKnowledgeRoute
+  '/viewings': typeof AuthenticatedViewingsRoute
   '/lead/$leadId': typeof AuthenticatedLeadLeadIdRoute
   '/listing/$listingId': typeof AuthenticatedListingListingIdRoute
 }
@@ -109,6 +130,8 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/ai-reply-rules': typeof AuthenticatedAiReplyRulesRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/follow-ups': typeof AuthenticatedFollowUpsRoute
   '/leads': typeof AuthenticatedLeadsRoute
   '/listings': typeof AuthenticatedListingsRoute
   '/market-data': typeof AuthenticatedMarketDataRoute
@@ -116,6 +139,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/test-chat': typeof AuthenticatedTestChatRoute
   '/uae-knowledge': typeof AuthenticatedUaeKnowledgeRoute
+  '/viewings': typeof AuthenticatedViewingsRoute
   '/lead/$leadId': typeof AuthenticatedLeadLeadIdRoute
   '/listing/$listingId': typeof AuthenticatedListingListingIdRoute
 }
@@ -125,6 +149,8 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/ai-reply-rules': typeof AuthenticatedAiReplyRulesRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/follow-ups': typeof AuthenticatedFollowUpsRoute
   '/_authenticated/leads': typeof AuthenticatedLeadsRoute
   '/_authenticated/listings': typeof AuthenticatedListingsRoute
   '/_authenticated/market-data': typeof AuthenticatedMarketDataRoute
@@ -132,6 +158,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/test-chat': typeof AuthenticatedTestChatRoute
   '/_authenticated/uae-knowledge': typeof AuthenticatedUaeKnowledgeRoute
+  '/_authenticated/viewings': typeof AuthenticatedViewingsRoute
   '/_authenticated/lead/$leadId': typeof AuthenticatedLeadLeadIdRoute
   '/_authenticated/listing/$listingId': typeof AuthenticatedListingListingIdRoute
 }
@@ -141,6 +168,8 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/ai-reply-rules'
+    | '/dashboard'
+    | '/follow-ups'
     | '/leads'
     | '/listings'
     | '/market-data'
@@ -148,6 +177,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/test-chat'
     | '/uae-knowledge'
+    | '/viewings'
     | '/lead/$leadId'
     | '/listing/$listingId'
   fileRoutesByTo: FileRoutesByTo
@@ -155,6 +185,8 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/ai-reply-rules'
+    | '/dashboard'
+    | '/follow-ups'
     | '/leads'
     | '/listings'
     | '/market-data'
@@ -162,6 +194,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/test-chat'
     | '/uae-knowledge'
+    | '/viewings'
     | '/lead/$leadId'
     | '/listing/$listingId'
   id:
@@ -170,6 +203,8 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/ai-reply-rules'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/follow-ups'
     | '/_authenticated/leads'
     | '/_authenticated/listings'
     | '/_authenticated/market-data'
@@ -177,6 +212,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/test-chat'
     | '/_authenticated/uae-knowledge'
+    | '/_authenticated/viewings'
     | '/_authenticated/lead/$leadId'
     | '/_authenticated/listing/$listingId'
   fileRoutesById: FileRoutesById
@@ -215,6 +251,20 @@ declare module '@tanstack/react-router' {
       path: '/ai-reply-rules'
       fullPath: '/ai-reply-rules'
       preLoaderRoute: typeof AuthenticatedAiReplyRulesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/follow-ups': {
+      id: '/_authenticated/follow-ups'
+      path: '/follow-ups'
+      fullPath: '/follow-ups'
+      preLoaderRoute: typeof AuthenticatedFollowUpsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/leads': {
@@ -266,6 +316,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedUaeKnowledgeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/viewings': {
+      id: '/_authenticated/viewings'
+      path: '/viewings'
+      fullPath: '/viewings'
+      preLoaderRoute: typeof AuthenticatedViewingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/lead/$leadId': {
       id: '/_authenticated/lead/$leadId'
       path: '/lead/$leadId'
@@ -285,6 +342,8 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAiReplyRulesRoute: typeof AuthenticatedAiReplyRulesRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedFollowUpsRoute: typeof AuthenticatedFollowUpsRoute
   AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
   AuthenticatedListingsRoute: typeof AuthenticatedListingsRoute
   AuthenticatedMarketDataRoute: typeof AuthenticatedMarketDataRoute
@@ -292,12 +351,15 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTestChatRoute: typeof AuthenticatedTestChatRoute
   AuthenticatedUaeKnowledgeRoute: typeof AuthenticatedUaeKnowledgeRoute
+  AuthenticatedViewingsRoute: typeof AuthenticatedViewingsRoute
   AuthenticatedLeadLeadIdRoute: typeof AuthenticatedLeadLeadIdRoute
   AuthenticatedListingListingIdRoute: typeof AuthenticatedListingListingIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAiReplyRulesRoute: AuthenticatedAiReplyRulesRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedFollowUpsRoute: AuthenticatedFollowUpsRoute,
   AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
   AuthenticatedListingsRoute: AuthenticatedListingsRoute,
   AuthenticatedMarketDataRoute: AuthenticatedMarketDataRoute,
@@ -305,6 +367,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedTestChatRoute: AuthenticatedTestChatRoute,
   AuthenticatedUaeKnowledgeRoute: AuthenticatedUaeKnowledgeRoute,
+  AuthenticatedViewingsRoute: AuthenticatedViewingsRoute,
   AuthenticatedLeadLeadIdRoute: AuthenticatedLeadLeadIdRoute,
   AuthenticatedListingListingIdRoute: AuthenticatedListingListingIdRoute,
 }
