@@ -15,6 +15,13 @@
       "when": 1792184282121,
       "tag": "0001_enable_listing_nightly_schedule",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792186071681,
+      "tag": "0002_require_available_listing_permit",
+      "breakpoints": true
     }
   ]
 }

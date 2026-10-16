@@ -41,6 +41,7 @@ export function ListingEditor({ listing, mediaUrls, onClose, onSaved }: { listin
   }
   async function submit(e: FormEvent) {
     e.preventDefault(); setError('');
+    if (form.status === 'Available' && !form.permit_number.trim()) { setError('Add a DLD / Trakheesi permit number before marking this listing Available. You can save it as Reserved instead.'); return; }
     const parsed = listingSchema.safeParse(form);
     if (!parsed.success) { setError(parsed.error.issues.map(i => `${i.path.join(' ')}: ${i.message}`).join('; ')); return; }
     setBusy(true);
@@ -68,7 +69,7 @@ export function ListingEditor({ listing, mediaUrls, onClose, onSaved }: { listin
         <label className="space-y-1 text-sm">Handover date<Input type="date" value={form.handover_date ?? ''} onChange={e => set('handover_date',e.target.value || null)} /></label>
         <label className="space-y-1 text-sm">Status<select className={selectStyle} value={form.status} onChange={e => set('status',e.target.value as ListingInput['status'])}>{['Available','Reserved','Sold'].map(v => <option key={v}>{v}</option>)}</select></label>
         <label className="space-y-1 text-sm">Last checked (Dubai)<Input type="date" max={new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dubai' }).format(new Date())} value={new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dubai' }).format(new Date(form.last_checked))} onChange={e => { if (e.target.value) set('last_checked',new Date(`${e.target.value}T00:00:00+04:00`).toISOString()); }} /></label>
-        {field('Google Maps link','maps_url','url')}{field('DLD / Trakheesi permit number','permit_number')}
+        <div>{field('Google Maps link','maps_url','url')}<p className="mt-1 text-xs text-muted-foreground">Leave blank to use the building and community in Google Maps.</p></div>{field('DLD / Trakheesi permit number','permit_number')}
         <label className="space-y-1 text-sm sm:col-span-2">Description<textarea className="min-h-24 w-full rounded-md border border-input bg-background px-3 py-2" value={form.description} onChange={e => set('description',e.target.value)} /></label>
       </fieldset>
       <section className="space-y-3"><h3 className="text-sm font-semibold">Photos</h3><label className="inline-flex cursor-pointer items-center gap-2 text-sm text-primary"><Upload className="size-4" />Upload photos<input aria-label="Upload photos" className="sr-only" type="file" accept="image/*" multiple disabled={busy} onChange={e => void upload(e.target.files,'photos')} /></label>

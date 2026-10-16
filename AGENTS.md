@@ -14,3 +14,5 @@
 - Private listing routes live under the client-only authenticated layout; listing server functions verify owner claims and use the caller's RLS-scoped client, including signed media reads.
 - Listing freshness and future AI eligibility derive from timestamps in the browser-safe listings module; nightly SQL persists the check flag without replacing the exact-time read filter.
 - Inventory sources use source/external_id identity and source adapters; connected adapters must upsert inventory before the nightly freshness check, never confirm unchanged listings automatically.
+- Listing map fallback, filtering, permit validation and WhatsApp content use browser-safe listings helpers with unit tests; enforce permits again in the database to protect every write path.
+- Listing details use their own authenticated route and Embla swipe gallery; duplicated listings copy private media into independent paths so deleting either unit cannot break the other.

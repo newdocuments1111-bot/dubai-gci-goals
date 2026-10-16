@@ -1,6 +1,10 @@
 # Calculator simplification
 
 # Private listings
+- [x] Add map defaults, permit enforcement and WhatsApp price rule with tests.
+- [x] Add details page with swipe gallery and listing actions.
+- [x] Add quick status, duplication, filters and CSV template download.
+- [x] Verify owner actions and phone layout.
 - [x] Private storage and inventory with sample listings.
 - [x] Listings page, editing, uploads and CSV import.
 - [x] Dubai midnight check and future source interface.

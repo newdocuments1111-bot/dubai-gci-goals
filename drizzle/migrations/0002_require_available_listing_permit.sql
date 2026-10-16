@@ -1,0 +1,2 @@
+CREATE OR REPLACE FUNCTION public.enforce_listing_permit() RETURNS trigger LANGUAGE plpgsql SET search_path = public AS $$ BEGIN IF NEW.status = 'Available' AND btrim(NEW.permit_number) = '' THEN RAISE EXCEPTION 'Add a DLD / Trakheesi permit number before marking this listing Available.'; END IF; RETURN NEW; END; $$;
+CREATE TRIGGER listing_permit_guard BEFORE INSERT OR UPDATE OF status, permit_number ON public.listings FOR EACH ROW EXECUTE FUNCTION public.enforce_listing_permit();

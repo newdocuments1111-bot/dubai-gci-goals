@@ -18,6 +18,8 @@ export const listingSchema = z.object({
   photos: z.array(media).max(50), videos: z.array(media).max(20), maps_url: safeUrl,
   permit_number: z.string().trim().max(100),
   last_checked: z.string().datetime({ offset: true }).refine(v => new Date(v).getTime() <= Date.now() + 60000, 'Last checked cannot be in the future'),
+}).superRefine((listing, ctx) => {
+  if (listing.status === 'Available' && !listing.permit_number.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['permit_number'], message: 'Add a DLD / Trakheesi permit number before marking this listing Available.' });
 });
 export type ListingInput = z.infer<typeof listingSchema>;
 export const emptyListing = (): ListingInput => ({ title: '', community: '', project: '', property_type: 'apartment', bedrooms: 0, size_sqft: 0, price_aed: 0, completion: 'ready', handover_date: null, status: 'Available', description: '', photos: [], videos: [], maps_url: '', permit_number: '', last_checked: new Date().toISOString() });
@@ -30,6 +32,23 @@ export function eligibleForAI(listing: Pick<Listing, 'status' | 'last_checked'>,
 }
 export function dubaiDate(timestamp: string) {
   return new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Dubai', dateStyle: 'medium', timeStyle: 'short' }).format(new Date(timestamp));
+}
+export function mapsLink(listing: Pick<ListingInput, 'maps_url' | 'project' | 'community'>) {
+  return listing.maps_url.trim() || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([listing.project.trim(), listing.community.trim(), 'Dubai'].filter(Boolean).join(' '))}`;
+}
+export function whatsappMessage(listing: Pick<Listing, 'title' | 'community' | 'project' | 'maps_url' | 'bedrooms' | 'size_sqft' | 'completion' | 'status' | 'last_checked' | 'price_aed'>, photoUrl?: string, now = Date.now()) {
+  return [`Hi! Take a look at ${listing.title}.`, listing.community, `${listing.bedrooms} beds · ${listing.size_sqft.toLocaleString('en-US')} sq ft · ${listing.completion === 'off-plan' ? 'Off-plan' : 'Ready'}`,
+    ...(eligibleForAI(listing, now) ? [`AED ${listing.price_aed.toLocaleString('en-US')}`] : []),
+    `Map: ${mapsLink(listing)}`, ...(photoUrl ? [`Photo: ${photoUrl}`] : [])].filter(Boolean).join('\n');
+}
+export const defaultListingFilters = { search: '', community: '', status: '', bedrooms: '', completion: '', minPrice: '', maxPrice: '' };
+export function matchesListing(listing: Listing, filters: typeof defaultListingFilters, now = Date.now()) {
+  return `${listing.title} ${listing.project}`.toLowerCase().includes(filters.search.trim().toLowerCase()) &&
+    (!filters.community || listing.community === filters.community) &&
+    (!filters.status || (filters.status === 'Needs check' ? needsCheck(listing.last_checked, now) : listing.status === filters.status)) &&
+    (!filters.bedrooms || listing.bedrooms === Number(filters.bedrooms)) &&
+    (!filters.completion || listing.completion === filters.completion) &&
+    (!filters.minPrice || listing.price_aed >= Number(filters.minPrice)) && (!filters.maxPrice || listing.price_aed <= Number(filters.maxPrice));
 }
 export const csvColumns = ['title','community','project','property_type','bedrooms','size_sqft','price_aed','completion','handover_date','status','description','maps_url','permit_number','last_checked','photos','videos'];
 export function parseListingsCsv(text: string): ListingInput[] {
