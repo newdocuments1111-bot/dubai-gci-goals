@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAiReplyRulesRouteImport } from './routes/_authenticated/ai-reply-rules'
 import { Route as AuthenticatedListingsRouteImport } from './routes/_authenticated/listings'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedListingListingIdRouteImport } from './routes/_authenticated/listing.$listingId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -41,6 +42,11 @@ const AuthenticatedListingsRoute = AuthenticatedListingsRouteImport.update({
   path: '/listings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedListingListingIdRoute =
   AuthenticatedListingListingIdRouteImport.update({
     id: '/listing/$listingId',
@@ -53,6 +59,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/ai-reply-rules': typeof AuthenticatedAiReplyRulesRoute
   '/listings': typeof AuthenticatedListingsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/listing/$listingId': typeof AuthenticatedListingListingIdRoute
 }
 export interface FileRoutesByTo {
@@ -60,6 +67,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/ai-reply-rules': typeof AuthenticatedAiReplyRulesRoute
   '/listings': typeof AuthenticatedListingsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/listing/$listingId': typeof AuthenticatedListingListingIdRoute
 }
 export interface FileRoutesById {
@@ -69,14 +77,26 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/ai-reply-rules': typeof AuthenticatedAiReplyRulesRoute
   '/_authenticated/listings': typeof AuthenticatedListingsRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/listing/$listingId': typeof AuthenticatedListingListingIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/auth' | '/ai-reply-rules' | '/listings' | '/listing/$listingId'
+    | '/'
+    | '/auth'
+    | '/ai-reply-rules'
+    | '/listings'
+    | '/settings'
+    | '/listing/$listingId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/ai-reply-rules' | '/listings' | '/listing/$listingId'
+  to:
+    | '/'
+    | '/auth'
+    | '/ai-reply-rules'
+    | '/listings'
+    | '/settings'
+    | '/listing/$listingId'
   id:
     | '__root__'
     | '/'
@@ -84,6 +104,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/ai-reply-rules'
     | '/_authenticated/listings'
+    | '/_authenticated/settings'
     | '/_authenticated/listing/$listingId'
   fileRoutesById: FileRoutesById
 }
@@ -130,6 +151,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedListingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/listing/$listingId': {
       id: '/_authenticated/listing/$listingId'
       path: '/listing/$listingId'
@@ -143,12 +171,14 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAiReplyRulesRoute: typeof AuthenticatedAiReplyRulesRoute
   AuthenticatedListingsRoute: typeof AuthenticatedListingsRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedListingListingIdRoute: typeof AuthenticatedListingListingIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAiReplyRulesRoute: AuthenticatedAiReplyRulesRoute,
   AuthenticatedListingsRoute: AuthenticatedListingsRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedListingListingIdRoute: AuthenticatedListingListingIdRoute,
 }
 
