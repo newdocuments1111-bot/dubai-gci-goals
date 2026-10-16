@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ListingEditor } from '@/components/ListingEditor';
 import { ListingGallery } from '@/components/ListingGallery';
+import { ListingAiDetails } from '@/components/ListingAiDetails';
 import { ListingShareButton } from '@/components/ListingShareButton';
 import { listingsQuery } from '@/lib/listings-query';
 import { deleteListing, duplicateListing } from '@/lib/listings.functions';
@@ -57,6 +58,7 @@ function ListingDetails() {
         </div>{error && <p role="alert" className="mt-3 text-sm text-destructive">{error}</p>}
       </div>
     </div>
+    <ListingAiDetails listing={listing} mediaUrls={data.mediaUrls} />
     {editing && <ListingEditor listing={listing} mediaUrls={data.mediaUrls} onClose={() => setEditing(false)} onSaved={reload} />}
     <Dialog open={deleting} onOpenChange={open => { if (!busy) setDeleting(open); }}><DialogContent><DialogTitle>Delete listing?</DialogTitle><DialogDescription>{listing.title} and its uploaded media will be removed permanently.</DialogDescription><div className="flex justify-end gap-2"><Button variant="outline" disabled={busy} onClick={() => setDeleting(false)}>Cancel</Button><Button variant="destructive" disabled={busy} onClick={async () => { setBusy(true); setError(''); try { await remove({ data: listing.id }); setDeleting(false); await reload(); await navigate({ to: '/listings' }); } catch { setError('Could not delete listing. Please try again.'); } finally { setBusy(false); } }}>Delete listing</Button></div></DialogContent></Dialog>
   </div></main>;

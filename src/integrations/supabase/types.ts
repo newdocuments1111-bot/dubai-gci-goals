@@ -14,81 +14,171 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_reply_settings: {
+        Row: {
+          agency_name: string
+          id: string
+          rules: Json
+          updated_at: string
+        }
+        Insert: {
+          agency_name?: string
+          id?: string
+          rules?: Json
+          updated_at?: string
+        }
+        Update: {
+          agency_name?: string
+          id?: string
+          rules?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       listings: {
         Row: {
+          agent_highlights: string
+          amenity_gym: boolean | null
+          amenity_kids_play_area: boolean | null
+          amenity_pool: boolean | null
+          amenity_security: boolean | null
           bedrooms: number
           community: string
           completion: string
+          construction_percent: number | null
           created_at: string
           description: string
+          developer: string
+          do_not_mention: string
           external_id: string | null
+          floor: string
+          floor_plan: string
+          furnishing: string
           handover_date: string | null
           id: string
           is_sample: boolean
           last_checked: string
           maps_url: string
+          nearby_beach: string
+          nearby_clinics: string
+          nearby_malls: string
+          nearby_metro: string
+          nearby_parks: string
+          nearby_schools: string
+          nearby_supermarket: string
           needs_check: boolean
+          parking_spaces: number | null
+          payment_plan: string
           permit_number: string
           photos: string[]
           price_aed: number
           project: string
           property_type: string
+          service_charge_aed_sqft_year: number | null
           size_sqft: number
           source: string
           status: string
           title: string
           updated_at: string
+          video_tour_url: string
           videos: string[]
+          view: string
         }
         Insert: {
+          agent_highlights?: string
+          amenity_gym?: boolean | null
+          amenity_kids_play_area?: boolean | null
+          amenity_pool?: boolean | null
+          amenity_security?: boolean | null
           bedrooms?: number
           community?: string
           completion?: string
+          construction_percent?: number | null
           created_at?: string
           description?: string
+          developer?: string
+          do_not_mention?: string
           external_id?: string | null
+          floor?: string
+          floor_plan?: string
+          furnishing?: string
           handover_date?: string | null
           id?: string
           is_sample?: boolean
           last_checked?: string
           maps_url?: string
+          nearby_beach?: string
+          nearby_clinics?: string
+          nearby_malls?: string
+          nearby_metro?: string
+          nearby_parks?: string
+          nearby_schools?: string
+          nearby_supermarket?: string
           needs_check?: boolean
+          parking_spaces?: number | null
+          payment_plan?: string
           permit_number?: string
           photos?: string[]
           price_aed?: number
           project?: string
           property_type?: string
+          service_charge_aed_sqft_year?: number | null
           size_sqft?: number
           source?: string
           status?: string
           title: string
           updated_at?: string
+          video_tour_url?: string
           videos?: string[]
+          view?: string
         }
         Update: {
+          agent_highlights?: string
+          amenity_gym?: boolean | null
+          amenity_kids_play_area?: boolean | null
+          amenity_pool?: boolean | null
+          amenity_security?: boolean | null
           bedrooms?: number
           community?: string
           completion?: string
+          construction_percent?: number | null
           created_at?: string
           description?: string
+          developer?: string
+          do_not_mention?: string
           external_id?: string | null
+          floor?: string
+          floor_plan?: string
+          furnishing?: string
           handover_date?: string | null
           id?: string
           is_sample?: boolean
           last_checked?: string
           maps_url?: string
+          nearby_beach?: string
+          nearby_clinics?: string
+          nearby_malls?: string
+          nearby_metro?: string
+          nearby_parks?: string
+          nearby_schools?: string
+          nearby_supermarket?: string
           needs_check?: boolean
+          parking_spaces?: number | null
+          payment_plan?: string
           permit_number?: string
           photos?: string[]
           price_aed?: number
           project?: string
           property_type?: string
+          service_charge_aed_sqft_year?: number | null
           size_sqft?: number
           source?: string
           status?: string
           title?: string
           updated_at?: string
+          video_tour_url?: string
           videos?: string[]
+          view?: string
         }
         Relationships: []
       }

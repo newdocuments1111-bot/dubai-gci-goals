@@ -11,8 +11,11 @@
 
 - Keep GCI and completion-time calculations in the browser-safe `src/lib/gci.ts` module with unit tests; the page uses the same calculations for both input modes to avoid inconsistent targets.
 - Real HubSpot leads are fetched only after a server-side owner check in the lead server function; the UI gate is cosmetic.
-- Private listing routes live under the client-only authenticated layout; listing server functions verify owner claims and use the caller's RLS-scoped client, including signed media reads.
+- Private listing and reply-settings routes live under the client-only authenticated layout; server functions verify owner claims and use the caller's RLS-scoped client.
 - Listing freshness and future AI eligibility derive from timestamps in the browser-safe listings module; nightly SQL persists the check flag without replacing the exact-time read filter.
 - Inventory sources use source/external_id identity and source adapters; connected adapters must upsert inventory before the nightly freshness check, never confirm unchanged listings automatically.
 - Listing map fallback, filtering, permit validation and WhatsApp content use browser-safe listings helpers with unit tests; enforce permits again in the database to protect every write path.
-- Listing details use their own authenticated route and Embla swipe gallery; duplicated listings copy private media into independent paths so deleting either unit cannot break the other.
+- Listing details use their own authenticated route and Embla swipe gallery; duplicated listings copy uploaded photos, videos and floor plans into independent paths so deleting either unit cannot break the other.
+- Store shareable photos separately from private videos/floor plans; resolve sharing through an owner-checked function that verifies permanent public access, never copy expiring signed or bundled asset URLs.
+- Listing AI detail validation and field definitions live in a browser-safe helper shared by CSV, editor and details views to keep optional values consistent.
+- Future reply defaults and validation live in a browser-safe module; owner-edited settings persist in an RLS-protected singleton, without activating messaging automation.

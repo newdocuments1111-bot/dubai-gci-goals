@@ -1,11 +1,12 @@
 import { z } from 'zod';
 import Papa from 'papaparse';
 import type { Tables } from '@/integrations/supabase/types';
+import { aiDetailsSchema, aiCsvColumns, optionalBoolean, optionalNumber, amenityFields } from './listing-ai-details';
 
 export type Listing = Tables<'listings'>;
 export const DAY_MS = 24 * 60 * 60 * 1000;
 const safeUrl = z.string().max(2000).refine(v => !v || /^https:\/\//i.test(v), 'Use an https:// link');
-const media = z.string().max(2000).refine(v => /^https:\/\//i.test(v) || /^listings\/[a-zA-Z0-9/_\-.]+$/.test(v), 'Invalid media path');
+const media = z.string().max(2000).refine(v => /^https:\/\//i.test(v) || /^(listings|photos)\/[a-zA-Z0-9/_\-.]+$/.test(v), 'Invalid media path');
 export const listingSchema = z.object({
   title: z.string().trim().min(1, 'Title is required').max(200),
   community: z.string().trim().max(200), project: z.string().trim().max(200),
@@ -18,11 +19,11 @@ export const listingSchema = z.object({
   photos: z.array(media).max(50), videos: z.array(media).max(20), maps_url: safeUrl,
   permit_number: z.string().trim().max(100),
   last_checked: z.string().datetime({ offset: true }).refine(v => new Date(v).getTime() <= Date.now() + 60000, 'Last checked cannot be in the future'),
-}).superRefine((listing, ctx) => {
+}).merge(aiDetailsSchema).superRefine((listing, ctx) => {
   if (listing.status === 'Available' && !listing.permit_number.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['permit_number'], message: 'Add a DLD / Trakheesi permit number before marking this listing Available.' });
 });
 export type ListingInput = z.infer<typeof listingSchema>;
-export const emptyListing = (): ListingInput => ({ title: '', community: '', project: '', property_type: 'apartment', bedrooms: 0, size_sqft: 0, price_aed: 0, completion: 'ready', handover_date: null, status: 'Available', description: '', photos: [], videos: [], maps_url: '', permit_number: '', last_checked: new Date().toISOString() });
+export const emptyListing = (): ListingInput => ({ ...aiDetailsSchema.parse({}), title: '', community: '', project: '', property_type: 'apartment', bedrooms: 0, size_sqft: 0, price_aed: 0, completion: 'ready', handover_date: null, status: 'Available', description: '', photos: [], videos: [], maps_url: '', permit_number: '', last_checked: new Date().toISOString() });
 export function needsCheck(lastChecked: string, now = Date.now()) {
   const time = Date.parse(lastChecked);
   return !Number.isFinite(time) || time > now || now - time > DAY_MS;
@@ -39,7 +40,7 @@ export function mapsLink(listing: Pick<ListingInput, 'maps_url' | 'project' | 'c
 export function whatsappMessage(listing: Pick<Listing, 'title' | 'community' | 'project' | 'maps_url' | 'bedrooms' | 'size_sqft' | 'completion' | 'status' | 'last_checked' | 'price_aed'>, photoUrl?: string, now = Date.now()) {
   return [`Hi! Take a look at ${listing.title}.`, listing.community, `${listing.bedrooms} beds · ${listing.size_sqft.toLocaleString('en-US')} sq ft · ${listing.completion === 'off-plan' ? 'Off-plan' : 'Ready'}`,
     ...(eligibleForAI(listing, now) ? [`AED ${listing.price_aed.toLocaleString('en-US')}`] : []),
-    `Map: ${mapsLink(listing)}`, ...(photoUrl ? [`Photo: ${photoUrl}`] : [])].filter(Boolean).join('\n');
+    `Map: ${mapsLink(listing)}`, ...(photoUrl ? [`Photo: ${photoUrl}`] : []), 'Would you like more photos, a video tour, or to arrange a viewing?'].filter(Boolean).join('\n');
 }
 export const defaultListingFilters = { search: '', community: '', status: '', bedrooms: '', completion: '', minPrice: '', maxPrice: '' };
 export function matchesListing(listing: Listing, filters: typeof defaultListingFilters, now = Date.now()) {
@@ -50,7 +51,7 @@ export function matchesListing(listing: Listing, filters: typeof defaultListingF
     (!filters.completion || listing.completion === filters.completion) &&
     (!filters.minPrice || listing.price_aed >= Number(filters.minPrice)) && (!filters.maxPrice || listing.price_aed <= Number(filters.maxPrice));
 }
-export const csvColumns = ['title','community','project','property_type','bedrooms','size_sqft','price_aed','completion','handover_date','status','description','maps_url','permit_number','last_checked','photos','videos'];
+export const csvColumns = ['title','community','project','property_type','bedrooms','size_sqft','price_aed','completion','handover_date','status','description','maps_url','permit_number','last_checked','photos','videos', ...aiCsvColumns];
 export function parseListingsCsv(text: string): ListingInput[] {
   const parsed = Papa.parse<Record<string,string>>(text, { header: true, skipEmptyLines: 'greedy', transformHeader: h => h.trim().toLowerCase().replace(/^\uFEFF/, '') });
   if (parsed.errors.length) throw new Error(`CSV error: ${parsed.errors[0]?.message}`);
@@ -64,6 +65,8 @@ export function parseListingsCsv(text: string): ListingInput[] {
       last_checked: r['last_checked'] ? new Date(r['last_checked']).toISOString() : new Date().toISOString(),
       photos: r['photos'] ? r['photos'].split('|').map(v => v.trim()).filter(Boolean) : [],
       videos: r['videos'] ? r['videos'].split('|').map(v => v.trim()).filter(Boolean) : [],
+      ...Object.fromEntries(amenityFields.map(([key]) => [key, optionalBoolean(r[key])])),
+      ...Object.fromEntries(['parking_spaces','construction_percent','service_charge_aed_sqft_year'].map(key => [key, optionalNumber(r[key] || '')])),
     };
     const result = listingSchema.safeParse(input);
     if (!result.success) throw new Error(`Row ${i + 2}: ${result.error.issues.map(x => `${x.path.join('.')}: ${x.message}`).join('; ')}`);
