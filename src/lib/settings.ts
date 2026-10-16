@@ -26,7 +26,7 @@ export const defaultSettings: AppSettings = {
 };
 
 /** True when the date (YYYY-MM-DD) is a working day and not a holiday. */
-export function isWorkingDay(date: string, settings: Pick<AppSettings, 'working_days' | 'holidays'>) {
+export function isWorkingDay(date: string, settings: { working_days: readonly string[]; holidays: readonly string[] }) {
   if (settings.holidays.includes(date)) return false;
   const day = new Date(`${date}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'long', timeZone: 'Asia/Dubai' });
   return (settings.working_days as readonly string[]).includes(day);
