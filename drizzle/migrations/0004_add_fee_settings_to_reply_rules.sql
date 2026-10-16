@@ -1,0 +1,1 @@
+ALTER TABLE public.ai_reply_settings ADD COLUMN fees jsonb NOT NULL DEFAULT '{}'::jsonb;

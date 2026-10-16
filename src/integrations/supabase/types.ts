@@ -17,18 +17,21 @@ export type Database = {
       ai_reply_settings: {
         Row: {
           agency_name: string
+          fees: Json
           id: string
           rules: Json
           updated_at: string
         }
         Insert: {
           agency_name?: string
+          fees?: Json
           id?: string
           rules?: Json
           updated_at?: string
         }
         Update: {
           agency_name?: string
+          fees?: Json
           id?: string
           rules?: Json
           updated_at?: string
