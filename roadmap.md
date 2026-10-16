@@ -1,10 +1,11 @@
 # Calculator simplification
 
 # Listing AI preparation
-- [ ] Fix permanent public photo sharing and WhatsApp closing question.
-- [ ] Add optional AI property details, sample data and CSV columns.
-- [ ] Add private editable AI Reply Rules and agency setting.
-- [ ] Test owner saves, sharing, privacy and phone layout.
+- [x] Add Cloud photo separation, public-access verification and WhatsApp closing question; reject expiring or bundled sharing links.
+- [ ] Enable permanent public photo links — blocked by workspace public_buckets_blocked; owner must allow public buckets in Settings → Privacy & Security, then listing-photos can be made public and anonymous reads verified.
+- [x] Add optional AI property details, fictional sample data/floor plans and CSV columns. No real video tours were supplied; links remain blank rather than invented.
+- [x] Add private editable AI Reply Rules and agency setting; save future rules without activating messaging automation.
+- [x] Test owner saves/read-back, sample photo rendering, floor plan uploads, WhatsApp price rules, CSV download, signed-out privacy and phone layout.
 
 # Private listings
 - [x] Add map defaults, permit enforcement and WhatsApp price rule with tests.
