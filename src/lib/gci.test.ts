@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { completionPlan, type Inputs } from "./gci";
+import { completionPlan, gciPerDeal, type Inputs } from "./gci";
 
 const inputs: Inputs = {
   price: 2_000_000, commissionPct: 2, weeks: 46,
