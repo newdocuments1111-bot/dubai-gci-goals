@@ -18,7 +18,9 @@ import { Route as AuthenticatedListingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedMarketDataRouteImport } from './routes/_authenticated/market-data'
 import { Route as AuthenticatedOwnersRouteImport } from './routes/_authenticated/owners'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedTestChatRouteImport } from './routes/_authenticated/test-chat'
 import { Route as AuthenticatedUaeKnowledgeRouteImport } from './routes/_authenticated/uae-knowledge'
+import { Route as AuthenticatedLeadLeadIdRouteImport } from './routes/_authenticated/lead.$leadId'
 import { Route as AuthenticatedListingListingIdRouteImport } from './routes/_authenticated/listing.$listingId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -66,12 +68,22 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedTestChatRoute = AuthenticatedTestChatRouteImport.update({
+  id: '/test-chat',
+  path: '/test-chat',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedUaeKnowledgeRoute =
   AuthenticatedUaeKnowledgeRouteImport.update({
     id: '/uae-knowledge',
     path: '/uae-knowledge',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedLeadLeadIdRoute = AuthenticatedLeadLeadIdRouteImport.update({
+  id: '/lead/$leadId',
+  path: '/lead/$leadId',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedListingListingIdRoute =
   AuthenticatedListingListingIdRouteImport.update({
     id: '/listing/$listingId',
@@ -88,7 +100,9 @@ export interface FileRoutesByFullPath {
   '/market-data': typeof AuthenticatedMarketDataRoute
   '/owners': typeof AuthenticatedOwnersRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/test-chat': typeof AuthenticatedTestChatRoute
   '/uae-knowledge': typeof AuthenticatedUaeKnowledgeRoute
+  '/lead/$leadId': typeof AuthenticatedLeadLeadIdRoute
   '/listing/$listingId': typeof AuthenticatedListingListingIdRoute
 }
 export interface FileRoutesByTo {
@@ -100,7 +114,9 @@ export interface FileRoutesByTo {
   '/market-data': typeof AuthenticatedMarketDataRoute
   '/owners': typeof AuthenticatedOwnersRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/test-chat': typeof AuthenticatedTestChatRoute
   '/uae-knowledge': typeof AuthenticatedUaeKnowledgeRoute
+  '/lead/$leadId': typeof AuthenticatedLeadLeadIdRoute
   '/listing/$listingId': typeof AuthenticatedListingListingIdRoute
 }
 export interface FileRoutesById {
@@ -114,7 +130,9 @@ export interface FileRoutesById {
   '/_authenticated/market-data': typeof AuthenticatedMarketDataRoute
   '/_authenticated/owners': typeof AuthenticatedOwnersRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/test-chat': typeof AuthenticatedTestChatRoute
   '/_authenticated/uae-knowledge': typeof AuthenticatedUaeKnowledgeRoute
+  '/_authenticated/lead/$leadId': typeof AuthenticatedLeadLeadIdRoute
   '/_authenticated/listing/$listingId': typeof AuthenticatedListingListingIdRoute
 }
 export interface FileRouteTypes {
@@ -128,7 +146,9 @@ export interface FileRouteTypes {
     | '/market-data'
     | '/owners'
     | '/settings'
+    | '/test-chat'
     | '/uae-knowledge'
+    | '/lead/$leadId'
     | '/listing/$listingId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -140,7 +160,9 @@ export interface FileRouteTypes {
     | '/market-data'
     | '/owners'
     | '/settings'
+    | '/test-chat'
     | '/uae-knowledge'
+    | '/lead/$leadId'
     | '/listing/$listingId'
   id:
     | '__root__'
@@ -153,7 +175,9 @@ export interface FileRouteTypes {
     | '/_authenticated/market-data'
     | '/_authenticated/owners'
     | '/_authenticated/settings'
+    | '/_authenticated/test-chat'
     | '/_authenticated/uae-knowledge'
+    | '/_authenticated/lead/$leadId'
     | '/_authenticated/listing/$listingId'
   fileRoutesById: FileRoutesById
 }
@@ -228,11 +252,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/test-chat': {
+      id: '/_authenticated/test-chat'
+      path: '/test-chat'
+      fullPath: '/test-chat'
+      preLoaderRoute: typeof AuthenticatedTestChatRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/uae-knowledge': {
       id: '/_authenticated/uae-knowledge'
       path: '/uae-knowledge'
       fullPath: '/uae-knowledge'
       preLoaderRoute: typeof AuthenticatedUaeKnowledgeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/lead/$leadId': {
+      id: '/_authenticated/lead/$leadId'
+      path: '/lead/$leadId'
+      fullPath: '/lead/$leadId'
+      preLoaderRoute: typeof AuthenticatedLeadLeadIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/listing/$listingId': {
@@ -252,7 +290,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMarketDataRoute: typeof AuthenticatedMarketDataRoute
   AuthenticatedOwnersRoute: typeof AuthenticatedOwnersRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedTestChatRoute: typeof AuthenticatedTestChatRoute
   AuthenticatedUaeKnowledgeRoute: typeof AuthenticatedUaeKnowledgeRoute
+  AuthenticatedLeadLeadIdRoute: typeof AuthenticatedLeadLeadIdRoute
   AuthenticatedListingListingIdRoute: typeof AuthenticatedListingListingIdRoute
 }
 
@@ -263,7 +303,9 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMarketDataRoute: AuthenticatedMarketDataRoute,
   AuthenticatedOwnersRoute: AuthenticatedOwnersRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedTestChatRoute: AuthenticatedTestChatRoute,
   AuthenticatedUaeKnowledgeRoute: AuthenticatedUaeKnowledgeRoute,
+  AuthenticatedLeadLeadIdRoute: AuthenticatedLeadLeadIdRoute,
   AuthenticatedListingListingIdRoute: AuthenticatedListingListingIdRoute,
 }
 
