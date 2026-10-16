@@ -26,3 +26,24 @@ export function fromEffort(callsPerWeek: number, i: Inputs) {
   const deals = listings * (r.listingsToDeals / 100);
   return { deals, listings, appraisals, talks, calls };
 }
+
+export const WORKING_DAYS_PER_WEEK = 5;
+
+/** Completion uses gross commission, before the agent/broker split. */
+export function completionPlan(mode: "goal" | "effort", goal: number, callsPerWeek: number, i: Inputs) {
+  const validPercent = (v: number) => Number.isFinite(v) && v > 0 && v <= 100;
+  if (!Number.isFinite(goal) || goal < 0 || !Number.isFinite(i.price) || i.price <= 0 ||
+      !validPercent(i.commissionPct) || !Object.values(i.rates).every(validPercent) ||
+      (mode === "goal" && (!Number.isFinite(i.weeks) || i.weeks <= 0)) ||
+      (mode === "effort" && (!Number.isFinite(callsPerWeek) || callsPerWeek <= 0))) return null;
+
+  const funnel = fromGoal(goal, i);
+  const callsPerDay = mode === "goal"
+    ? Math.ceil(funnel.calls / (i.weeks * WORKING_DAYS_PER_WEEK))
+    : callsPerWeek / WORKING_DAYS_PER_WEEK;
+  const workingDays = mode === "goal"
+    ? Math.ceil(i.weeks * WORKING_DAYS_PER_WEEK)
+    : Math.ceil(funnel.calls / callsPerDay);
+
+  return { funnel, callsPerDay, workingDays, workingWeeks: workingDays / WORKING_DAYS_PER_WEEK };
+}
