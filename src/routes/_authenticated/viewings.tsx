@@ -25,7 +25,8 @@ export const Route = createFileRoute('/_authenticated/viewings')({
 function ViewingsPage() {
   const { data: viewings } = useSuspenseQuery(viewingsQuery);
   const { data: leads } = useQuery(queryOptions({ queryKey: ['leads'], queryFn: () => listLeads() }));
-  const { data: listings } = useQuery(queryOptions({ queryKey: ['listings'], queryFn: () => getListings() }));
+  const { data: listingsData } = useQuery(queryOptions({ queryKey: ['listings'], queryFn: () => getListings() }));
+  const listings = listingsData?.listings;
   const { data: slots } = useQuery(queryOptions({ queryKey: ['free-slots'], queryFn: () => freeSlots() }));
   const client = useQueryClient();
   const book = useServerFn(bookViewing), setStatus = useServerFn(setViewingStatus);
