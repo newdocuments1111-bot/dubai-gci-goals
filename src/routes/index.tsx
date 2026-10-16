@@ -90,7 +90,7 @@ function Index() {
                   {[60, 80].map((s) => (
                     <button key={s} onClick={() => setSplit(s)}
                       className={`rounded-lg border py-2 text-sm font-medium ${split === s ? "border-primary bg-primary text-primary-foreground" : "border-input"}`}>
-                      {s}%
+                      {s}/{100 - s}
                     </button>
                   ))}
                 </div>
@@ -111,7 +111,7 @@ function Index() {
 
           <section className="space-y-4">
             <div className="rounded-2xl bg-primary p-5 text-primary-foreground">
-              <p className="text-sm opacity-80">Your yearly take-home ({split}% split)</p>
+              <p className="text-sm opacity-80">Your yearly take-home ({split}/{100 - split} split — you keep {split}%)</p>
               <p className="mt-1 text-3xl font-bold sm:text-4xl">{aed(takeHome)}</p>
               <p className="mt-2 text-sm opacity-80">GCI: {aed(gci)}</p>
             </div>
