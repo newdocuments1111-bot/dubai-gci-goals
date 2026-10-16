@@ -38,6 +38,78 @@ export type Database = {
         }
         Relationships: []
       }
+      app_settings: {
+        Row: {
+          agency_name: string
+          agent_name: string
+          compliance_email: string
+          holidays: string[]
+          id: string
+          mortgage_partner: string
+          rera_brn: string
+          retention_years: number
+          updated_at: string
+          viewing_minutes: number
+          work_end: string
+          work_start: string
+          working_days: string[]
+        }
+        Insert: {
+          agency_name?: string
+          agent_name?: string
+          compliance_email?: string
+          holidays?: string[]
+          id?: string
+          mortgage_partner?: string
+          rera_brn?: string
+          retention_years?: number
+          updated_at?: string
+          viewing_minutes?: number
+          work_end?: string
+          work_start?: string
+          working_days?: string[]
+        }
+        Update: {
+          agency_name?: string
+          agent_name?: string
+          compliance_email?: string
+          holidays?: string[]
+          id?: string
+          mortgage_partner?: string
+          rera_brn?: string
+          retention_years?: number
+          updated_at?: string
+          viewing_minutes?: number
+          work_end?: string
+          work_start?: string
+          working_days?: string[]
+        }
+        Relationships: []
+      }
+      document_log: {
+        Row: {
+          action: string
+          client_name: string
+          created_at: string
+          id: string
+          path: string
+        }
+        Insert: {
+          action: string
+          client_name: string
+          created_at?: string
+          id?: string
+          path: string
+        }
+        Update: {
+          action?: string
+          client_name?: string
+          created_at?: string
+          id?: string
+          path?: string
+        }
+        Relationships: []
+      }
       listings: {
         Row: {
           agent_highlights: string
@@ -182,6 +254,72 @@ export type Database = {
           video_tour_url?: string
           videos?: string[]
           view?: string
+        }
+        Relationships: []
+      }
+      market_transactions: {
+        Row: {
+          area: string
+          building: string
+          id: string
+          imported_at: string
+          price_aed: number
+          property_type: string
+          size_sqft: number
+          source: string
+          transaction_date: string
+        }
+        Insert: {
+          area: string
+          building?: string
+          id?: string
+          imported_at?: string
+          price_aed: number
+          property_type?: string
+          size_sqft?: number
+          source?: string
+          transaction_date: string
+        }
+        Update: {
+          area?: string
+          building?: string
+          id?: string
+          imported_at?: string
+          price_aed?: number
+          property_type?: string
+          size_sqft?: number
+          source?: string
+          transaction_date?: string
+        }
+        Relationships: []
+      }
+      uae_knowledge: {
+        Row: {
+          created_at: string
+          fact: string
+          id: string
+          last_verified: string
+          needs_verification: boolean
+          source: string
+          topic: string
+        }
+        Insert: {
+          created_at?: string
+          fact: string
+          id?: string
+          last_verified?: string
+          needs_verification?: boolean
+          source?: string
+          topic: string
+        }
+        Update: {
+          created_at?: string
+          fact?: string
+          id?: string
+          last_verified?: string
+          needs_verification?: boolean
+          source?: string
+          topic?: string
         }
         Relationships: []
       }
