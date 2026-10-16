@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAiReplyRulesRouteImport } from './routes/_authenticated/ai-reply-rules'
 import { Route as AuthenticatedListingsRouteImport } from './routes/_authenticated/listings'
 import { Route as AuthenticatedMarketDataRouteImport } from './routes/_authenticated/market-data'
+import { Route as AuthenticatedOwnersRouteImport } from './routes/_authenticated/owners'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedUaeKnowledgeRouteImport } from './routes/_authenticated/uae-knowledge'
 import { Route as AuthenticatedListingListingIdRouteImport } from './routes/_authenticated/listing.$listingId'
@@ -49,6 +50,11 @@ const AuthenticatedMarketDataRoute = AuthenticatedMarketDataRouteImport.update({
   path: '/market-data',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOwnersRoute = AuthenticatedOwnersRouteImport.update({
+  id: '/owners',
+  path: '/owners',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/ai-reply-rules': typeof AuthenticatedAiReplyRulesRoute
   '/listings': typeof AuthenticatedListingsRoute
   '/market-data': typeof AuthenticatedMarketDataRoute
+  '/owners': typeof AuthenticatedOwnersRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/uae-knowledge': typeof AuthenticatedUaeKnowledgeRoute
   '/listing/$listingId': typeof AuthenticatedListingListingIdRoute
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/ai-reply-rules': typeof AuthenticatedAiReplyRulesRoute
   '/listings': typeof AuthenticatedListingsRoute
   '/market-data': typeof AuthenticatedMarketDataRoute
+  '/owners': typeof AuthenticatedOwnersRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/uae-knowledge': typeof AuthenticatedUaeKnowledgeRoute
   '/listing/$listingId': typeof AuthenticatedListingListingIdRoute
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/_authenticated/ai-reply-rules': typeof AuthenticatedAiReplyRulesRoute
   '/_authenticated/listings': typeof AuthenticatedListingsRoute
   '/_authenticated/market-data': typeof AuthenticatedMarketDataRoute
+  '/_authenticated/owners': typeof AuthenticatedOwnersRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/uae-knowledge': typeof AuthenticatedUaeKnowledgeRoute
   '/_authenticated/listing/$listingId': typeof AuthenticatedListingListingIdRoute
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/ai-reply-rules'
     | '/listings'
     | '/market-data'
+    | '/owners'
     | '/settings'
     | '/uae-knowledge'
     | '/listing/$listingId'
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/ai-reply-rules'
     | '/listings'
     | '/market-data'
+    | '/owners'
     | '/settings'
     | '/uae-knowledge'
     | '/listing/$listingId'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ai-reply-rules'
     | '/_authenticated/listings'
     | '/_authenticated/market-data'
+    | '/_authenticated/owners'
     | '/_authenticated/settings'
     | '/_authenticated/uae-knowledge'
     | '/_authenticated/listing/$listingId'
@@ -183,6 +195,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMarketDataRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/owners': {
+      id: '/_authenticated/owners'
+      path: '/owners'
+      fullPath: '/owners'
+      preLoaderRoute: typeof AuthenticatedOwnersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
       path: '/settings'
@@ -211,6 +230,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAiReplyRulesRoute: typeof AuthenticatedAiReplyRulesRoute
   AuthenticatedListingsRoute: typeof AuthenticatedListingsRoute
   AuthenticatedMarketDataRoute: typeof AuthenticatedMarketDataRoute
+  AuthenticatedOwnersRoute: typeof AuthenticatedOwnersRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedUaeKnowledgeRoute: typeof AuthenticatedUaeKnowledgeRoute
   AuthenticatedListingListingIdRoute: typeof AuthenticatedListingListingIdRoute
@@ -220,6 +240,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAiReplyRulesRoute: AuthenticatedAiReplyRulesRoute,
   AuthenticatedListingsRoute: AuthenticatedListingsRoute,
   AuthenticatedMarketDataRoute: AuthenticatedMarketDataRoute,
+  AuthenticatedOwnersRoute: AuthenticatedOwnersRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedUaeKnowledgeRoute: AuthenticatedUaeKnowledgeRoute,
   AuthenticatedListingListingIdRoute: AuthenticatedListingListingIdRoute,
