@@ -1,11 +1,11 @@
 export type Rates = { callsToTalks: number; talksToAppraisals: number; appraisalsToListings: number; listingsToDeals: number };
-export type Inputs = { price: number; commissionPct: number; splitPct: number; weeks: number; rates: Rates };
+export type Inputs = { price: number; commissionPct: number; weeks: number; rates: Rates };
 
 export function gciPerDeal(i: Inputs) {
   return i.price * (i.commissionPct / 100);
 }
 
-/** Funnel from yearly GCI goal (GCI = gross commission before agent split). */
+/** Funnel from yearly GCI goal (GCI = total commission earned). */
 export function fromGoal(goal: number, i: Inputs) {
   const per = gciPerDeal(i);
   const deals = per > 0 ? goal / per : 0;
@@ -29,7 +29,7 @@ export function fromEffort(callsPerWeek: number, i: Inputs) {
 
 export const WORKING_DAYS_PER_WEEK = 5;
 
-/** Completion uses gross commission, before the agent/broker split. */
+/** Working days and daily call target needed to hit the GCI goal. */
 export function completionPlan(mode: "goal" | "effort", goal: number, callsPerWeek: number, i: Inputs) {
   const validPercent = (v: number) => Number.isFinite(v) && v > 0 && v <= 100;
   if (!Number.isFinite(goal) || goal < 0 || !Number.isFinite(i.price) || i.price <= 0 ||
