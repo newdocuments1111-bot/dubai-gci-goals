@@ -3,6 +3,7 @@ import { useState } from "react";
 import { CalendarDays, Phone, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { completionPlan, gciPerDeal, WORKING_DAYS_PER_WEEK, type Rates } from "@/lib/gci";
+import { LeadFinder } from "@/components/LeadFinder";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -144,10 +145,7 @@ function Index() {
           </div>
         </details>
 
-        <section className="mt-8 border-t border-dashed border-border py-6 text-center">
-          <h2 className="text-xl font-semibold">AI lead finder</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Coming soon.</p>
-        </section>
+        <LeadFinder />
       </div>
     </main>
   );
