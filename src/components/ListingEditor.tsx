@@ -7,6 +7,7 @@ import { Upload, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { emptyListing, listingSchema, type Listing, type ListingInput } from '@/lib/listings';
 import { saveListing } from '@/lib/listings.functions';
+import { ListingAiFields } from './ListingAiFields';
 
 export function ListingEditor({ listing, mediaUrls, onClose, onSaved }: { listing?: Listing | undefined; mediaUrls: Record<string,string>; onClose: () => void; onSaved: () => Promise<void> }) {
   const [form, setForm] = useState<ListingInput>(listing ? listingSchema.parse(listing) : emptyListing());
@@ -17,26 +18,33 @@ export function ListingEditor({ listing, mediaUrls, onClose, onSaved }: { listin
   const [uploaded, setUploaded] = useState<string[]>([]);
   const save = useServerFn(saveListing);
   const set = <K extends keyof ListingInput>(key: K, value: ListingInput[K]) => setForm(f => ({ ...f, [key]: value }));
-  async function upload(files: FileList | null, kind: 'photos' | 'videos') {
+  async function cleanup(paths: string[]) {
+    for (const bucket of ['listing-media','listing-photos']) {
+      const selected = paths.filter(p => bucket === 'listing-photos' ? p.startsWith('photos/') && !p.startsWith('photos/sample-') : p.startsWith('listings/'));
+      if (selected.length) await supabase.storage.from(bucket).remove(selected);
+    }
+  }
+  async function upload(files: FileList | null, kind: 'photos' | 'videos' | 'floor_plan') {
     if (!files?.length) return;
     setBusy(true); setError('');
     const paths: string[] = [];
     try {
-      for (const file of Array.from(files)) {
-        if (file.size > 50 * 1024 * 1024 || !file.type.startsWith(kind === 'photos' ? 'image/' : 'video/')) throw new Error('Choose valid media files under 50 MB.');
+      for (const file of Array.from(files).slice(0,kind === 'floor_plan' ? 1 : undefined)) {
+        const validType = kind === 'floor_plan' ? file.type === 'application/pdf' || file.type.startsWith('image/') : file.type.startsWith(kind === 'photos' ? 'image/' : 'video/');
+        if (file.size > 50 * 1024 * 1024 || !validType) throw new Error('Choose valid media files under 50 MB.');
         const ext = file.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || 'bin';
-        const path = `listings/${crypto.randomUUID()}.${ext}`;
-        const { error } = await supabase.storage.from('listing-media').upload(path, file, { contentType: file.type });
+        const path = `${kind === 'photos' ? 'photos' : 'listings'}/${crypto.randomUUID()}.${ext}`;
+        const { error } = await supabase.storage.from(kind === 'photos' ? 'listing-photos' : 'listing-media').upload(path, file, { contentType: file.type });
         if (error) throw new Error('Upload failed. Please try again.');
         paths.push(path);
         setPreviews(p => ({ ...p, [path]: URL.createObjectURL(file) }));
       }
     } catch (e) { setError(e instanceof Error ? e.message : 'Upload failed.'); }
-    finally { setForm(f => ({ ...f, [kind]: [...f[kind], ...paths] })); setUploaded(u => [...u, ...paths]); setBusy(false); }
+    finally { setForm(f => kind === 'floor_plan' ? { ...f, floor_plan: paths[0] ?? f.floor_plan } : { ...f, [kind]: [...f[kind], ...paths] }); setUploaded(u => [...u, ...paths]); setBusy(false); }
   }
   async function close() {
     if (busy) return;
-    if (uploaded.length) await supabase.storage.from('listing-media').remove(uploaded);
+    if (uploaded.length) await cleanup(uploaded);
     onClose();
   }
   async function submit(e: FormEvent) {
@@ -47,8 +55,8 @@ export function ListingEditor({ listing, mediaUrls, onClose, onSaved }: { listin
     setBusy(true);
     try {
       await save({ data: { id: listing?.id, listing: parsed.data } });
-      const removed = [...(listing?.photos ?? []), ...(listing?.videos ?? []), ...uploaded].filter(p => p.startsWith('listings/') && ![...form.photos, ...form.videos].includes(p));
-      if (removed.length) await supabase.storage.from('listing-media').remove(removed);
+      const removed = [...(listing?.photos ?? []), ...(listing?.videos ?? []), listing?.floor_plan ?? '', ...uploaded].filter(p => p && ![...form.photos, ...form.videos, form.floor_plan].includes(p));
+      if (removed.length) await cleanup(removed);
       await onSaved(); onClose();
     } catch { setError('Could not save listing. Your changes are still here.'); }
     finally { setBusy(false); }
@@ -76,6 +84,7 @@ export function ListingEditor({ listing, mediaUrls, onClose, onSaved }: { listin
       <div className="grid grid-cols-3 gap-2">{form.photos.map((p,i) => <div key={p} className="relative"><img alt={`Photo ${i+1}`} src={p.startsWith('https://') ? p : previews[p]} className="aspect-[4/3] w-full rounded-md object-cover" /><Button type="button" size="icon" variant="secondary" className="absolute right-1 top-1 size-7" aria-label={`Remove photo ${i+1}`} disabled={busy} onClick={() => set('photos',form.photos.filter(x => x!==p))}><X className="size-4" /></Button></div>)}</div></section>
       <section className="space-y-3"><h3 className="text-sm font-semibold">Videos</h3><label className="inline-flex cursor-pointer items-center gap-2 text-sm text-primary"><Upload className="size-4" />Upload videos<input aria-label="Upload videos" type="file" className="sr-only" accept="video/*" multiple disabled={busy} onChange={e => void upload(e.target.files,'videos')} /></label><div className="flex gap-2"><Input aria-label="Video link" placeholder="https://…" value={videoLink} onChange={e => setVideoLink(e.target.value)} /><Button type="button" variant="outline" disabled={busy || !videoLink} onClick={() => { if (!/^https:\/\//i.test(videoLink)) { setError('Use an https:// video link.'); return; } set('videos',[...form.videos,videoLink]); setVideoLink(''); }}>Add link</Button></div>
         {form.videos.map((p,i) => <div key={p} className="flex min-w-0 items-center gap-2"><span className="min-w-0 flex-1 truncate text-sm">{p.startsWith('https://') ? p : `Uploaded video ${i+1}`}</span><Button type="button" size="icon" variant="ghost" aria-label={`Remove video ${i+1}`} disabled={busy} onClick={() => set('videos',form.videos.filter(x => x!==p))}><X className="size-4" /></Button></div>)}</section>
+      <ListingAiFields form={form} set={set} busy={busy} uploadFloorPlan={files => void upload(files,'floor_plan')} removeFloorPlan={() => set('floor_plan','')} />
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       <div className="flex justify-end gap-2"><Button type="button" variant="outline" disabled={busy} onClick={() => void close()}>Cancel</Button><Button type="submit" disabled={busy}>{busy ? 'Saving / uploading…' : 'Save listing'}</Button></div>
     </form>
