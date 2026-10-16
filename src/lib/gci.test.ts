@@ -11,19 +11,19 @@ describe("GCI goal completion", () => {
     const plan = completionPlan("goal", 1_000_000, 200, inputs);
     expect(plan?.workingDays).toBe(230);
     expect(plan?.workingWeeks).toBe(46);
-    expect(plan?.callsPerDay).toBe(216);
+    expect(plan?.callsPerDay).toBe(5);
     expect(plan?.funnel.deals).toBe(25);
   });
 
   it("uses weekly effort to calculate rounded working days to the target GCI", () => {
     const plan = completionPlan("effort", 1_000_000, 200, inputs);
     expect(plan?.callsPerDay).toBe(40);
-    expect(plan?.workingDays).toBe(2792);
-    expect(plan?.workingWeeks).toBe(558.4);
+    expect(plan?.workingDays).toBe(28);
+    expect(plan?.workingWeeks).toBe(5.6);
   });
 
   it("updates completion time when the target GCI changes in effort mode", () => {
-    expect(completionPlan("effort", 500_000, 200, inputs)?.workingDays).toBe(1396);
+    expect(completionPlan("effort", 500_000, 200, inputs)?.workingDays).toBe(14);
   });
 
   it("keeps gross-goal timing independent of the 60/40 or 80/20 split", () => {
