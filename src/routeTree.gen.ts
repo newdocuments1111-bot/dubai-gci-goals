@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAiReplyRulesRouteImport } from './routes/_authenticated/ai-reply-rules'
+import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
 import { Route as AuthenticatedListingsRouteImport } from './routes/_authenticated/listings'
 import { Route as AuthenticatedMarketDataRouteImport } from './routes/_authenticated/market-data'
 import { Route as AuthenticatedOwnersRouteImport } from './routes/_authenticated/owners'
@@ -40,6 +41,11 @@ const AuthenticatedAiReplyRulesRoute =
     path: '/ai-reply-rules',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedLeadsRoute = AuthenticatedLeadsRouteImport.update({
+  id: '/leads',
+  path: '/leads',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedListingsRoute = AuthenticatedListingsRouteImport.update({
   id: '/listings',
   path: '/listings',
@@ -77,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/ai-reply-rules': typeof AuthenticatedAiReplyRulesRoute
+  '/leads': typeof AuthenticatedLeadsRoute
   '/listings': typeof AuthenticatedListingsRoute
   '/market-data': typeof AuthenticatedMarketDataRoute
   '/owners': typeof AuthenticatedOwnersRoute
@@ -88,6 +95,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/ai-reply-rules': typeof AuthenticatedAiReplyRulesRoute
+  '/leads': typeof AuthenticatedLeadsRoute
   '/listings': typeof AuthenticatedListingsRoute
   '/market-data': typeof AuthenticatedMarketDataRoute
   '/owners': typeof AuthenticatedOwnersRoute
@@ -101,6 +109,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/ai-reply-rules': typeof AuthenticatedAiReplyRulesRoute
+  '/_authenticated/leads': typeof AuthenticatedLeadsRoute
   '/_authenticated/listings': typeof AuthenticatedListingsRoute
   '/_authenticated/market-data': typeof AuthenticatedMarketDataRoute
   '/_authenticated/owners': typeof AuthenticatedOwnersRoute
@@ -114,6 +123,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/ai-reply-rules'
+    | '/leads'
     | '/listings'
     | '/market-data'
     | '/owners'
@@ -125,6 +135,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/ai-reply-rules'
+    | '/leads'
     | '/listings'
     | '/market-data'
     | '/owners'
@@ -137,6 +148,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/ai-reply-rules'
+    | '/_authenticated/leads'
     | '/_authenticated/listings'
     | '/_authenticated/market-data'
     | '/_authenticated/owners'
@@ -179,6 +191,13 @@ declare module '@tanstack/react-router' {
       path: '/ai-reply-rules'
       fullPath: '/ai-reply-rules'
       preLoaderRoute: typeof AuthenticatedAiReplyRulesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/leads': {
+      id: '/_authenticated/leads'
+      path: '/leads'
+      fullPath: '/leads'
+      preLoaderRoute: typeof AuthenticatedLeadsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/listings': {
@@ -228,6 +247,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAiReplyRulesRoute: typeof AuthenticatedAiReplyRulesRoute
+  AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
   AuthenticatedListingsRoute: typeof AuthenticatedListingsRoute
   AuthenticatedMarketDataRoute: typeof AuthenticatedMarketDataRoute
   AuthenticatedOwnersRoute: typeof AuthenticatedOwnersRoute
@@ -238,6 +258,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAiReplyRulesRoute: AuthenticatedAiReplyRulesRoute,
+  AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
   AuthenticatedListingsRoute: AuthenticatedListingsRoute,
   AuthenticatedMarketDataRoute: AuthenticatedMarketDataRoute,
   AuthenticatedOwnersRoute: AuthenticatedOwnersRoute,
