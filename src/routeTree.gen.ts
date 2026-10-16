@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedAiReplyRulesRouteImport } from './routes/_authenticated/ai-reply-rules'
 import { Route as AuthenticatedListingsRouteImport } from './routes/_authenticated/listings'
 import { Route as AuthenticatedListingListingIdRouteImport } from './routes/_authenticated/listing.$listingId'
 
@@ -29,6 +30,12 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAiReplyRulesRoute =
+  AuthenticatedAiReplyRulesRouteImport.update({
+    id: '/ai-reply-rules',
+    path: '/ai-reply-rules',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedListingsRoute = AuthenticatedListingsRouteImport.update({
   id: '/listings',
   path: '/listings',
@@ -44,12 +51,14 @@ const AuthenticatedListingListingIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/ai-reply-rules': typeof AuthenticatedAiReplyRulesRoute
   '/listings': typeof AuthenticatedListingsRoute
   '/listing/$listingId': typeof AuthenticatedListingListingIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/ai-reply-rules': typeof AuthenticatedAiReplyRulesRoute
   '/listings': typeof AuthenticatedListingsRoute
   '/listing/$listingId': typeof AuthenticatedListingListingIdRoute
 }
@@ -58,19 +67,22 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/ai-reply-rules': typeof AuthenticatedAiReplyRulesRoute
   '/_authenticated/listings': typeof AuthenticatedListingsRoute
   '/_authenticated/listing/$listingId': typeof AuthenticatedListingListingIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/listings' | '/listing/$listingId'
+  fullPaths:
+    '/' | '/auth' | '/ai-reply-rules' | '/listings' | '/listing/$listingId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/listings' | '/listing/$listingId'
+  to: '/' | '/auth' | '/ai-reply-rules' | '/listings' | '/listing/$listingId'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/ai-reply-rules'
     | '/_authenticated/listings'
     | '/_authenticated/listing/$listingId'
   fileRoutesById: FileRoutesById
@@ -104,6 +116,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/ai-reply-rules': {
+      id: '/_authenticated/ai-reply-rules'
+      path: '/ai-reply-rules'
+      fullPath: '/ai-reply-rules'
+      preLoaderRoute: typeof AuthenticatedAiReplyRulesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/listings': {
       id: '/_authenticated/listings'
       path: '/listings'
@@ -122,11 +141,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAiReplyRulesRoute: typeof AuthenticatedAiReplyRulesRoute
   AuthenticatedListingsRoute: typeof AuthenticatedListingsRoute
   AuthenticatedListingListingIdRoute: typeof AuthenticatedListingListingIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAiReplyRulesRoute: AuthenticatedAiReplyRulesRoute,
   AuthenticatedListingsRoute: AuthenticatedListingsRoute,
   AuthenticatedListingListingIdRoute: AuthenticatedListingListingIdRoute,
 }
