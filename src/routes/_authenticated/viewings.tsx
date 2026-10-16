@@ -6,7 +6,7 @@ import { CalendarPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { bookViewing, freeSlots, listViewings, setViewingStatus } from '@/lib/viewings.functions';
 import { listLeads } from '@/lib/leads-app.functions';
-import { listListings } from '@/lib/listings.functions';
+import { getListings } from '@/lib/listings.functions';
 import { dubaiDate } from '@/lib/listings';
 import { useQuery } from '@tanstack/react-query';
 
@@ -25,7 +25,7 @@ export const Route = createFileRoute('/_authenticated/viewings')({
 function ViewingsPage() {
   const { data: viewings } = useSuspenseQuery(viewingsQuery);
   const { data: leads } = useQuery(queryOptions({ queryKey: ['leads'], queryFn: () => listLeads() }));
-  const { data: listings } = useQuery(queryOptions({ queryKey: ['listings'], queryFn: () => listListings() }));
+  const { data: listings } = useQuery(queryOptions({ queryKey: ['listings'], queryFn: () => getListings() }));
   const { data: slots } = useQuery(queryOptions({ queryKey: ['free-slots'], queryFn: () => freeSlots() }));
   const client = useQueryClient();
   const book = useServerFn(bookViewing), setStatus = useServerFn(setViewingStatus);
