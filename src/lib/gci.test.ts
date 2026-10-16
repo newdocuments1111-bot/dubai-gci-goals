@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { completionPlan, type Inputs } from "./gci";
+import { completionPlan, gciPerDeal, type Inputs } from "./gci";
 
 const inputs: Inputs = {
-  price: 2_000_000, commissionPct: 2, splitPct: 60, weeks: 46,
+  price: 2_000_000, commissionPct: 2, weeks: 46,
   rates: { callsToTalks: 36, talksToAppraisals: 34, appraisalsToListings: 59, listingsToDeals: 31 },
 };
 
@@ -26,9 +26,9 @@ describe("GCI goal completion", () => {
     expect(completionPlan("effort", 500_000, 200, inputs)?.workingDays).toBe(14);
   });
 
-  it("keeps gross-goal timing independent of the 60/40 or 80/20 split", () => {
-    expect(completionPlan("effort", 1_000_000, 200, { ...inputs, splitPct: 80 }))
-      .toEqual(completionPlan("effort", 1_000_000, 200, inputs));
+  it("reports total GCI per deal as price times commission, with no split applied", () => {
+    expect(gciPerDeal(inputs)).toBe(40_000);
+    expect(completionPlan("goal", 1_000_000, 200, inputs)?.funnel.deals).toBe(25);
   });
 
   it("does not claim a completion time for zero pace or zero conversion", () => {
