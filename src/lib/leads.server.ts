@@ -10,8 +10,8 @@ const hs = {
 };
 
 function keys() {
-  const lovable = process.env.LOVABLE_API_KEY;
-  const hubspot = process.env.HUBSPOT_API_KEY;
+  const lovable = process.env['LOVABLE_API_KEY'];
+  const hubspot = process.env['HUBSPOT_API_KEY'];
   if (!lovable) throw new Error("AI is not configured.");
   if (!hubspot) throw new Error("HubSpot is not connected yet.");
   return { lovable, hubspot };
@@ -61,9 +61,9 @@ export async function loadLeads(): Promise<Lead[]> {
 
   const items = contacts.map((c) => {
     const p = c.properties;
-    const name = [p.firstname, p.lastname].filter(Boolean).join(" ") || p.email || "Unnamed contact";
-    const text = [p.message, ...(c.associations?.notes?.results.map((n) => notes.get(n.id)) ?? [])].filter(Boolean).join("\n").slice(0, 3000);
-    return { id: c.id, name, email: p.email ?? null, url: c.url ?? null, text };
+    const name = [p['firstname'], p['lastname']].filter(Boolean).join(" ") || p['email'] || "Unnamed contact";
+    const text = [p['message'], ...(c.associations?.notes?.results.map((n) => notes.get(n.id)) ?? [])].filter(Boolean).join("\n").slice(0, 3000);
+    return { id: c.id, name, email: p['email'] ?? null, url: c.url ?? null, text };
   });
 
   const provider = createOpenAI({
