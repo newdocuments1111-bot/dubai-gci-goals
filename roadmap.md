@@ -3,49 +3,49 @@
 Keep calculator, Lead Finder, My Listings, AI Reply Rules working as-is. Owner-only unless stated.
 
 ## A. Foundations
-- [ ] Make listing-photos bucket public (workspace now allows it) and verify WhatsApp photo links open without login
-- [ ] Settings page: agent name, agency name, RERA/BRN, working days/hours, viewing length, UAE holidays (pre-filled, editable), compliance officer email, document retention (default 5 years), mortgage partner name
-- [ ] Navigation: Dashboard · Test Chat · Leads · Viewings · Follow-ups · My Listings · Owners · Market Data · UAE Knowledge · AI Reply Rules · Settings · Calculator · Lead Finder
-- [ ] Document Vault: private bucket, one folder per client, 10-min signed links, upload/view/delete audit log, retention setting, "delete on request" blocked for legally required records
-- [ ] Footer on owner pages: "Powered by Elite Visions"
+- [x] Make listing-photos bucket public and verify WhatsApp photo links open without login
+- [x] Settings page: agent name, agency name, RERA/BRN, working days/hours, viewing length, UAE holidays (pre-filled, editable), compliance officer email, document retention (default 5 years), mortgage partner name
+- [x] Navigation: Dashboard · Test Chat · Leads · Viewings · Follow-ups · My Listings · Owners · Market Data · UAE Knowledge · AI Reply Rules · Settings · Calculator · Lead Finder
+- [x] Document Vault: private bucket, one folder per client, 10-min signed links, upload/view/delete audit log, retention setting, "delete on request" blocked for legally required records
+- [x] Footer on owner pages: "Powered by Elite Visions"
 
 ## B. AI reply brain
-- [ ] Test Chat (WhatsApp-style, play buyer/seller/tenant, follows Reply Rules + UAE Knowledge + eligible listings, sends photos/video/map links, New conversation)
-- [ ] Voice note transcription + image/screenshot understanding
-- [ ] Reply in client's language; owner-facing summaries in English with original underneath
-- [ ] Time zone from phone country code, editable per lead; no non-urgent messages 9pm–8am client time
-- [ ] Conversation types: buyer / seller-landlord (book valuation) / tenant
-- [ ] Mortgage: offer adviser connection (partner name in Settings); never give mortgage advice
-- [ ] Confidence rule: unsure/legal/financial/contract → agent will confirm + flag lead
-- [ ] Take over / Hand back to AI per conversation
-- [ ] STOP/consent handling + consent log per contact
-- [ ] Audit log of every AI message per lead
+- [x] Test Chat (WhatsApp-style, play buyer/seller/tenant, follows Reply Rules + UAE Knowledge + eligible listings, sends photo/video/map links, New conversation)
+- [ ] Voice note transcription + image/screenshot understanding — blocked: @lovable.dev/ai-gateway install waits for the 24h bunfig guard (~13h); user chose to wait
+- [ ] Reply in client's language; owner-facing summaries in English with original underneath — AI prompt supports it; original-underneath stored on messages
+- [x] Time zone from phone country code, editable per lead; no non-urgent messages 9pm–8am client time
+- [x] Conversation types: buyer / seller-landlord (book valuation) / tenant
+- [x] Mortgage: offer adviser connection (partner name in Settings); never give mortgage advice
+- [x] Confidence rule: unsure/legal/financial/contract → agent will confirm + flag lead
+- [x] Take over / Hand back to AI per conversation
+- [x] STOP/consent handling + consent log per contact
+- [x] Audit log of every AI message per lead
 
 ## C. Leads and alerts
-- [ ] Leads page: type, full chat, learned facts, Hot/Warm/Cold score, source; "Save to HubSpot" button
-- [ ] Hot alert: red banner + email to owner
-- [ ] AML red-flag alert to compliance officer email (cash ≥ AED 55,000, crypto, third-party payments, ID refusal, rushed deals); never shown to client
+- [x] Leads page: type, full chat, learned facts, Hot/Warm/Cold score, source; "Save to HubSpot" button
+- [x] Hot alert: red banner on Dashboard — [ ] email to owner pending (no email infra configured)
+- [x] AML red-flag alert (cash ≥ AED 55,000, crypto, third-party payments, ID refusal, rushed deals); never shown to client — [ ] email to compliance officer pending (no email infra configured)
 
 ## D. Viewings and follow-ups
-- [ ] Viewings page: book free slots (Settings hours, holidays, existing bookings), Mark as done / No-show, day-before 6pm reminder with map link
-- [ ] Post-viewing follow-up: next morning 10am message; 2-day no-reply draft waits on Follow-ups page (Approve/Edit/Cancel)
-- [ ] Until WhatsApp connected, "sent" = appears in lead's Test Chat marked Sent
+- [x] Viewings page: book free slots (Settings hours, holidays, existing bookings), Mark as done / No-show — [ ] day-before 6pm reminder pending (needs a scheduled job)
+- [x] Post-viewing follow-up: next morning 10am draft queued on Mark as done; approve on Follow-ups page — [ ] 2-day no-reply draft pending (needs a scheduled job)
+- [x] Until WhatsApp connected, "sent" = appears in lead's chat marked Sent
 
 ## E. Documents (UAE)
-- [ ] Per-lead checklist by role (buyer individual/company, seller, landlord, tenant, POA), private upload link into Vault, received/missing, notify owner when complete
+- [x] Per-lead checklist by role (buyer individual/company, seller, landlord, tenant, POA), private upload into Vault, received/missing — [ ] notify owner when complete pending
 
 ## F. After the deal
-- [ ] Off-plan payment schedule + milestones; reminders 7 days before; milestone updates → Follow-ups approval
-- [ ] Owners page: agreed-to-updates flag, handover date, owner/investor, frequency (3 months default / monthly)
-- [ ] Value updates from real Market Data only, with source+date, → Follow-ups approval
-- [ ] Home anniversary reminder 7 days before; rental owners: 120-day lease-end reminder
+- [ ] Off-plan payment schedule + milestones; reminders 7 days before; milestone updates → Follow-ups approval — tables ready (payment_schedules), UI pending
+- [x] Owners page: agreed-to-updates flag, handover date, owner/investor, frequency (3 months default / monthly)
+- [ ] Value updates from real Market Data only, with source+date, → Follow-ups approval — Market Data import ready; draft generation pending
+- [ ] Home anniversary reminder 7 days before; rental owners: 120-day lease-end reminder — needs a scheduled job
 - [ ] Old leads revival drafts for approval
 
 ## G. Real data
-- [ ] Market Data page: CSV import of DLD transactions (date, area, building, type, size, price), source + import date shown
-- [ ] UAE Knowledge page: editable facts with source + last verified; >6 months shows "please re-verify"; pre-filled with spec facts marked "verify before going live"
+- [x] Market Data page: CSV import of DLD transactions (date, area, building, type, size, price), source + import date shown
+- [x] UAE Knowledge page: editable facts with source + last verified; >6 months shows "please re-verify"; pre-filled with spec facts marked "verify before going live"
 
 ## H. Dashboard and proof
-- [ ] Dashboard (owner home): today's Hot leads, viewings, pending follow-ups, missing documents, AML alerts, avg AI first-reply time
+- [x] Dashboard (owner home): today's Hot leads, viewings, pending follow-ups, AML alerts — [ ] missing documents + avg AI first-reply time pending
 - [ ] Manager stats: leads by source, scores by source, viewings, offers, valuations, response time, per week/month
 - [ ] Real conversion rates + "Use my real rates" button on Calculator
