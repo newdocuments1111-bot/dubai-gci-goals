@@ -11,6 +11,7 @@ export const defaultReplyRules = {
   after_viewing: 'Next morning at 10am (buyer’s time zone): “Good morning! How was the viewing yesterday? Did you get a feel for the neighbourhood?” If there’s no reply, one more message 2 days later, drafted by the AI and approved by the agent. Then stop.',
   documents: 'Ask only for the documents needed, through a secure upload link, never inside the chat.',
   after_handover: 'Only if the owner agreed to updates: a property value update every 3 months (owner can choose monthly), using real past sales only, and a reminder to the agent 1 week before the home anniversary.',
+  fees: 'When asked about buying costs, quote only the editable fee amounts below (DLD transfer fee, admin fee, Trustee office fee, developer NOC, mortgage registration). Always say they are approximate and the agent will confirm the exact figures. Never promise or negotiate fees.',
 };
 export const replyRuleLabels: Record<keyof typeof defaultReplyRules, string> = {
   opening: 'Opening message', tone: 'Tone', honesty: 'Honesty', never: 'Never', property: 'Property answers',
