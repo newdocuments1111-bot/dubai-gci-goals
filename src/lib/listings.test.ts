@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { DAY_MS, needsCheck, eligibleForAI, parseListingsCsv, listingSchema, emptyListing, mapsLink, whatsappMessage, matchesListing, defaultListingFilters, type Listing } from './listings';
+import { aiCsvColumns } from './listing-ai-details';
 describe('listing freshness', () => {
   const now = Date.parse('2026-10-16T20:00:00Z');
   it('needs a check after 24 hours', () => { expect(needsCheck(new Date(now - DAY_MS - 1).toISOString(), now)).toBe(true); expect(needsCheck(new Date(now - DAY_MS).toISOString(), now)).toBe(false); });
@@ -12,6 +13,19 @@ describe('listing freshness', () => {
   it('rejects a future or invalid check date', () => { expect(needsCheck('invalid', now)).toBe(true); expect(needsCheck(new Date(now+1).toISOString(), now)).toBe(true); });
 });
 describe('listing import and validation', () => {
+  it('keeps every AI detail optional and preserves unknown amenities', () => {
+    const parsed = listingSchema.parse({ ...emptyListing(),title:'Test',status:'Reserved' });
+    expect(parsed.amenity_pool).toBeNull(); expect(parsed.parking_spaces).toBeNull(); expect(parsed.floor).toBe('');
+  });
+  it('reads AI details from CSV with explicit false and zero values', () => {
+    const row = parseListingsCsv('title,status,nearby_schools,amenity_pool,amenity_gym,parking_spaces,construction_percent,service_charge_aed_sqft_year,furnishing\nTest,Reserved,School - 10 min,false,yes,0,25,14.5,unfurnished')[0];
+    expect(row?.nearby_schools).toBe('School - 10 min'); expect(row?.amenity_pool).toBe(false); expect(row?.amenity_gym).toBe(true); expect(row?.parking_spaces).toBe(0); expect(row?.construction_percent).toBe(25); expect(row?.service_charge_aed_sqft_year).toBe(14.5);
+    expect(aiCsvColumns).toContain('floor_plan'); expect(aiCsvColumns).toContain('do_not_mention');
+  });
+  it('restricts construction progress to 0–100 percent', () => {
+    for (const construction_percent of [0,100]) expect(listingSchema.safeParse({ ...emptyListing(),title:'Test',status:'Reserved',construction_percent }).success).toBe(true);
+    for (const construction_percent of [-1,101]) expect(listingSchema.safeParse({ ...emptyListing(),title:'Test',status:'Reserved',construction_percent }).success).toBe(false);
+  });
   it('reads quoted descriptions and multiple video links', () => {
     const rows = parseListingsCsv('title,price_aed,description,videos,permit_number\n"Marina, apartment",2400000,"Bright, spacious",https://example.com/a|https://example.com/b,123');
     expect(rows[0]?.title).toBe('Marina, apartment'); expect(rows[0]?.price_aed).toBe(2400000); expect(rows[0]?.videos).toHaveLength(2);
