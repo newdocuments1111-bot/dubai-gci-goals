@@ -1,5 +1,11 @@
 # Calculator simplification
 
+# Private listings
+- [x] Private storage and inventory with sample listings.
+- [x] Listings page, editing, uploads and CSV import.
+- [x] Dubai midnight check and future source interface.
+- [x] Test owner flow, privacy and freshness.
+
 - [x] Add goal completion calculations and rule tests.
 - [x] Highlight working days and daily calls; allow goal and daily/weekly pace in effort mode.
 - [x] Replace the metrics table with concise, secondary details.

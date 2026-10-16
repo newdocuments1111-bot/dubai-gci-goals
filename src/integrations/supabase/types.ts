@@ -14,13 +14,90 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      listings: {
+        Row: {
+          bedrooms: number
+          community: string
+          completion: string
+          created_at: string
+          description: string
+          external_id: string | null
+          handover_date: string | null
+          id: string
+          is_sample: boolean
+          last_checked: string
+          maps_url: string
+          needs_check: boolean
+          permit_number: string
+          photos: string[]
+          price_aed: number
+          project: string
+          property_type: string
+          size_sqft: number
+          source: string
+          status: string
+          title: string
+          updated_at: string
+          videos: string[]
+        }
+        Insert: {
+          bedrooms?: number
+          community?: string
+          completion?: string
+          created_at?: string
+          description?: string
+          external_id?: string | null
+          handover_date?: string | null
+          id?: string
+          is_sample?: boolean
+          last_checked?: string
+          maps_url?: string
+          needs_check?: boolean
+          permit_number?: string
+          photos?: string[]
+          price_aed?: number
+          project?: string
+          property_type?: string
+          size_sqft?: number
+          source?: string
+          status?: string
+          title: string
+          updated_at?: string
+          videos?: string[]
+        }
+        Update: {
+          bedrooms?: number
+          community?: string
+          completion?: string
+          created_at?: string
+          description?: string
+          external_id?: string | null
+          handover_date?: string | null
+          id?: string
+          is_sample?: boolean
+          last_checked?: string
+          maps_url?: string
+          needs_check?: boolean
+          permit_number?: string
+          photos?: string[]
+          price_aed?: number
+          project?: string
+          property_type?: string
+          size_sqft?: number
+          source?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          videos?: string[]
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      refresh_listing_checks: { Args: never; Returns: number }
     }
     Enums: {
       [_ in never]: never
