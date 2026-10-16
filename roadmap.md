@@ -1,5 +1,11 @@
 # Calculator simplification
 
+# Listing AI preparation
+- [ ] Fix permanent public photo sharing and WhatsApp closing question.
+- [ ] Add optional AI property details, sample data and CSV columns.
+- [ ] Add private editable AI Reply Rules and agency setting.
+- [ ] Test owner saves, sharing, privacy and phone layout.
+
 # Private listings
 - [x] Add map defaults, permit enforcement and WhatsApp price rule with tests.
 - [x] Add details page with swipe gallery and listing actions.
