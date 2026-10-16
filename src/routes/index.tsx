@@ -1,4 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
+import { useSessionEmail } from "@/hooks/use-session-email";
+import { isOwnerEmail } from "@/lib/owner";
 import { useState } from "react";
 import { CalendarDays, Phone, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -45,6 +48,7 @@ function Num({ label, value, onChange, suffix, max }: { label: string; value: nu
 }
 
 function Index() {
+  const session = useSessionEmail();
   const [mode, setMode] = useState<"goal" | "effort">("goal");
   const [goal, setGoal] = useState(1_000_000);
   const [callsWeek, setCallsWeek] = useState(200);
@@ -62,9 +66,14 @@ function Index() {
   return (
     <main className="min-h-screen bg-background">
       <div className="mx-auto max-w-4xl px-4 py-6 sm:py-10">
-        <header className="mb-6">
-          <h1 className="text-3xl font-bold sm:text-4xl">Dubai AI GCI</h1>
-          <p className="mt-1 text-muted-foreground">Your goal. Your daily calls. Your timeline.</p>
+        <header className="mb-6 flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-3xl font-bold sm:text-4xl">Dubai AI GCI</h1>
+            <p className="mt-1 text-muted-foreground">Your goal. Your daily calls. Your timeline.</p>
+          </div>
+          {session.email
+            ? <Button variant="outline" size="sm" onClick={async () => { await supabase.auth.signOut(); }}>Sign out</Button>
+            : <Button asChild variant="outline" size="sm"><Link to="/auth">Owner login</Link></Button>}
         </header>
 
         <div className="mb-5 grid grid-cols-2 rounded-lg bg-muted p-1 sm:inline-flex">
@@ -145,7 +154,7 @@ function Index() {
           </div>
         </details>
 
-        <LeadFinder />
+        <LeadFinder key={session.email ?? "guest"} isOwner={isOwnerEmail(session.email)} />
       </div>
     </main>
   );
