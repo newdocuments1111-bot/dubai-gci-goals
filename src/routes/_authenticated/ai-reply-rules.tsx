@@ -6,7 +6,7 @@ import { ArrowLeft, Save, RotateCcw, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { getReplySettings, saveReplySettings } from '@/lib/ai-reply-rules.functions';
-import { defaultReplyRules, replyRuleLabels, openingPreview, type ReplySettings } from '@/lib/ai-reply-rules';
+import { defaultReplyRules, defaultFees, replyRuleLabels, feeLabels, feesSummary, openingPreview, type ReplySettings } from '@/lib/ai-reply-rules';
 
 const replyQuery = queryOptions({ queryKey: ['ai-reply-settings'], queryFn: () => getReplySettings() });
 export const Route = createFileRoute('/_authenticated/ai-reply-rules')({
