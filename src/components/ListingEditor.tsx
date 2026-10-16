@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { emptyListing, listingSchema, type Listing, type ListingInput } from '@/lib/listings';
 import { saveListing } from '@/lib/listings.functions';
 
-export function ListingEditor({ listing, mediaUrls, onClose, onSaved }: { listing?: Listing; mediaUrls: Record<string,string>; onClose: () => void; onSaved: () => Promise<void> }) {
+export function ListingEditor({ listing, mediaUrls, onClose, onSaved }: { listing?: Listing | undefined; mediaUrls: Record<string,string>; onClose: () => void; onSaved: () => Promise<void> }) {
   const [form, setForm] = useState<ListingInput>(listing ? listingSchema.parse(listing) : emptyListing());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');

@@ -39,12 +39,12 @@ export function parseListingsCsv(text: string): ListingInput[] {
   if (!parsed.data.length || parsed.data.length > 500) throw new Error('Import between 1 and 500 listings at a time.');
   return parsed.data.map((r, i) => {
     const input = { ...emptyListing(), ...Object.fromEntries(Object.entries(r).filter(([k]) => csvColumns.includes(k))),
-      bedrooms: Number(r.bedrooms || 0), size_sqft: Number(r.size_sqft || 0), price_aed: Number(r.price_aed || 0),
-      property_type: r.property_type?.trim().toLowerCase() || 'apartment', completion: r.completion?.trim().toLowerCase() || 'ready',
-      status: r.status?.trim() || 'Available', handover_date: r.handover_date?.trim() || null,
-      last_checked: r.last_checked ? new Date(r.last_checked).toISOString() : new Date().toISOString(),
-      photos: r.photos ? r.photos.split('|').map(v => v.trim()).filter(Boolean) : [],
-      videos: r.videos ? r.videos.split('|').map(v => v.trim()).filter(Boolean) : [],
+      bedrooms: Number(r['bedrooms'] || 0), size_sqft: Number(r['size_sqft'] || 0), price_aed: Number(r['price_aed'] || 0),
+      property_type: r['property_type']?.trim().toLowerCase() || 'apartment', completion: r['completion']?.trim().toLowerCase() || 'ready',
+      status: r['status']?.trim() || 'Available', handover_date: r['handover_date']?.trim() || null,
+      last_checked: r['last_checked'] ? new Date(r['last_checked']).toISOString() : new Date().toISOString(),
+      photos: r['photos'] ? r['photos'].split('|').map(v => v.trim()).filter(Boolean) : [],
+      videos: r['videos'] ? r['videos'].split('|').map(v => v.trim()).filter(Boolean) : [],
     };
     const result = listingSchema.safeParse(input);
     if (!result.success) throw new Error(`Row ${i + 2}: ${result.error.issues.map(x => `${x.path.join('.')}: ${x.message}`).join('; ')}`);
