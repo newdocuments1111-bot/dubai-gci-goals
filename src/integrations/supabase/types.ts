@@ -38,6 +38,41 @@ export type Database = {
         }
         Relationships: []
       }
+      alerts: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          lead_id: string | null
+          message: string
+          read: boolean
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          lead_id?: string | null
+          message: string
+          read?: boolean
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          lead_id?: string | null
+          message?: string
+          read?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alerts_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       app_settings: {
         Row: {
           agency_name: string
@@ -86,6 +121,79 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          language: string
+          lead_id: string
+          original_content: string | null
+          role: string
+          sent: boolean
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          language?: string
+          lead_id: string
+          original_content?: string | null
+          role: string
+          sent?: boolean
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          language?: string
+          lead_id?: string
+          original_content?: string | null
+          role?: string
+          sent?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consent_log: {
+        Row: {
+          agreed_to: string
+          created_at: string
+          how: string
+          id: string
+          lead_id: string
+        }
+        Insert: {
+          agreed_to: string
+          created_at?: string
+          how?: string
+          id?: string
+          lead_id: string
+        }
+        Update: {
+          agreed_to?: string
+          created_at?: string
+          how?: string
+          id?: string
+          lead_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consent_log_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_log: {
         Row: {
           action: string
@@ -107,6 +215,101 @@ export type Database = {
           created_at?: string
           id?: string
           path?: string
+        }
+        Relationships: []
+      }
+      follow_ups: {
+        Row: {
+          created_at: string
+          draft: string
+          id: string
+          kind: string
+          lead_id: string | null
+          owner_id: string | null
+          send_after: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          draft: string
+          id?: string
+          kind?: string
+          lead_id?: string | null
+          owner_id?: string | null
+          send_after?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          draft?: string
+          id?: string
+          kind?: string
+          lead_id?: string | null
+          owner_id?: string | null
+          send_after?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follow_ups_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          ai_paused: boolean
+          created_at: string
+          flagged: boolean
+          hubspot_id: string | null
+          id: string
+          last_message_at: string | null
+          learned: Json
+          name: string
+          opted_in: boolean
+          phone: string
+          score: string
+          source: string
+          stopped: boolean
+          timezone: string
+          type: string
+        }
+        Insert: {
+          ai_paused?: boolean
+          created_at?: string
+          flagged?: boolean
+          hubspot_id?: string | null
+          id?: string
+          last_message_at?: string | null
+          learned?: Json
+          name?: string
+          opted_in?: boolean
+          phone?: string
+          score?: string
+          source?: string
+          stopped?: boolean
+          timezone?: string
+          type?: string
+        }
+        Update: {
+          ai_paused?: boolean
+          created_at?: string
+          flagged?: boolean
+          hubspot_id?: string | null
+          id?: string
+          last_message_at?: string | null
+          learned?: Json
+          name?: string
+          opted_in?: boolean
+          phone?: string
+          score?: string
+          source?: string
+          stopped?: boolean
+          timezone?: string
+          type?: string
         }
         Relationships: []
       }
@@ -293,6 +496,99 @@ export type Database = {
         }
         Relationships: []
       }
+      owners: {
+        Row: {
+          agreed_to_updates: boolean
+          area: string
+          building: string
+          created_at: string
+          handover_date: string | null
+          id: string
+          kind: string
+          lease_end: string | null
+          name: string
+          phone: string
+          update_frequency: string
+        }
+        Insert: {
+          agreed_to_updates?: boolean
+          area?: string
+          building?: string
+          created_at?: string
+          handover_date?: string | null
+          id?: string
+          kind?: string
+          lease_end?: string | null
+          name: string
+          phone?: string
+          update_frequency?: string
+        }
+        Update: {
+          agreed_to_updates?: boolean
+          area?: string
+          building?: string
+          created_at?: string
+          handover_date?: string | null
+          id?: string
+          kind?: string
+          lease_end?: string | null
+          name?: string
+          phone?: string
+          update_frequency?: string
+        }
+        Relationships: []
+      }
+      payment_schedules: {
+        Row: {
+          amount_aed: number
+          created_at: string
+          due_date: string
+          id: string
+          label: string
+          lead_id: string | null
+          listing_id: string | null
+          milestone: string | null
+          paid: boolean
+        }
+        Insert: {
+          amount_aed: number
+          created_at?: string
+          due_date: string
+          id?: string
+          label: string
+          lead_id?: string | null
+          listing_id?: string | null
+          milestone?: string | null
+          paid?: boolean
+        }
+        Update: {
+          amount_aed?: number
+          created_at?: string
+          due_date?: string
+          id?: string
+          label?: string
+          lead_id?: string | null
+          listing_id?: string | null
+          milestone?: string | null
+          paid?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_schedules_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_schedules_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       uae_knowledge: {
         Row: {
           created_at: string
@@ -322,6 +618,57 @@ export type Database = {
           topic?: string
         }
         Relationships: []
+      }
+      viewings: {
+        Row: {
+          created_at: string
+          followup_sent: boolean
+          id: string
+          kind: string
+          lead_id: string | null
+          listing_id: string | null
+          reminder_sent: boolean
+          starts_at: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          followup_sent?: boolean
+          id?: string
+          kind?: string
+          lead_id?: string | null
+          listing_id?: string | null
+          reminder_sent?: boolean
+          starts_at: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          followup_sent?: boolean
+          id?: string
+          kind?: string
+          lead_id?: string | null
+          listing_id?: string | null
+          reminder_sent?: boolean
+          starts_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "viewings_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "viewings_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
