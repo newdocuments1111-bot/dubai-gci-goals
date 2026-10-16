@@ -36,7 +36,7 @@ export function dubaiDate(timestamp: string) {
 export function mapsLink(listing: Pick<ListingInput, 'maps_url' | 'project' | 'community'>) {
   return listing.maps_url.trim() || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([listing.project.trim(), listing.community.trim(), 'Dubai'].filter(Boolean).join(' '))}`;
 }
-export function whatsappMessage(listing: ListingInput, photoUrl?: string, now = Date.now()) {
+export function whatsappMessage(listing: Pick<Listing, 'title' | 'community' | 'project' | 'maps_url' | 'bedrooms' | 'size_sqft' | 'completion' | 'status' | 'last_checked' | 'price_aed'>, photoUrl?: string, now = Date.now()) {
   return [`Hi! Take a look at ${listing.title}.`, listing.community, `${listing.bedrooms} beds · ${listing.size_sqft.toLocaleString('en-US')} sq ft · ${listing.completion === 'off-plan' ? 'Off-plan' : 'Ready'}`,
     ...(eligibleForAI(listing, now) ? [`AED ${listing.price_aed.toLocaleString('en-US')}`] : []),
     `Map: ${mapsLink(listing)}`, ...(photoUrl ? [`Photo: ${photoUrl}`] : [])].filter(Boolean).join('\n');

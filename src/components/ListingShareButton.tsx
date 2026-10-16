@@ -3,7 +3,7 @@ import { Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { whatsappMessage, type Listing } from '@/lib/listings';
 
-export function ListingShareButton({ listing, photo }: { listing: Listing; photo?: string }) {
+export function ListingShareButton({ listing, photo }: { listing: Listing; photo?: string | undefined }) {
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState('');
   return <div><Button variant="outline" size="sm" className="w-full" onClick={async () => {

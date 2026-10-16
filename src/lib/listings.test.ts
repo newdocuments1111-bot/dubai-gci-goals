@@ -16,7 +16,7 @@ describe('listing import and validation', () => {
     const rows = parseListingsCsv('title,price_aed,description,videos,permit_number\n"Marina, apartment",2400000,"Bright, spacious",https://example.com/a|https://example.com/b,123');
     expect(rows[0]?.title).toBe('Marina, apartment'); expect(rows[0]?.price_aed).toBe(2400000); expect(rows[0]?.videos).toHaveLength(2);
   });
-  it('rejects invalid statuses instead of partially importing', () => { expect(() => parseListingsCsv('title,status\nOne,Available\nTwo,Unknown')).toThrow('Row 3'); });
+  it('rejects invalid statuses instead of partially importing', () => { expect(() => parseListingsCsv('title,status,permit_number\nOne,Available,123\nTwo,Unknown,')).toThrow('Row 3'); });
   it('allows precisely the three requested statuses', () => { for (const status of ['Available','Reserved','Sold']) expect(listingSchema.safeParse({ ...emptyListing(), title: 'Test', status, permit_number: '123' }).success).toBe(true); expect(listingSchema.safeParse({ ...emptyListing(), title: 'Test', status: 'Needs check' }).success).toBe(false); });
 });
 describe('listing actions', () => {
