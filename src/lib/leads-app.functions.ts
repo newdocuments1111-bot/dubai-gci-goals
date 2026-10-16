@@ -28,7 +28,8 @@ export const updateLead = createServerFn({ method: 'POST' }).middleware([require
   .inputValidator(leadSchema.partial().extend({ id: z.string().uuid() })).handler(async ({ data, context }) => {
     guard(context.claims.email as string | undefined);
     const { id, ...fields } = data;
-    const { error } = await context.supabase.from('leads').update(fields).eq('id', id);
+    const clean = Object.fromEntries(Object.entries(fields).filter(([, v]) => v !== undefined));
+    const { error } = await context.supabase.from('leads').update(clean).eq('id', id);
     if (error) throw new Error('Could not update the lead.');
     return { success: true };
   });
@@ -125,9 +126,8 @@ export const sendClientMessage = createServerFn({ method: 'POST' }).middleware([
     }
     const learned = { ...(lead.learned as Record<string, unknown>), ...(ai.learned ?? {}) };
     const score = scoreLead(learned);
-    const updates: Record<string, unknown> = { learned, score, flagged: lead.flagged || Boolean(ai.flag), stopped: lead.stopped || Boolean(ai.stopped) };
-    if (ai.type && ai.type !== 'other') updates['type'] = ai.type;
-    await context.supabase.from('leads').update(updates).eq('id', data.leadId);
+    const type = ai.type && ['buyer', 'seller', 'landlord', 'tenant'].includes(ai.type) ? ai.type : lead.type;
+    await context.supabase.from('leads').update({ learned, score, type, flagged: lead.flagged || Boolean(ai.flag), stopped: lead.stopped || Boolean(ai.stopped) }).eq('id', data.leadId);
     if (ai.stopped) await context.supabase.from('consent_log').insert({ lead_id: data.leadId, agreed_to: 'Stopped all messages', how: 'Client said stop in chat' });
     if (ai.hot && score === 'Hot') {
       await context.supabase.from('alerts').insert({ lead_id: data.leadId, kind: 'hot', message: `HOT: ${lead.name || 'A lead'} ${ai.hotReason || 'is ready to move'}. Call them today.` });
