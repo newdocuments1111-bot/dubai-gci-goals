@@ -8,6 +8,13 @@
       "when": 1792184218391,
       "tag": "0000_private_listing_inventory",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792184282121,
+      "tag": "0001_enable_listing_nightly_schedule",
+      "breakpoints": true
     }
   ]
 }
