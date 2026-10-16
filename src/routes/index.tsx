@@ -50,14 +50,12 @@ function Index() {
   const [paceUnit, setPaceUnit] = useState<"week" | "day">("week");
   const [price, setPrice] = useState(2_000_000);
   const [commission, setCommission] = useState(2);
-  const [split, setSplit] = useState(60);
   const [weeks, setWeeks] = useState(46);
   const [rates, setRates] = useState<Rates>({ callsToTalks: 36, talksToAppraisals: 34, appraisalsToListings: 59, listingsToDeals: 31 });
 
   const n = (x: number) => (Number.isNaN(x) ? 0 : x);
-  const inputs = { price: n(price), commissionPct: n(commission), splitPct: split, weeks: n(weeks), rates };
+  const inputs = { price: n(price), commissionPct: n(commission), weeks: n(weeks), rates };
   const plan = completionPlan(mode, goal, callsWeek, inputs);
-  const takeHome = n(goal) * (split / 100);
   const setRate = (k: keyof Rates) => (v: number) => setRates({ ...rates, [k]: n(v) });
 
   return (
@@ -115,21 +113,11 @@ function Index() {
             <div className="grid grid-cols-2 gap-4">
               <Num label="Property price" value={price} onChange={setPrice} suffix="AED" />
               <Num label="Commission" value={commission} onChange={setCommission} suffix="%" max={100} />
-              <div>
-                <span className="text-xs font-medium text-muted-foreground">Agent split</span>
-                <div className="mt-1 grid grid-cols-2 gap-2">
-                  {[60, 80].map((s) => (
-                    <Button key={s} onClick={() => setSplit(s)} aria-pressed={split === s} variant={split === s ? "default" : "outline"}>
-                      {s}/{100 - s}
-                    </Button>
-                  ))}
-                </div>
-              </div>
             </div>
             <div className="border-t border-border pt-3">
-              <p className="text-xs text-muted-foreground">Take-home at your GCI goal</p>
-              <p className="mt-1 text-2xl font-bold">{plan ? aed(takeHome) : "—"}</p>
-              <p className="mt-1 text-xs text-muted-foreground">{split}/{100 - split} split — you keep {split}%</p>
+              <p className="text-xs text-muted-foreground">Total GCI per deal</p>
+              <p className="mt-1 text-2xl font-bold">{aed(gciPerDeal(inputs))}</p>
+              <p className="mt-1 text-xs text-muted-foreground">Every figure below is total GCI, the full commission on your deals.</p>
             </div>
           </section>
         </div>
@@ -151,7 +139,7 @@ function Index() {
               {plan && <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-3">
                 {Object.entries(plan.funnel).reverse().map(([label, count]) => <div key={label} className="flex justify-between gap-2 border-b border-border pb-2"><dt className="text-sm capitalize text-muted-foreground">{label}</dt><dd className="text-sm font-semibold tabular-nums">{up(count)}</dd></div>)}
               </dl>}
-              <p className="mt-3 text-xs text-muted-foreground">Activity counts rounded up. GCI is before your agent split.</p>
+              <p className="mt-3 text-xs text-muted-foreground">Activity counts rounded up.</p>
             </div>
           </div>
         </details>
