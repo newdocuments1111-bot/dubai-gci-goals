@@ -1,10 +1,10 @@
 # Calculator simplification
 
 # Private listings
-- [ ] Private storage and inventory with sample listings.
-- [ ] Listings page, editing, uploads and CSV import.
-- [ ] Dubai midnight check and future source interface.
-- [ ] Test owner flow, privacy and freshness.
+- [x] Private storage and inventory with sample listings.
+- [x] Listings page, editing, uploads and CSV import.
+- [x] Dubai midnight check and future source interface.
+- [x] Test owner flow, privacy and freshness.
 
 - [x] Add goal completion calculations and rule tests.
 - [x] Highlight working days and daily calls; allow goal and daily/weekly pace in effort mode.
