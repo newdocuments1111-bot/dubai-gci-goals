@@ -14,11 +14,28 @@ export const defaultReplyRules = {
 };
 export const replyRuleLabels: Record<keyof typeof defaultReplyRules, string> = {
   opening: 'Opening message', tone: 'Tone', honesty: 'Honesty', never: 'Never', property: 'Property answers',
-  booking: 'Booking', offers: 'I want to make an offer', after_viewing: 'After a viewing', documents: 'Documents', after_handover: 'After handover',
+  booking: 'Booking', offers: 'I want to make an offer', after_viewing: 'After a viewing', documents: 'Documents', after_handover: 'After handover', fees: 'Fees and extra costs',
 };
+export const defaultFees = {
+  dld_transfer_pct: 4, admin_fee_min: 2000, admin_fee_max: 4000, trustee_fee_min: 2000, trustee_fee_max: 4000,
+  developer_noc_min: 500, developer_noc_max: 5000, mortgage_registration_pct: 0.25,
+};
+export const feeLabels: Record<keyof typeof defaultFees, string> = {
+  dld_transfer_pct: 'DLD transfer fee (% of price, usually paid by the buyer)',
+  admin_fee_min: 'Admin fee from (AED)', admin_fee_max: 'Admin fee to (AED)',
+  trustee_fee_min: 'Trustee office fee from (AED)', trustee_fee_max: 'Trustee office fee to (AED)',
+  developer_noc_min: 'Developer NOC from (AED, paid by the seller)', developer_noc_max: 'Developer NOC to (AED, varies by developer)',
+  mortgage_registration_pct: 'Mortgage registration (% of the loan)',
+};
+export const feesSchema = z.object(Object.fromEntries(Object.keys(defaultFees).map(key => [key, z.number().finite().min(0).max(100000000)])) as Record<keyof typeof defaultFees, z.ZodNumber>);
+export type FeeSettings = z.infer<typeof feesSchema>;
+export function feesSummary(fees: FeeSettings) {
+  return `DLD transfer fee ${fees.dld_transfer_pct}% of the price (usually paid by the buyer), admin fee AED ${fees.admin_fee_min.toLocaleString('en-US')}–${fees.admin_fee_max.toLocaleString('en-US')}, Trustee office fee AED ${fees.trustee_fee_min.toLocaleString('en-US')}–${fees.trustee_fee_max.toLocaleString('en-US')}, developer NOC AED ${fees.developer_noc_min.toLocaleString('en-US')}–${fees.developer_noc_max.toLocaleString('en-US')} (paid by the seller, varies by developer), mortgage registration ${fees.mortgage_registration_pct}% of the loan.`;
+}
 export const replySettingsSchema = z.object({
   agency_name: z.string().trim().max(200),
   rules: z.object(Object.fromEntries(Object.keys(defaultReplyRules).map(key => [key, z.string().trim().min(1).max(10000)])) as Record<keyof typeof defaultReplyRules, z.ZodString>),
+  fees: feesSchema,
 });
 export type ReplySettings = z.infer<typeof replySettingsSchema>;
 export function openingPreview(settings: ReplySettings) { return settings.rules.opening.replaceAll('[Agency Name]', settings.agency_name || '[Agency Name]'); }
