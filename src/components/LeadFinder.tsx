@@ -4,11 +4,12 @@ import { RefreshCw, Plug } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getLeads } from "@/lib/leads.functions";
 import type { Lead } from "@/lib/leads";
+import { DEMO_LEADS } from "@/lib/demo-leads";
 
 const BADGE = { hot: "Hot 🔥", warm: "Warm 🟡", cold: "Cold ❄️" } as const;
 const SIGN_LABEL = { budget: "Budget", location: "Location", moveIn: "Move-in time" } as const;
 
-export function LeadFinder() {
+export function LeadFinder({ isOwner }: { isOwner: boolean }) {
   const fetchLeads = useServerFn(getLeads);
   const [leads, setLeads] = useState<Lead[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +29,17 @@ export function LeadFinder() {
     }
   };
 
+  if (!isOwner) {
+    return (
+      <section aria-label="Demo leads" className="mt-8 border-t border-border pt-6">
+        <h2 className="text-xl font-semibold">Demo leads</h2>
+        <p className="mt-1 inline-block rounded-md bg-muted px-2 py-1 text-xs font-semibold">Sample data – not real people</p>
+        <p className="mt-2 text-sm text-muted-foreground">An example of how the AI lead finder scores leads by budget, location and move-in time.</p>
+        <LeadCards leads={DEMO_LEADS} />
+      </section>
+    );
+  }
+
   return (
     <section aria-label="AI lead finder" className="mt-8 border-t border-border pt-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -44,7 +56,13 @@ export function LeadFinder() {
       {error && <p role="alert" className="mt-4 rounded-lg border border-destructive/40 p-3 text-sm text-destructive">{error}</p>}
       {leads && !leads.length && !error && <p className="mt-4 text-sm text-muted-foreground">No contacts found in HubSpot yet.</p>}
 
-      {leads && leads.length > 0 && (
+      {leads && leads.length > 0 && <LeadCards leads={leads} />}
+    </section>
+  );
+}
+
+function LeadCards({ leads }: { leads: Lead[] }) {
+  return (
         <ul className="mt-5 grid gap-4 sm:grid-cols-2">
           {leads.map((l) => {
             const found = (Object.keys(SIGN_LABEL) as (keyof typeof SIGN_LABEL)[]).filter((k) => l.signs[k]);
@@ -68,7 +86,5 @@ export function LeadFinder() {
             );
           })}
         </ul>
-      )}
-    </section>
   );
 }
