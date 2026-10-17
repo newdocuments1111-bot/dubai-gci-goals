@@ -2,6 +2,11 @@
 
 Keep calculator, Lead Finder, My Listings, AI Reply Rules working as-is. Owner-only unless stated.
 
+## Current request: Test Chat improvements
+- [ ] Warm, grounded answers, no deferred promises, natural one-question conversation and frustration recovery
+- [ ] Consent-first two-slot appointments, booking in Viewings, Hot intent alerts and document guidance
+- [ ] Unit tests and authenticated end-to-end verification; all other screens unchanged
+
 ## A. Foundations
 - [x] Make listing-photos bucket public and verify WhatsApp photo links open without login
 - [x] Settings page: agent name, agency name, RERA/BRN, working days/hours, viewing length, UAE holidays (pre-filled, editable), compliance officer email, document retention (default 5 years), mortgage partner name
@@ -16,7 +21,7 @@ Keep calculator, Lead Finder, My Listings, AI Reply Rules working as-is. Owner-o
 - [x] Time zone from phone country code, editable per lead; no non-urgent messages 9pm–8am client time
 - [x] Conversation types: buyer / seller-landlord (book valuation) / tenant
 - [x] Mortgage: offer adviser connection (partner name in Settings); never give mortgage advice
-- [x] Confidence rule: unsure/legal/financial/contract → agent will confirm + flag lead
+- [x] Confidence rule: explain limits honestly without deferred promises; privately flag unsure/legal/financial/contract questions
 - [x] Take over / Hand back to AI per conversation
 - [x] STOP/consent handling + consent log per contact
 - [x] Audit log of every AI message per lead
