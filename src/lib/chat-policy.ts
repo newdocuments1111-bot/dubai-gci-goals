@@ -29,7 +29,10 @@ export function mergeLearned(previous: Record<string, unknown>, next: Record<str
   return merged;
 }
 export function chatLeadScore(learned: Record<string, unknown>, intent: 'none' | 'viewing' | 'offer') {
-  return intent !== 'none' || learned['_hotIntent'] === true ? 'Hot' : scoreLead(learned);
+  // Hot: location + purpose + budget + timing all known, or viewing/offer intent.
+  if (intent !== 'none' || learned['_hotIntent'] === true) return 'Hot';
+  if (learned['location'] && learned['purpose'] && learned['budget'] && learned['move_in']) return 'Hot';
+  return scoreLead(learned);
 }
 /** Model interpretations cannot skip invitation, agreement, or selection. */
 export function appointmentTransition(state: AppointmentState | undefined, action: string, slots: string[], slotIndex?: number): AppointmentState | undefined {
