@@ -78,7 +78,8 @@ async function buildAiContext(supabase: typeof import('@/integrations/supabase/c
   const r = (rules?.rules ?? {}) as Record<string, string>;
   return {
     agency: rules?.agency_name || settings?.agency_name || '',
-    rules: Object.values(r).filter(Boolean),
+    // Test Chat's current conversation policy replaces legacy behavioural rules without editing the owner's saved page.
+    rules: Object.entries(r).filter(([key, value]) => value && !['opening','tone','property','booking','offers','documents','fees'].includes(key)).map(([, value]) => value),
     fees: feesSummary({ dld_transfer_pct: 4, admin_fee_min: 2000, admin_fee_max: 4000, trustee_fee_min: 2000, trustee_fee_max: 4000, developer_noc_min: 500, developer_noc_max: 5000, mortgage_registration_pct: 0.25, ...((rules?.fees ?? {}) as object) }),
     knowledge: (knowledge ?? []).map(k => `${k.topic}: ${k.fact}`),
     listings: eligible,

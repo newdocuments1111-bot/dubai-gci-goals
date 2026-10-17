@@ -3,9 +3,9 @@
 Keep calculator, Lead Finder, My Listings, AI Reply Rules working as-is. Owner-only unless stated.
 
 ## Current request: Test Chat improvements
-- [ ] Warm, grounded answers, no deferred promises, natural one-question conversation and frustration recovery
-- [ ] Consent-first two-slot appointments, booking in Viewings, Hot intent alerts and document guidance
-- [ ] Unit tests and authenticated end-to-end verification; all other screens unchanged
+- [x] Warm, grounded answers, no deferred promises, natural one-question conversation and frustration recovery
+- [x] Consent-first two-slot appointments, booking in Viewings, Hot intent alerts and document guidance
+- [x] Unit tests and authenticated end-to-end verification; all other screens unchanged
 
 ## A. Foundations
 - [x] Make listing-photos bucket public and verify WhatsApp photo links open without login
