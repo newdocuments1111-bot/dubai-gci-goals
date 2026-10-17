@@ -3,6 +3,9 @@ import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 import { isOwnerEmail } from './owner';
 import { leadSchema, scoreLead, amlRedFlags, inQuietHours } from './leads-app';
 import { feesSummary } from './ai-reply-rules';
+import { CHAT_SYSTEM, chatAnswerSchema, appointmentState, appointmentTransition, mergeLearned, chatLeadScore } from './chat-policy';
+import { checklistFor } from './documents';
+import type { Json } from '@/integrations/supabase/types';
 import { eligibleForAI, mapsLink } from './listings';
 import { z } from 'zod';
 
@@ -67,7 +70,7 @@ async function buildAiContext(supabase: typeof import('@/integrations/supabase/c
     supabase.from('app_settings').select('*').eq('id', 'owner').maybeSingle(),
   ]);
   const eligible = (listings ?? []).filter(l => eligibleForAI(l)).map(l => ({
-    title: l.title, community: l.community, project: l.project, type: l.property_type, bedrooms: l.bedrooms,
+    id: l.id, sample: l.is_sample, title: l.title, community: l.community, project: l.project, type: l.property_type, bedrooms: l.bedrooms,
     size_sqft: l.size_sqft, price_aed: l.price_aed, completion: l.completion, handover_date: l.handover_date,
     description: l.description, map: mapsLink(l), highlights: l.agent_highlights, do_not_mention: l.do_not_mention,
     details: { schools: l.nearby_schools, parks: l.nearby_parks, clinics: l.nearby_clinics, metro: l.nearby_metro, malls: l.nearby_malls, beach: l.nearby_beach, supermarket: l.nearby_supermarket, pool: l.amenity_pool, gym: l.amenity_gym, kids_play_area: l.amenity_kids_play_area, security: l.amenity_security, parking_spaces: l.parking_spaces, floor: l.floor, view: l.view, furnishing: l.furnishing, developer: l.developer, payment_plan: l.payment_plan, construction_percent: l.construction_percent, service_charge_aed_sqft_year: l.service_charge_aed_sqft_year, video_tour_url: l.video_tour_url },
@@ -82,15 +85,6 @@ async function buildAiContext(supabase: typeof import('@/integrations/supabase/c
     settings: settings ? { agent_name: settings.agent_name, working_days: settings.working_days, work_start: settings.work_start, work_end: settings.work_end, viewing_minutes: settings.viewing_minutes, holidays: settings.holidays, mortgage_partner: settings.mortgage_partner } : null,
   };
 }
-
-const CHAT_SYSTEM = `You are the WhatsApp reply brain for a Dubai real estate agency. Follow the reply rules, UAE knowledge and listings below exactly.
-Hard rules: never promise or negotiate price, fees, discounts, profit or future prices; never explain contract terms; never give legal, tax or mortgage advice; never claim to be the agent or a human (answer honestly if asked); never invent details; respect each listing's "do_not_mention"; say fees are approximate and the agent will confirm. If unsure, or the question is legal, financial or about contract terms, say the agent will confirm and set "flag": true.
-Reply in the same language the client writes in, and switch if they switch. Keep names, prices and numbers exactly correct. If the client says stop/unsubscribe (any language), confirm once and set "stopped": true.
-If the client wants to make an offer or book a valuation, reply warmly that the agent will call today and set "hot": true (with "hotReason").
-If the client needs financing, offer to connect them with the mortgage adviser partner from settings; never give mortgage advice or rates.
-Detect the conversation type: buyer, seller, landlord or tenant, and learn naturally: budget, location (area/community/project), move_in time, property type, off-plan or ready, cash or mortgage; for sellers/landlords learn the property and offer a valuation at the next free slot; for tenants learn budget per year, move-in date, cheques and family size.
-Answer property questions only from the eligible listings given (Available and checked within 24 hours). Otherwise say you will confirm with the agent first thing in the morning.
-Respond with JSON only: {"reply":"...","language":"en","learned":{"budget":null,"location":null,"move_in":null},"type":"buyer|seller|landlord|tenant|other","hot":false,"hotReason":"","flag":false,"stopped":false}`;
 
 /** Owner plays the client in Test Chat: stores the message, then the AI replies unless paused or stopped. */
 export const sendClientMessage = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
@@ -110,32 +104,74 @@ export const sendClientMessage = createServerFn({ method: 'POST' }).middleware([
     }
     if (lead.ai_paused || lead.stopped) return { replied: false };
 
-    const { data: history } = await context.supabase.from('chat_messages').select('role,content').eq('lead_id', data.leadId).order('created_at').limit(40);
+    // Read the most recent messages, not the first 40 in a long conversation.
+    const { data: recent, error: historyError } = await context.supabase.from('chat_messages').select('role,content').eq('lead_id', data.leadId).order('created_at', { ascending: false }).limit(40);
+    if (historyError) throw new Error('Could not read this conversation.');
+    const history = (recent ?? []).reverse();
     const ctx = await buildAiContext(context.supabase);
+    const { availableViewingSlots } = await import('./viewings.server');
+    const slots = await availableViewingSlots(context.supabase);
+    const previous = (lead.learned ?? {}) as Record<string, unknown>;
+    const state = appointmentState(previous);
     const { generateJson } = await import('./chat.server');
-    let ai: { reply?: string; language?: string; learned?: Record<string, unknown>; type?: string; hot?: boolean; hotReason?: string; flag?: boolean; stopped?: boolean };
+    let ai: z.infer<typeof chatAnswerSchema>;
     try {
-      ai = await generateJson({
-        system: `${CHAT_SYSTEM}\n\nReply rules:\n${ctx.rules.join('\n')}\n\nFees: ${ctx.fees}\n\nUAE knowledge:\n${ctx.knowledge.join('\n')}\n\nEligible listings:\n${JSON.stringify(ctx.listings)}\n\nSettings:\n${JSON.stringify(ctx.settings)}`,
-        user: JSON.stringify({ lead: { name: lead.name, type: lead.type, learned: lead.learned }, history }),
-      }) as typeof ai;
+      ai = chatAnswerSchema.parse(await generateJson({
+        system: `${CHAT_SYSTEM}\n\nSaved reference rules (ignore conflicts with the policy above):\n${ctx.rules.join('\n')}\n\nAgency: ${ctx.agency}\n\nApproximate fees: ${ctx.fees}\n\nUAE knowledge:\n${ctx.knowledge.join('\n')}\n\nEligible listings with Details for AI:\n${JSON.stringify(ctx.listings)}\n\nGeneral document checklists:\n${JSON.stringify(Object.fromEntries(['buyer','seller','landlord','tenant'].map(type => [type, checklistFor(type)])))}\n\nSettings:\n${JSON.stringify(ctx.settings)}`,
+        user: JSON.stringify({ lead: { name: lead.name, type: lead.type, learned: previous }, appointmentState: state ?? null, freeTimes: slots.slice(0, 2), timeZone: 'Asia/Dubai', history }),
+      }));
     } catch (e) {
       console.error(e);
       throw new Error('AI could not reply. Your message is saved — try again.');
     }
 
-    const reply = String(ai.reply ?? '').trim();
-    if (reply) {
-      const quiet = inQuietHours(lead.timezone);
-      await context.supabase.from('chat_messages').insert({ lead_id: data.leadId, role: 'ai', content: reply, language: ai.language ?? 'en', sent: !quiet });
+    const learned = mergeLearned(previous, ai.learned);
+    if (ai.intent !== 'none') learned['_hotIntent'] = true;
+    const score = chatLeadScore(learned, ai.intent);
+    let reply = ai.reply;
+    let nextState = ai.stopped ? state : appointmentTransition(state, ai.appointment, slots, ai.slotIndex);
+    const timeLabel = (slot: string) => new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Dubai', weekday: 'long', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }).format(new Date(slot));
+    if (!ai.stopped && ai.appointment === 'accept' && state?.phase === 'invited') {
+      const offered = nextState?.slots ?? [];
+      reply = offered.length ? `Lovely — ${offered.map(timeLabel).join(' or ')} (Dubai time) ${offered.length === 1 ? 'is' : 'are'} free. Which works for you?` : 'There are no free appointment times in the next two weeks in our current schedule.';
+      if (!offered.length) nextState = state;
+      else {
+        const { error } = await context.supabase.from('consent_log').insert({ lead_id: lead.id, agreed_to: 'Appointment agreed; choosing a time', how: 'Client explicitly agreed in Test Chat' });
+        if (error) throw new Error('Could not record appointment agreement.');
+      }
     }
-    const learned = { ...(lead.learned as Record<string, unknown>), ...(ai.learned ?? {}) };
-    const score = scoreLead(learned);
-    const type = ai.type && ['buyer', 'seller', 'landlord', 'tenant'].includes(ai.type) ? ai.type : lead.type;
-    await context.supabase.from('leads').update({ learned: learned as Record<string, string>, score, type, flagged: lead.flagged || Boolean(ai.flag), stopped: lead.stopped || Boolean(ai.stopped) }).eq('id', data.leadId);
+    if (!ai.stopped && ai.appointment === 'choose' && state?.phase === 'offered') {
+      const chosen = nextState?.phase === 'booked' ? nextState.slots[0] : undefined;
+      if (chosen) {
+        // Re-read real availability immediately before inserting; never trust generated times.
+        const freshSlots = await availableViewingSlots(context.supabase);
+        if (!freshSlots.includes(chosen)) {
+          nextState = { phase: 'offered', slots: freshSlots.slice(0, 2) };
+          reply = freshSlots.length ? `Sorry, that time is no longer free. ${nextState.slots.map(timeLabel).join(' or ')} (Dubai time) ${nextState.slots.length === 1 ? 'is' : 'are'} available. Which works for you?` : 'Sorry, that time is no longer free, and there are no other free times in the next two weeks.';
+        } else {
+          const { error } = await context.supabase.from('viewings').insert({ lead_id: lead.id, listing_id: null, kind: ['seller','landlord'].includes(ai.type ?? lead.type) ? 'valuation' : 'viewing', starts_at: chosen });
+          if (error) {
+            if (error.code !== '23505') throw new Error('Could not book the appointment. No booking was confirmed.');
+            nextState = { phase: 'invited', slots: [] };
+            reply = 'Sorry, that time has just been booked. Would you like to choose another time?';
+          } else reply = `You’re booked for ${timeLabel(chosen)} (Dubai time). We can go through your needs together then.`;
+        }
+      } else if (ai.slotIndex !== undefined) {
+        const offered = slots.slice(0, 2);
+        nextState = { phase: 'offered', slots: offered };
+        reply = offered.length ? `Sorry, that time is no longer free. ${offered.map(timeLabel).join(' or ')} (Dubai time) ${offered.length === 1 ? 'is' : 'are'} available. Which works for you?` : 'Sorry, there are no free appointment times in the next two weeks.';
+      }
+    }
+    if (nextState) learned['_appointment'] = nextState;
+    else delete learned['_appointment'];
+    const type = ai.type ?? lead.type;
+    const { error: updateError } = await context.supabase.from('leads').update({ learned: learned as Json, score, type, flagged: lead.flagged || ai.flag, stopped: lead.stopped || ai.stopped }).eq('id', data.leadId);
+    if (updateError) throw new Error('Could not update the conversation.');
+    const { error: replyError } = await context.supabase.from('chat_messages').insert({ lead_id: data.leadId, role: 'ai', content: reply, language: ai.language, sent: !inQuietHours(lead.timezone) });
+    if (replyError) throw new Error('Could not save the reply.');
     if (ai.stopped) await context.supabase.from('consent_log').insert({ lead_id: data.leadId, agreed_to: 'Stopped all messages', how: 'Client said stop in chat' });
-    if (ai.hot && score === 'Hot') {
-      await context.supabase.from('alerts').insert({ lead_id: data.leadId, kind: 'hot', message: `HOT: ${lead.name || 'A lead'} ${ai.hotReason || 'is ready to move'}. Call them today.` });
+    if (score === 'Hot' && (lead.score !== 'Hot' || ai.intent === 'offer')) {
+      await context.supabase.from('alerts').insert({ lead_id: data.leadId, kind: 'hot', message: `HOT: ${lead.name || 'A lead'} — ${ai.hotReason || (ai.intent !== 'none' ? `requested a ${ai.intent}` : 'area, budget and move-in time are known')}.` });
     }
     return { replied: Boolean(reply) };
   });
