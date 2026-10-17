@@ -32,6 +32,9 @@ describe('Hot leads', () => {
   it('makes three known signs Hot without a model hot flag', () => {
     expect(chatLeadScore({ budget: '2M AED', location: 'Marina', move_in: 'June' }, 'none')).toBe('Hot');
   });
+  it('makes location, purpose, budget and timing together Hot', () => {
+    expect(chatLeadScore({ location: 'Downtown', purpose: 'investment', budget: '2M AED', move_in: '6 months' }, 'none')).toBe('Hot');
+  });
   it('makes viewing intent Hot even without qualification facts', () => {
     expect(chatLeadScore({}, 'viewing')).toBe('Hot');
   });

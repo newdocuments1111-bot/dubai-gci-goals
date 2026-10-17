@@ -6,6 +6,7 @@ import { useState } from "react";
 import { CalendarDays, Phone, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { completionPlan, gciPerDeal, WORKING_DAYS_PER_WEEK, type Rates } from "@/lib/gci";
+import { getManagerStats } from "@/lib/stats.functions";
 import { LeadFinder } from "@/components/LeadFinder";
 
 export const Route = createFileRoute("/")({
@@ -57,6 +58,27 @@ function Index() {
   const [commission, setCommission] = useState(2);
   const [weeks, setWeeks] = useState(46);
   const [rates, setRates] = useState<Rates>({ callsToTalks: 36, talksToAppraisals: 34, appraisalsToListings: 59, listingsToDeals: 31 });
+  const [loadingRates, setLoadingRates] = useState(false);
+  const [ratesNote, setRatesNote] = useState("");
+  const useRealRates = async () => {
+    setLoadingRates(true); setRatesNote("");
+    try {
+      const s = await getManagerStats();
+      const r = s.realRates;
+      if (r.talksToAppraisals === null && r.appraisalsToListings === null && r.listingsToDeals === null) {
+        setRatesNote("Not enough real activity yet to calculate rates. Keep your own % for now.");
+        return;
+      }
+      setRates(prev => ({
+        callsToTalks: prev.callsToTalks,
+        talksToAppraisals: r.talksToAppraisals ?? prev.talksToAppraisals,
+        appraisalsToListings: r.appraisalsToListings ?? prev.appraisalsToListings,
+        listingsToDeals: r.listingsToDeals ?? prev.listingsToDeals,
+      }));
+      setRatesNote("Rates updated from your real activity. Calls → talks stays manual because calls are not tracked.");
+    } catch { setRatesNote("Could not load your real rates."); }
+    finally { setLoadingRates(false); }
+  };
 
   const n = (x: number) => (Number.isNaN(x) ? 0 : x);
   const inputs = { price: n(price), commissionPct: n(commission), weeks: n(weeks), rates };
@@ -146,6 +168,12 @@ function Index() {
                 <Num label="Listings → deals" value={rates.listingsToDeals} onChange={setRate("listingsToDeals")} suffix="%" max={100} />
               </div>
               <p className="mt-3 text-xs text-muted-foreground">These % are examples. Change them to your own.</p>
+              {isOwnerEmail(session.email) && (
+                <Button variant="outline" size="sm" className="mt-3" disabled={loadingRates} onClick={() => void useRealRates()}>
+                  {loadingRates ? "Loading…" : "Use my real rates"}
+                </Button>
+              )}
+              {ratesNote && <p className="mt-2 text-xs text-muted-foreground">{ratesNote}</p>}
             </div>
             <div>
               <h3 className="text-sm font-medium">Total activity to reach your goal</h3>

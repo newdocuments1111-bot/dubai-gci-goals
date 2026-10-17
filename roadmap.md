@@ -2,10 +2,15 @@
 
 Keep calculator, Lead Finder, My Listings, AI Reply Rules working as-is. Owner-only unless stated.
 
-## Current request: Test Chat improvements
-- [x] Warm, grounded answers, no deferred promises, natural one-question conversation and frustration recovery
-- [x] Consent-first two-slot appointments, booking in Viewings, Hot intent alerts and document guidance
-- [x] Unit tests and authenticated end-to-end verification; all other screens unchanged
+## Current request: final update (tone, area guide, reminders, stats)
+- [x] Warm guided conversation: location → purpose → budget/timing → appointment, compliments before questions, no "no data" phrasing, Hot on 4 signs or viewing/offer intent
+- [x] Area Guide: 10 Dubai areas in UAE Knowledge, editable, marked verify
+- [x] Sample Marina apartment set Available with permit TEST-123, checked today
+- [x] Scheduled reminders (hourly job): day-before viewing 6pm client time, lease-end 120 days, anniversary 7 days, off-plan payment 7 days — all drafts to Follow-ups
+- [x] Manager statistics page (/stats): leads by source, scores by source, viewings/valuations/offers, avg AI first-reply time, weekly/monthly
+- [x] "Use my real rates" button on Calculator (owner only; calls→talks stays manual)
+- [ ] Email alerts for Hot/AML — blocked: needs an email domain the user owns (setup dialog shown)
+- [ ] Voice notes / image understanding — skipped: AI package still inside the 24h safety window
 
 ## A. Foundations
 - [x] Make listing-photos bucket public and verify WhatsApp photo links open without login
