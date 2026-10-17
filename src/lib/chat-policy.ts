@@ -6,14 +6,15 @@ export const appointmentStateSchema = z.object({
   slots: z.array(z.string().datetime()).max(2).default([]),
 });
 export type AppointmentState = z.infer<typeof appointmentStateSchema>;
+const missingAsUndefined = <T extends z.ZodTypeAny>(schema: T) => z.preprocess(v => v === null ? undefined : v, schema);
 export const chatAnswerSchema = z.object({
-  reply: z.string().trim().min(1).max(10000), language: z.string().max(30).default('en'),
-  learned: z.record(z.union([z.string(), z.number(), z.boolean(), z.null()])).default({}),
-  type: z.enum(['buyer', 'seller', 'landlord', 'tenant', 'other']).optional(),
-  intent: z.enum(['none', 'viewing', 'offer']).default('none'),
-  appointment: z.enum(['none', 'invite', 'accept', 'decline', 'choose']).default('none'),
-  slotIndex: z.number().int().min(0).max(1).optional(),
-  hotReason: z.string().max(500).default(''), flag: z.boolean().default(false), stopped: z.boolean().default(false),
+  reply: z.string().trim().min(1).max(10000), language: missingAsUndefined(z.string().max(30).default('en')),
+  learned: missingAsUndefined(z.record(z.union([z.string(), z.number(), z.boolean(), z.null()])).default({})),
+  type: missingAsUndefined(z.enum(['buyer', 'seller', 'landlord', 'tenant', 'other']).optional()),
+  intent: missingAsUndefined(z.enum(['none', 'viewing', 'offer']).default('none')),
+  appointment: missingAsUndefined(z.enum(['none', 'invite', 'accept', 'decline', 'choose']).default('none')),
+  slotIndex: missingAsUndefined(z.number().int().min(0).max(1).optional()),
+  hotReason: missingAsUndefined(z.string().max(500).default('')), flag: missingAsUndefined(z.boolean().default(false)), stopped: missingAsUndefined(z.boolean().default(false)),
 });
 export function appointmentState(learned: Record<string, unknown>) {
   const result = appointmentStateSchema.safeParse(learned['_appointment']);

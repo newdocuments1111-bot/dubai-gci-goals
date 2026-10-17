@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { appointmentTransition, chatLeadScore, mergeLearned } from './chat-policy';
 import { calculateFreeSlots } from './viewing-slots';
 
-const slots = ['2026-10-19T05:00:00.000Z', '2026-10-19T05:30:00.000Z'];
+const slots: [string, string] = ['2026-10-19T05:00:00.000Z', '2026-10-19T05:30:00.000Z'];
 describe('Test Chat appointment rules', () => {
   it('does not offer times before agreement to an invitation', () => {
     expect(appointmentTransition(undefined, 'accept', slots)).toBeUndefined();
