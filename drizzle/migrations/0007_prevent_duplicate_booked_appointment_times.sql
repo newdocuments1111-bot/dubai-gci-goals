@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS viewings_unique_booked_start ON public.viewings (starts_at) WHERE status = 'booked';
