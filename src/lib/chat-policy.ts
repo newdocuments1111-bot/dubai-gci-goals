@@ -7,6 +7,7 @@ export const appointmentStateSchema = z.object({
 });
 export type AppointmentState = z.infer<typeof appointmentStateSchema>;
 const missingAsUndefined = <T extends z.ZodTypeAny>(schema: T) => z.preprocess(v => v === null ? undefined : v, schema);
+const modelBoolean = z.preprocess(v => v === true || v === 'true', z.boolean());
 export const chatAnswerSchema = z.object({
   reply: z.string().trim().min(1).max(10000), language: missingAsUndefined(z.string().max(30).default('en')),
   learned: missingAsUndefined(z.record(z.union([z.string(), z.number(), z.boolean(), z.null()])).default({})),
@@ -14,7 +15,7 @@ export const chatAnswerSchema = z.object({
   intent: missingAsUndefined(z.enum(['none', 'viewing', 'offer']).default('none')),
   appointment: missingAsUndefined(z.enum(['none', 'invite', 'accept', 'decline', 'choose']).default('none')),
   slotIndex: missingAsUndefined(z.number().int().min(0).max(1).optional()),
-  hotReason: missingAsUndefined(z.string().max(500).default('')), flag: missingAsUndefined(z.boolean().default(false)), stopped: missingAsUndefined(z.boolean().default(false)),
+  hotReason: missingAsUndefined(z.string().max(500).default('')), flag: modelBoolean, stopped: modelBoolean,
 });
 export function appointmentState(learned: Record<string, unknown>) {
   const result = appointmentStateSchema.safeParse(learned['_appointment']);
