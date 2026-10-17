@@ -1,6 +1,6 @@
 import { defaultSettings, isWorkingDay } from './settings';
 
-export type SlotSettings = Pick<typeof defaultSettings, 'working_days' | 'holidays' | 'work_start' | 'work_end' | 'viewing_minutes'>;
+export type SlotSettings = Omit<Pick<typeof defaultSettings, 'working_days' | 'holidays' | 'work_start' | 'work_end' | 'viewing_minutes'>, 'working_days'> & { working_days: readonly string[] };
 export function calculateFreeSlots(settings: SlotSettings, booked: string[], now = Date.now()) {
   const duration = settings.viewing_minutes * 60000;
   if (!Number.isFinite(duration) || duration <= 0) return [];
