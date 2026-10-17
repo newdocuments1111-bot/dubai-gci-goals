@@ -6,6 +6,7 @@ import { useState } from "react";
 import { CalendarDays, Phone, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { completionPlan, gciPerDeal, WORKING_DAYS_PER_WEEK, type Rates } from "@/lib/gci";
+import { getManagerStats } from "@/lib/stats.functions";
 import { LeadFinder } from "@/components/LeadFinder";
 
 export const Route = createFileRoute("/")({
@@ -57,6 +58,27 @@ function Index() {
   const [commission, setCommission] = useState(2);
   const [weeks, setWeeks] = useState(46);
   const [rates, setRates] = useState<Rates>({ callsToTalks: 36, talksToAppraisals: 34, appraisalsToListings: 59, listingsToDeals: 31 });
+  const [loadingRates, setLoadingRates] = useState(false);
+  const [ratesNote, setRatesNote] = useState("");
+  const useRealRates = async () => {
+    setLoadingRates(true); setRatesNote("");
+    try {
+      const s = await getManagerStats();
+      const r = s.realRates;
+      if (r.talksToAppraisals === null && r.appraisalsToListings === null && r.listingsToDeals === null) {
+        setRatesNote("Not enough real activity yet to calculate rates. Keep your own % for now.");
+        return;
+      }
+      setRates(prev => ({
+        callsToTalks: prev.callsToTalks,
+        talksToAppraisals: r.talksToAppraisals ?? prev.talksToAppraisals,
+        appraisalsToListings: r.appraisalsToListings ?? prev.appraisalsToListings,
+        listingsToDeals: r.listingsToDeals ?? prev.listingsToDeals,
+      }));
+      setRatesNote("Rates updated from your real activity. Calls → talks stays manual because calls are not tracked.");
+    } catch { setRatesNote("Could not load your real rates."); }
+    finally { setLoadingRates(false); }
+  };
 
   const n = (x: number) => (Number.isNaN(x) ? 0 : x);
   const inputs = { price: n(price), commissionPct: n(commission), weeks: n(weeks), rates };
