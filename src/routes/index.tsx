@@ -146,6 +146,12 @@ function Index() {
                 <Num label="Listings → deals" value={rates.listingsToDeals} onChange={setRate("listingsToDeals")} suffix="%" max={100} />
               </div>
               <p className="mt-3 text-xs text-muted-foreground">These % are examples. Change them to your own.</p>
+              {isOwnerEmail(session.email) && (
+                <Button variant="outline" size="sm" className="mt-3" disabled={loadingRates} onClick={() => void useRealRates()}>
+                  {loadingRates ? "Loading…" : "Use my real rates"}
+                </Button>
+              )}
+              {ratesNote && <p className="mt-2 text-xs text-muted-foreground">{ratesNote}</p>}
             </div>
             <div>
               <h3 className="text-sm font-medium">Total activity to reach your goal</h3>

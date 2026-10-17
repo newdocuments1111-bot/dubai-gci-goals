@@ -7,6 +7,7 @@ const NAV = [
   { to: '/leads', label: 'Leads' },
   { to: '/viewings', label: 'Viewings' },
   { to: '/follow-ups', label: 'Follow-ups' },
+  { to: '/stats', label: 'Statistics' },
   { to: '/listings', label: 'My Listings' },
   { to: '/owners', label: 'Owners' },
   { to: '/market-data', label: 'Market Data' },

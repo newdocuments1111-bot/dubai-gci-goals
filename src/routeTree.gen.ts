@@ -20,6 +20,7 @@ import { Route as AuthenticatedListingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedMarketDataRouteImport } from './routes/_authenticated/market-data'
 import { Route as AuthenticatedOwnersRouteImport } from './routes/_authenticated/owners'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedStatsRouteImport } from './routes/_authenticated/stats'
 import { Route as AuthenticatedTestChatRouteImport } from './routes/_authenticated/test-chat'
 import { Route as AuthenticatedUaeKnowledgeRouteImport } from './routes/_authenticated/uae-knowledge'
 import { Route as AuthenticatedViewingsRouteImport } from './routes/_authenticated/viewings'
@@ -81,6 +82,11 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedStatsRoute = AuthenticatedStatsRouteImport.update({
+  id: '/stats',
+  path: '/stats',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedTestChatRoute = AuthenticatedTestChatRouteImport.update({
   id: '/test-chat',
   path: '/test-chat',
@@ -120,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/market-data': typeof AuthenticatedMarketDataRoute
   '/owners': typeof AuthenticatedOwnersRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/stats': typeof AuthenticatedStatsRoute
   '/test-chat': typeof AuthenticatedTestChatRoute
   '/uae-knowledge': typeof AuthenticatedUaeKnowledgeRoute
   '/viewings': typeof AuthenticatedViewingsRoute
@@ -137,6 +144,7 @@ export interface FileRoutesByTo {
   '/market-data': typeof AuthenticatedMarketDataRoute
   '/owners': typeof AuthenticatedOwnersRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/stats': typeof AuthenticatedStatsRoute
   '/test-chat': typeof AuthenticatedTestChatRoute
   '/uae-knowledge': typeof AuthenticatedUaeKnowledgeRoute
   '/viewings': typeof AuthenticatedViewingsRoute
@@ -156,6 +164,7 @@ export interface FileRoutesById {
   '/_authenticated/market-data': typeof AuthenticatedMarketDataRoute
   '/_authenticated/owners': typeof AuthenticatedOwnersRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/stats': typeof AuthenticatedStatsRoute
   '/_authenticated/test-chat': typeof AuthenticatedTestChatRoute
   '/_authenticated/uae-knowledge': typeof AuthenticatedUaeKnowledgeRoute
   '/_authenticated/viewings': typeof AuthenticatedViewingsRoute
@@ -175,6 +184,7 @@ export interface FileRouteTypes {
     | '/market-data'
     | '/owners'
     | '/settings'
+    | '/stats'
     | '/test-chat'
     | '/uae-knowledge'
     | '/viewings'
@@ -192,6 +202,7 @@ export interface FileRouteTypes {
     | '/market-data'
     | '/owners'
     | '/settings'
+    | '/stats'
     | '/test-chat'
     | '/uae-knowledge'
     | '/viewings'
@@ -210,6 +221,7 @@ export interface FileRouteTypes {
     | '/_authenticated/market-data'
     | '/_authenticated/owners'
     | '/_authenticated/settings'
+    | '/_authenticated/stats'
     | '/_authenticated/test-chat'
     | '/_authenticated/uae-knowledge'
     | '/_authenticated/viewings'
@@ -302,6 +314,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/stats': {
+      id: '/_authenticated/stats'
+      path: '/stats'
+      fullPath: '/stats'
+      preLoaderRoute: typeof AuthenticatedStatsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/test-chat': {
       id: '/_authenticated/test-chat'
       path: '/test-chat'
@@ -349,6 +368,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMarketDataRoute: typeof AuthenticatedMarketDataRoute
   AuthenticatedOwnersRoute: typeof AuthenticatedOwnersRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedStatsRoute: typeof AuthenticatedStatsRoute
   AuthenticatedTestChatRoute: typeof AuthenticatedTestChatRoute
   AuthenticatedUaeKnowledgeRoute: typeof AuthenticatedUaeKnowledgeRoute
   AuthenticatedViewingsRoute: typeof AuthenticatedViewingsRoute
@@ -365,6 +385,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMarketDataRoute: AuthenticatedMarketDataRoute,
   AuthenticatedOwnersRoute: AuthenticatedOwnersRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedStatsRoute: AuthenticatedStatsRoute,
   AuthenticatedTestChatRoute: AuthenticatedTestChatRoute,
   AuthenticatedUaeKnowledgeRoute: AuthenticatedUaeKnowledgeRoute,
   AuthenticatedViewingsRoute: AuthenticatedViewingsRoute,
