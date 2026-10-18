@@ -101,7 +101,7 @@ export const sendClientMessage = createServerFn({ method: 'POST' }).middleware([
     if (leadError || !lead) throw new Error('Lead not found.');
 
     if (data.media && !data.media.path.startsWith(`${lead.id}/`)) throw new Error('Invalid attachment.');
-    const { error: messageError } = await context.supabase.from('chat_messages').insert({ lead_id: data.leadId, role: 'client', content: data.content, sent: true, media_path: data.media?.path, media_kind: data.media?.kind });
+    const { error: messageError } = await context.supabase.from('chat_messages').insert({ lead_id: data.leadId, role: 'client', content: data.content, sent: true, media_path: data.media?.path ?? null, media_kind: data.media?.kind ?? null });
     if (messageError) throw new Error('Could not save the message.');
     await context.supabase.from('leads').update({ last_message_at: new Date().toISOString() }).eq('id', data.leadId);
 
@@ -219,5 +219,15 @@ export const markAlertRead = createServerFn({ method: 'POST' }).middleware([requ
   .inputValidator(z.string().uuid()).handler(async ({ data, context }) => {
     guard(context.claims.email as string | undefined);
     await context.supabase.from('alerts').update({ read: true }).eq('id', data);
+    return { success: true };
+  });
+
+export const recordContactConsent = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ id: z.string().uuid(), agreed: z.boolean() })).handler(async ({ data, context }) => {
+    guard(context.claims.email as string | undefined);
+    const { error: logError } = await context.supabase.from('consent_log').insert({ lead_id: data.id, agreed_to: data.agreed ? 'Agreed to future property check-ins' : 'Withdrew future property check-in consent', how: 'Owner recorded client agreement' });
+    if (logError) throw new Error('Could not record consent.');
+    const { error } = await context.supabase.from('leads').update({ opted_in: data.agreed }).eq('id', data.id);
+    if (error) throw new Error('Could not update consent.');
     return { success: true };
   });

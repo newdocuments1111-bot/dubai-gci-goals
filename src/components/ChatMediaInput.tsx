@@ -8,7 +8,7 @@ import { sendClientMessage } from '@/lib/leads-app.functions';
 export function ChatMediaInput({ leadId, onChanged, disabled }: { leadId: string; onChanged: () => void; disabled: boolean }) {
   const prepare = useServerFn(prepareChatMedia), send = useServerFn(sendClientMessage);
   const [file, setFile] = useState<File>(), [recording, setRecording] = useState(false), [busy, setBusy] = useState(false), [error, setError] = useState('');
-  const input = useRef<HTMLInputElement>(null), recorder = useRef<MediaRecorder>(), stream = useRef<MediaStream>(), timer = useRef<ReturnType<typeof setTimeout>>();
+  const input = useRef<HTMLInputElement>(null), recorder = useRef<MediaRecorder | undefined>(undefined), stream = useRef<MediaStream | undefined>(undefined), timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const active = useRef(true);
   useEffect(() => { active.current = true; return () => { active.current = false; if (timer.current) clearTimeout(timer.current); if (recorder.current?.state === 'recording') recorder.current.stop(); stream.current?.getTracks().forEach(t => t.stop()); }; }, []);
   const record = async () => {

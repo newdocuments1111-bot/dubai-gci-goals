@@ -2,9 +2,9 @@ import { createFileRoute } from '@tanstack/react-router';
 import { queryOptions, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
 import { useState } from 'react';
-import { Check, X } from 'lucide-react';
+import { Check, X, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { approveFollowUp, cancelFollowUp, listFollowUps } from '@/lib/followups.functions';
+import { approveFollowUp, cancelFollowUp, listFollowUps, draftOldLeadRevivals } from '@/lib/followups.functions';
 import { dubaiDate } from '@/lib/listings';
 
 const followUpsQuery = queryOptions({ queryKey: ['follow-ups'], queryFn: () => listFollowUps() });
@@ -24,7 +24,8 @@ const KIND_LABELS: Record<string, string> = { 'follow-up': 'Follow-up', 'payment
 function FollowUpsPage() {
   const { data: items } = useSuspenseQuery(followUpsQuery);
   const client = useQueryClient();
-  const approve = useServerFn(approveFollowUp), cancel = useServerFn(cancelFollowUp);
+  const approve = useServerFn(approveFollowUp), cancel = useServerFn(cancelFollowUp), revive = useServerFn(draftOldLeadRevivals);
+  const [revivalNote, setRevivalNote] = useState('');
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(''), [error, setError] = useState('');
   const refresh = () => client.invalidateQueries({ queryKey: followUpsQuery.queryKey });
@@ -34,6 +35,13 @@ function FollowUpsPage() {
   return <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
     <h1 className="mb-2 text-3xl font-bold">Follow-ups</h1>
     <p className="mb-6 text-sm text-muted-foreground">The AI drafts; you approve. Nothing is sent without your approval. Approved messages appear in the lead's conversation marked Sent.</p>
+    <Button variant="outline" className="mb-4" disabled={Boolean(busy)} onClick={async () => {
+      setBusy('revival'); setError(''); setRevivalNote('');
+      try { const result = await revive(); setRevivalNote(`${result.count} new check-in drafts. Only clients who agreed to contact and have been inactive for over 30 days are included.`); await refresh(); }
+      catch (e) { setError(e instanceof Error ? e.message : 'Could not draft check-ins.'); }
+      finally { setBusy(''); }
+    }}><RefreshCw className="size-4" />Draft old-lead check-ins</Button>
+    {revivalNote && <p role="status" className="mb-4 text-sm text-muted-foreground">{revivalNote}</p>}
     {pending.length === 0 && <p className="text-sm text-muted-foreground">Nothing waiting for approval.</p>}
     <div className="space-y-4">{pending.map(item => (
       <article key={item.id} className="rounded-lg border border-border p-4">
@@ -47,7 +55,7 @@ function FollowUpsPage() {
         <div className="mt-2 flex gap-2">
           <Button size="sm" disabled={busy === item.id} onClick={async () => { setBusy(item.id); setError('');
             try { await approve({ data: { id: item.id, draft: drafts[item.id] ?? item.draft } }); refresh(); }
-            catch { setError('Could not send.'); } finally { setBusy(''); } }}>
+            catch (e) { setError(e instanceof Error ? e.message : 'Could not send.'); } finally { setBusy(''); } }}>
             <Check className="size-4" />Approve and send
           </Button>
           <Button size="sm" variant="ghost" disabled={busy === item.id} onClick={async () => { setBusy(item.id); await cancel({ data: item.id }); setBusy(''); refresh(); }}>

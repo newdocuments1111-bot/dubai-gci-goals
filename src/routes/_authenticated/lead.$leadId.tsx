@@ -5,7 +5,8 @@ import { Suspense, useState } from 'react';
 import { ArrowLeft, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { getLeadThread, saveLeadToHubSpot, updateLead } from '@/lib/leads-app.functions';
+import { getLeadThread, saveLeadToHubSpot, updateLead, recordContactConsent } from '@/lib/leads-app.functions';
+import { Checkbox } from '@/components/ui/checkbox';
 import { LeadChat } from '@/components/LeadChat';
 import { LeadDocuments } from '@/components/LeadDocuments';
 import { timezoneFromPhone } from '@/lib/leads-app';
@@ -27,7 +28,7 @@ function LeadPage() {
   const { data } = useSuspenseQuery(threadQuery(leadId));
   const { lead, messages } = data;
   const client = useQueryClient();
-  const update = useServerFn(updateLead), toHubSpot = useServerFn(saveLeadToHubSpot);
+  const update = useServerFn(updateLead), toHubSpot = useServerFn(saveLeadToHubSpot), consent = useServerFn(recordContactConsent);
   const [name, setName] = useState(lead.name), [phone, setPhone] = useState(lead.phone), [source, setSource] = useState(lead.source);
   const [busy, setBusy] = useState(false), [message, setMessage] = useState(''), [error, setError] = useState('');
   const refresh = () => client.invalidateQueries({ queryKey: ['lead', leadId] });
@@ -65,6 +66,12 @@ function LeadPage() {
       <p className="text-muted-foreground">{['budget', 'location', 'move_in'].map(k => `${k.replace('_', ' ')}: ${learned[k] ? String(learned[k]) : '—'}`).join(' · ')}</p>
     </section>
     <LeadChat lead={lead} messages={messages} onChanged={refresh} playAsClient />
+    <label className="mt-4 flex items-center gap-2 text-sm"><Checkbox checked={lead.opted_in} disabled={busy || lead.stopped} onCheckedChange={async value => {
+      setBusy(true); setError('');
+      try { await consent({ data: { id: leadId, agreed: value === true } }); refresh(); }
+      catch (e) { setError(e instanceof Error ? e.message : 'Could not record consent.'); }
+      finally { setBusy(false); }
+    }} />Client agreed to future property check-ins</label>
     <div className="mt-4"><Suspense fallback={<p className="text-sm text-muted-foreground">Loading documents…</p>}><LeadDocuments lead={lead} /></Suspense></div>
   </main>;
 }
