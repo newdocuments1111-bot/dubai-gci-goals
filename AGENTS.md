@@ -22,6 +22,10 @@
 - Owner app modules: settings.ts, knowledge.ts, market.ts, leads-app.ts, documents.ts are browser-safe helpers with unit tests; their *.functions.ts counterparts are owner-gated via requireSupabaseAuth + isOwnerEmail.
 - The AI reply brain lives in src/lib/chat.server.ts (createOpenAI + generateText against the Lovable AI gateway, openai/gpt-6-astra); conversation flow in leads-app.functions.ts inserts client/AI/owner messages, checks AML flags privately, and queues replies during client quiet hours (9pm-8am).
 - Test Chat policy and consent transitions live in browser-safe chat-policy.ts with tests; persist invitation/offered/selected state in reserved learned fields so generated prose cannot bypass booking agreement. Shared viewing-slots.ts and viewings.server.ts calculate availability for both chat and Viewings; recheck slots before booking and confirm only after a successful insert.
-- AI calls use the gateway URL + LOVABLE_API_KEY headers pattern from leads.server.ts; @lovable.dev/ai-gateway stays uninstalled until the bunfig 24h minimumReleaseAge allows it.
+- New media and public-demo AI calls use the generated @lovable.dev/ai-gateway contracts; existing text and HubSpot calls retain their transport and model to avoid unrelated behavior changes.
+- Chat media is inspected before private storage; identity-document images never enter storage or model conversation history, and owner-only thread reads resolve short-lived media links.
+- Public demo context comes exclusively from browser-safe fictional fixtures; its privileged server access is limited to an atomic daily visitor counter, never owner data.
+- Phone installation uses manifest-only metadata and derived app icons without a service worker so preview pages cannot become stale.
+- Revival drafts require opted-in inactive leads, are deduplicated, and approval atomically rechecks consent/STOP/timing before adding any message.
 - Document Vault files live in the private "documents" bucket under one folder per client name; 10-minute signed links only, every upload/view/delete logged in document_log, deletion blocked inside the retention period.
 - Owner pages render inside OwnerLayout (nav + "Powered by Elite Visions" footer) from _authenticated/route.tsx.
