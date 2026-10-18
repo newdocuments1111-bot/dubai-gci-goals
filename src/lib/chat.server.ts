@@ -1,5 +1,6 @@
 import { createOpenAI } from '@ai-sdk/openai';
 import { generateText } from 'ai';
+import { parseChatJson } from './chat-json';
 
 const GATEWAY = 'https://connector-gateway.lovable.dev/hubspot';
 const HS_VERSION = '2026-09';
@@ -27,9 +28,7 @@ export async function generateJson(prompt: { system: string; user: string }) {
     messages: [{ role: 'user', content: prompt.user }],
     providerOptions: { openai: { store: false, forceReasoning: true, reasoningEffort: 'low', include: ['reasoning.encrypted_content'] } },
   });
-  const match = result.text.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error('AI returned an unreadable answer.');
-  return JSON.parse(match[0]) as Record<string, unknown>;
+  return parseChatJson(result.text);
 }
 
 async function hubspotFetch(path: string, init: RequestInit = {}) {

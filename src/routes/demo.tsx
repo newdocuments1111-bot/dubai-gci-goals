@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useState } from 'react';
+import { queryOptions, useSuspenseQuery } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
 import { Send, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { sendDemoMessage } from '@/lib/demo.functions';
+import { sendDemoMessage, getDemoAllowance } from '@/lib/demo.functions';
 import apartment from '@/assets/sample-apartment.jpg';
-import { DEMO_MESSAGE_LIMIT } from '@/lib/chat-extras';
+const allowanceQuery = queryOptions({ queryKey: ['demo-allowance'], queryFn: () => getDemoAllowance(), staleTime: 0 });
 
 export const Route = createFileRoute('/demo')({
   head: () => ({ meta: [
@@ -14,12 +15,13 @@ export const Route = createFileRoute('/demo')({
     { property: 'og:title', content: 'Try the AI — Demo Realty' },
     { property: 'og:description', content: 'A public sample-only Dubai property conversation.' },
     { property: 'og:type', content: 'website' }, { name: 'twitter:card', content: 'summary' },
-  ] }), component: DemoPage,
+  ] }), loader: ({ context }) => context.queryClient.ensureQueryData(allowanceQuery), component: DemoPage,
 });
 function DemoPage() {
   const send = useServerFn(sendDemoMessage);
+  const { data: allowance } = useSuspenseQuery(allowanceQuery);
   const [messages, setMessages] = useState<{ role: 'client' | 'ai'; content: string }[]>([]);
-  const [text, setText] = useState(''), [busy, setBusy] = useState(false), [error, setError] = useState(''), [remaining, setRemaining] = useState(DEMO_MESSAGE_LIMIT);
+  const [text, setText] = useState(''), [busy, setBusy] = useState(false), [error, setError] = useState(''), [remaining, setRemaining] = useState(allowance.remaining);
   const submit = async () => {
     if (!text.trim() || busy || remaining <= 0) return;
     setBusy(true); setError('');
