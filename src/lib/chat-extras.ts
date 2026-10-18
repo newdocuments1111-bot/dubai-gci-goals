@@ -7,7 +7,7 @@ export const demoProperties = [
   { sample: true, title: 'Sample JVC townhouse', community: 'JVC', bedrooms: 3, size_sqft: 2200, price_aed: 2800000, amenities: 'Garden, parking', status: 'Available' },
   { sample: true, title: 'Sample Dubai Hills villa', community: 'Dubai Hills', bedrooms: 4, size_sqft: 3400, price_aed: 6500000, amenities: 'Garden, community park', status: 'Available' },
 ] as const;
-export function leadsCsv(leads: Lead[]) {
+export function leadsCsv(leads: Pick<Lead, 'name' | 'phone' | 'source' | 'score' | 'learned' | 'last_message_at'>[]) {
   return Papa.unparse(leads.map(l => {
     const facts = l.learned as Record<string, unknown>;
     return { name: l.name, phone: l.phone, source: l.source, score: l.score, area: facts['location'] ?? '', budget: facts['budget'] ?? '', timing: facts['move_in'] ?? '', 'last message date': l.last_message_at ?? '' };
