@@ -13,7 +13,7 @@ export function parseChatJson(text: string): Record<string, unknown> {
       start = -1;
     }
   }
-  const answer = objects.findLast(o => typeof o['reply'] === 'string') ?? objects.at(-1);
+  const answer = objects.reverse().find(o => typeof o['reply'] === 'string') ?? objects[0];
   if (!answer) throw new Error('AI returned an unreadable answer.');
   return answer;
 }

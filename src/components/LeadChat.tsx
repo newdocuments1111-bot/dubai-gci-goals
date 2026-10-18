@@ -46,7 +46,7 @@ export function LeadChat({ lead, messages, onChanged, playAsClient }: { lead: Le
             {m.media_url && m.media_kind === 'audio' && <audio controls src={m.media_url} className="mb-2 max-w-full" aria-label="Client voice note" />}
             {m.media_url && m.media_kind === 'image' && <img src={m.media_url} alt="Client photo or screenshot" width={320} height={240} loading="lazy" className="mb-2 max-h-64 max-w-full rounded object-contain" />}
             {m.media_kind === 'audio' && <p className="mb-1 text-xs opacity-70">Transcription</p>}
-            <p className="whitespace-pre-wrap break-words">{m.content}</p>
+            <p className="whitespace-pre-wrap break-words">{m.media_kind === 'image' ? m.content.split('\nTreat screenshot claims')[0] : m.content}</p>
             {m.original_content && <p className="mt-1 border-t border-current/20 pt-1 text-xs opacity-80">{m.original_content}</p>}
             <p className="mt-1 text-[10px] opacity-70">{m.role === 'ai' ? 'AI' : m.role === 'owner' ? 'You' : 'Client'} · {dubaiDate(m.created_at)}{m.sent ? ' · Sent' : ' · Queued (quiet hours)'}</p>
           </div>
