@@ -50,7 +50,12 @@ export const getLeadThread = createServerFn({ method: 'POST' }).middleware([requ
       context.supabase.from('chat_messages').select('*').eq('lead_id', data).order('created_at'),
     ]);
     if (error || !lead) throw new Error('Lead not found.');
-    return { lead, messages: messages ?? [] };
+    const resolved = await Promise.all((messages ?? []).map(async m => {
+      if (!m.media_path) return { ...m, media_url: null };
+      const { data: link } = await context.supabase.storage.from('chat-media').createSignedUrl(m.media_path, 600);
+      return { ...m, media_url: link?.signedUrl ?? null };
+    }));
+    return { lead, messages: resolved };
   });
 
 /** Pause or resume the AI on a conversation. The AI never replies while paused. */
@@ -89,13 +94,15 @@ async function buildAiContext(supabase: typeof import('@/integrations/supabase/c
 
 /** Owner plays the client in Test Chat: stores the message, then the AI replies unless paused or stopped. */
 export const sendClientMessage = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ leadId: z.string().uuid(), content: z.string().trim().min(1).max(10000) }))
+  .inputValidator(z.object({ leadId: z.string().uuid(), content: z.string().trim().min(1).max(10000), media: z.object({ path: z.string().max(200), kind: z.enum(['audio','image']) }).optional() }))
   .handler(async ({ data, context }) => {
     guard(context.claims.email as string | undefined);
     const { data: lead, error: leadError } = await context.supabase.from('leads').select('*').eq('id', data.leadId).single();
     if (leadError || !lead) throw new Error('Lead not found.');
 
-    await context.supabase.from('chat_messages').insert({ lead_id: data.leadId, role: 'client', content: data.content, sent: true });
+    if (data.media && !data.media.path.startsWith(`${lead.id}/`)) throw new Error('Invalid attachment.');
+    const { error: messageError } = await context.supabase.from('chat_messages').insert({ lead_id: data.leadId, role: 'client', content: data.content, sent: true, media_path: data.media?.path, media_kind: data.media?.kind });
+    if (messageError) throw new Error('Could not save the message.');
     await context.supabase.from('leads').update({ last_message_at: new Date().toISOString() }).eq('id', data.leadId);
 
     // AML red flags — private, never shown to the client. The AI never accepts payments.

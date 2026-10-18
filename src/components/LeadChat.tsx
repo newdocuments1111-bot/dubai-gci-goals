@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { sendClientMessage, sendOwnerMessage, setAiPaused } from '@/lib/leads-app.functions';
 import type { ChatMessage, Lead } from '@/lib/leads-app';
 import { dubaiDate } from '@/lib/listings';
+import { ChatMediaInput } from './ChatMediaInput';
 
 /** WhatsApp-style conversation. The owner plays the client in Test Chat, or replies themselves after Take over. */
-export function LeadChat({ lead, messages, onChanged, playAsClient }: { lead: Lead; messages: ChatMessage[]; onChanged: () => void; playAsClient: boolean }) {
+export function LeadChat({ lead, messages, onChanged, playAsClient }: { lead: Lead; messages: (ChatMessage & { media_url?: string | null })[]; onChanged: () => void; playAsClient: boolean }) {
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false), [error, setError] = useState('');
   const sendClient = useServerFn(sendClientMessage), sendOwner = useServerFn(sendOwnerMessage), pause = useServerFn(setAiPaused);
@@ -42,6 +43,9 @@ export function LeadChat({ lead, messages, onChanged, playAsClient }: { lead: Le
       {messages.map(m => (
         <div key={m.id} className={`flex ${m.role === 'client' ? 'justify-start' : 'justify-end'}`}>
           <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${m.role === 'client' ? 'bg-muted' : m.role === 'owner' ? 'bg-secondary text-secondary-foreground' : 'bg-primary text-primary-foreground'}`}>
+            {m.media_url && m.media_kind === 'audio' && <audio controls src={m.media_url} className="mb-2 max-w-full" aria-label="Client voice note" />}
+            {m.media_url && m.media_kind === 'image' && <img src={m.media_url} alt="Client photo or screenshot" width={320} height={240} loading="lazy" className="mb-2 max-h-64 max-w-full rounded object-contain" />}
+            {m.media_kind === 'audio' && <p className="mb-1 text-xs opacity-70">Transcription</p>}
             <p className="whitespace-pre-wrap break-words">{m.content}</p>
             {m.original_content && <p className="mt-1 border-t border-current/20 pt-1 text-xs opacity-80">{m.original_content}</p>}
             <p className="mt-1 text-[10px] opacity-70">{m.role === 'ai' ? 'AI' : m.role === 'owner' ? 'You' : 'Client'} · {dubaiDate(m.created_at)}{m.sent ? ' · Sent' : ' · Queued (quiet hours)'}</p>
@@ -50,6 +54,7 @@ export function LeadChat({ lead, messages, onChanged, playAsClient }: { lead: Le
       ))}
       <div ref={endRef} />
     </div>
+    {playAsClient && <ChatMediaInput key={lead.id} leadId={lead.id} onChanged={onChanged} disabled={busy} />}
     <div className="flex items-end gap-2 border-t border-border p-3">
       <textarea ref={boxRef} aria-label={playAsClient ? 'Write as the client' : 'Write as yourself'} rows={1} maxLength={10000}
         placeholder={playAsClient ? 'Write as the client…' : 'Write your reply…'}
