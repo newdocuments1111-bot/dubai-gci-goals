@@ -2,6 +2,15 @@
 
 Keep calculator, Lead Finder, My Listings, AI Reply Rules working as-is. Owner-only unless stated.
 
+## Current request: media, agency demo, phone app, export, revival
+- [ ] Upload/record voice notes, transcription and same-language replies
+- [ ] Image understanding with confidential document rejection
+- [ ] Public sample-only /demo, Demo Realty, server-checked 20/day visitor counter
+- [ ] Home demo button and manifest-only phone installation with icons
+- [ ] Owner-only Leads CSV export
+- [ ] Verify/build consent-only old-lead revival drafts and approval checks
+- [ ] Test each flow and give short checklist
+
 ## Current request: final update (tone, area guide, reminders, stats)
 - [x] Warm guided conversation: location → purpose → budget/timing → appointment, compliments before questions, no "no data" phrasing, Hot on 4 signs or viewing/offer intent
 - [x] Area Guide: 10 Dubai areas in UAE Knowledge, editable, marked verify
