@@ -128,6 +128,8 @@ export type Database = {
           id: string
           language: string
           lead_id: string
+          media_kind: string | null
+          media_path: string | null
           original_content: string | null
           role: string
           sent: boolean
@@ -138,6 +140,8 @@ export type Database = {
           id?: string
           language?: string
           lead_id: string
+          media_kind?: string | null
+          media_path?: string | null
           original_content?: string | null
           role: string
           sent?: boolean
@@ -148,6 +152,8 @@ export type Database = {
           id?: string
           language?: string
           lead_id?: string
+          media_kind?: string | null
+          media_path?: string | null
           original_content?: string | null
           role?: string
           sent?: boolean
@@ -193,6 +199,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      demo_usage: {
+        Row: {
+          day: string
+          messages: number
+          visitor_id: string
+        }
+        Insert: {
+          day?: string
+          messages?: number
+          visitor_id: string
+        }
+        Update: {
+          day?: string
+          messages?: number
+          visitor_id?: string
+        }
+        Relationships: []
       }
       document_log: {
         Row: {
@@ -675,8 +699,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_chat_follow_up: {
+        Args: { p_draft: string; p_id: string }
+        Returns: undefined
+      }
+      draft_old_lead_revivals: { Args: never; Returns: number }
       draft_scheduled_reminders: { Args: never; Returns: undefined }
       refresh_listing_checks: { Args: never; Returns: number }
+      reserve_demo_message: { Args: { p_visitor: string }; Returns: number }
     }
     Enums: {
       [_ in never]: never
