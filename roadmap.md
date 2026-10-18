@@ -3,13 +3,13 @@
 Keep calculator, Lead Finder, My Listings, AI Reply Rules working as-is. Owner-only unless stated.
 
 ## Current request: media, agency demo, phone app, export, revival
-- [ ] Upload/record voice notes, transcription and same-language replies
-- [ ] Image understanding with confidential document rejection
-- [ ] Public sample-only /demo, Demo Realty, server-checked 20/day visitor counter
-- [ ] Home demo button and manifest-only phone installation with icons
-- [ ] Owner-only Leads CSV export
-- [ ] Verify/build consent-only old-lead revival drafts and approval checks
-- [ ] Test each flow and give short checklist
+- [x] Upload/record voice notes, transcription and same-language replies (English and Spanish live-tested)
+- [x] Image understanding with confidential document rejection (fictional screenshot and passport tested; no identity attachment persisted)
+- [x] Public sample-only /demo, Demo Realty, server-checked 20/day visitor counter (20th accepted, 21st rejected, allowance survives reload)
+- [x] Home demo button and manifest-only phone installation with icons (icons/head/manifest verified; physical phone installation requires published update)
+- [x] Owner-only Leads CSV export (download and eight columns verified)
+- [x] Verify/build consent-only old-lead revival drafts and approval checks (30-day default, one draft per lead; consent/STOP exclusions and withdrawn-consent rejection verified)
+- [x] Test each flow and give short checklist (66 unit tests passed; owner and public browser flows checked)
 
 ## Current request: final update (tone, area guide, reminders, stats)
 - [x] Warm guided conversation: location → purpose → budget/timing → appointment, compliments before questions, no "no data" phrasing, Hot on 4 signs or viewing/offer intent
@@ -19,7 +19,7 @@ Keep calculator, Lead Finder, My Listings, AI Reply Rules working as-is. Owner-o
 - [x] Manager statistics page (/stats): leads by source, scores by source, viewings/valuations/offers, avg AI first-reply time, weekly/monthly
 - [x] "Use my real rates" button on Calculator (owner only; calls→talks stays manual)
 - [ ] Email alerts for Hot/AML — blocked: needs an email domain the user owns (setup dialog shown)
-- [ ] Voice notes / image understanding — skipped: AI package still inside the 24h safety window
+- [x] Voice notes / image understanding — completed after the package safety window
 
 ## A. Foundations
 - [x] Make listing-photos bucket public and verify WhatsApp photo links open without login
@@ -30,7 +30,7 @@ Keep calculator, Lead Finder, My Listings, AI Reply Rules working as-is. Owner-o
 
 ## B. AI reply brain
 - [x] Test Chat (WhatsApp-style, play buyer/seller/tenant, follows Reply Rules + UAE Knowledge + eligible listings, sends photo/video/map links, New conversation)
-- [ ] Voice note transcription + image/screenshot understanding — blocked: @lovable.dev/ai-gateway install waits for the 24h bunfig guard (~13h); user chose to wait
+- [x] Voice note transcription + image/screenshot understanding — package installed with the 24h guard intact
 - [ ] Reply in client's language; owner-facing summaries in English with original underneath — AI prompt supports it; original-underneath stored on messages
 - [x] Time zone from phone country code, editable per lead; no non-urgent messages 9pm–8am client time
 - [x] Conversation types: buyer / seller-landlord (book valuation) / tenant
@@ -58,7 +58,7 @@ Keep calculator, Lead Finder, My Listings, AI Reply Rules working as-is. Owner-o
 - [x] Owners page: agreed-to-updates flag, handover date, owner/investor, frequency (3 months default / monthly)
 - [ ] Value updates from real Market Data only, with source+date, → Follow-ups approval — Market Data import ready; draft generation pending
 - [ ] Home anniversary reminder 7 days before; rental owners: 120-day lease-end reminder — needs a scheduled job
-- [ ] Old leads revival drafts for approval
+- [x] Old leads revival drafts for approval — owner-triggered, consent-only, after 30 inactive days
 
 ## G. Real data
 - [x] Market Data page: CSV import of DLD transactions (date, area, building, type, size, price), source + import date shown
