@@ -675,6 +675,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      draft_scheduled_reminders: { Args: never; Returns: undefined }
       refresh_listing_checks: { Args: never; Returns: number }
     }
     Enums: {
