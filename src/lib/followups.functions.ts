@@ -17,14 +17,8 @@ export const approveFollowUp = createServerFn({ method: 'POST' }).middleware([re
   .inputValidator(z.object({ id: z.string().uuid(), draft: z.string().trim().min(1).max(10000) }))
   .handler(async ({ data, context }) => {
     guard(context.claims.email as string | undefined);
-    const { data: fu } = await context.supabase.from('follow_ups').select('lead_id').eq('id', data.id).single();
-    if (!fu) throw new Error('Follow-up not found.');
-    if (fu.lead_id) {
-      await context.supabase.from('chat_messages').insert({ lead_id: fu.lead_id, role: 'ai', content: data.draft, sent: true });
-      await context.supabase.from('leads').update({ last_message_at: new Date().toISOString() }).eq('id', fu.lead_id);
-    }
-    const { error } = await context.supabase.from('follow_ups').update({ draft: data.draft, status: 'sent' }).eq('id', data.id);
-    if (error) throw new Error('Could not send the follow-up.');
+    const { error } = await context.supabase.rpc('approve_chat_follow_up', { p_id: data.id, p_draft: data.draft });
+    if (error) throw new Error(error.message);
     return { success: true };
   });
 
@@ -35,3 +29,10 @@ export const cancelFollowUp = createServerFn({ method: 'POST' }).middleware([req
     if (error) throw new Error('Could not cancel the follow-up.');
     return { success: true };
   });
+
+export const draftOldLeadRevivals = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
+  guard(context.claims.email as string | undefined);
+  const { data, error } = await context.supabase.rpc('draft_old_lead_revivals');
+  if (error) throw new Error('Could not draft old-lead check-ins.');
+  return { count: data };
+});

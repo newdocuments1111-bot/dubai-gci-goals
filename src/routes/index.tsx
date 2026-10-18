@@ -94,6 +94,7 @@ function Index() {
             <p className="mt-1 text-muted-foreground">Your goal. Your daily calls. Your timeline.</p>
           </div>
            <div className="flex flex-wrap justify-end gap-2">
+           <Button asChild variant="outline" size="sm"><Link to="/demo">Try the AI demo</Link></Button>
            {isOwnerEmail(session.email) && <Button asChild variant="outline" size="sm"><Link to="/listings">My listings</Link></Button>}
            {session.email
             ? <Button variant="outline" size="sm" onClick={async () => { await supabase.auth.signOut(); }}>Sign out</Button>

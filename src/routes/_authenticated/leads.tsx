@@ -2,7 +2,8 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { queryOptions, useSuspenseQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useServerFn } from '@tanstack/react-start';
-import { Plus } from 'lucide-react';
+import { Plus, Download } from 'lucide-react';
+import { leadsCsv, downloadCsv } from '@/lib/chat-extras';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createLead, listLeads } from '@/lib/leads-app.functions';
@@ -30,7 +31,7 @@ function LeadsPage() {
   const [name, setName] = useState(''), [phone, setPhone] = useState(''), [busy, setBusy] = useState(false), [error, setError] = useState('');
 
   return <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
-    <h1 className="mb-2 text-3xl font-bold">Leads</h1>
+    <div className="mb-2 flex flex-wrap items-center justify-between gap-3"><h1 className="text-3xl font-bold">Leads</h1><Button variant="outline" onClick={() => downloadCsv(leadsCsv(leads))}><Download className="size-4" />Export to CSV</Button></div>
     <p className="mb-6 text-sm text-muted-foreground">Every conversation becomes a lead. Hot first. Scores use the same 3 signs as the Lead Finder: budget, location, move-in time.</p>
     <section className="mb-6 flex flex-wrap items-end gap-3 rounded-lg border border-border p-4">
       <label className="text-sm">Name<Input className="mt-1 w-48" maxLength={200} value={name} onChange={e => setName(e.target.value)} /></label>
