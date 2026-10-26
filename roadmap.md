@@ -1,16 +1,17 @@
 # Roadmap — full app build (uploaded spec)
 
 ## Current request: AI Vision 2.0 (multi-agency, GCI, owner tools) — WhatsApp NOT connected
-- [ ] 1. Agencies + members (hq_admin/owner/agent), agency_id everywhere, assigned agent on leads, Demo Agency backfill, RLS per role
-- [ ] 1b. Onboarding: self sign-up creates agency; HQ creates agency + invites owner; owners invite agents within plan_logins; goal_setting_mode
-- [ ] 2. Deals + GCI (agent/agency share), lead → deal
-- [ ] 3. Agent home (GCI month/year, goal bar, hot leads, today's viewings, follow-ups due, AI daily summary)
-- [ ] 4. Owner home (GCI, agency share, per agent, AI-handled deals, kept vs no-shows, problems), missed-lead alerts, leaderboard, Coach me, Market insights, Hours saved (estimate)
-- [ ] 5. CRM fills itself from every chat (area, budget, timing, score, next step)
-- [ ] 6. Prepare paperwork (checklist + Form F / Ejari draft, "Draft – agent must check")
-- [ ] 7. Usage meter (usage_events, AI replies logged)
-- [ ] 8. Elite Visions HQ screen
-- [ ] Tests for money/limit/goal rules, end-to-end checks
+- [x] 1. Agencies + members (hq_admin/owner/agent), agency_id everywhere, assigned agent on leads, Demo Agency backfill, access rules per role
+- [x] 1b. Onboarding: self sign-up creates agency; HQ creates agency + invites owner; owners invite agents within plan_logins (limit message verified); goal_setting_mode in Settings
+- [x] 2. Deals + GCI (agent/agency share), lead → deal (verified: AED 2M × 2% → 40,000 / 20,000 / 20,000)
+- [x] 3. Agent home (GCI month/year, goal bar, hot leads, today's viewings, follow-ups due, AI daily summary)
+- [x] 4. Owner home, missed-lead alerts (checked when home/HQ opens), leaderboard, Coach me (verified live), Market Insights, Hours saved (estimate)
+- [x] 5. CRM fills itself from every chat (verified: area, budget, timing, score, next step)
+- [x] 6. Prepare paperwork (checklist + Form F / Ejari draft, "Draft – agent must check")
+- [x] 7. Usage meter (one row per AI reply, owner + HQ monthly counts)
+- [x] 8. Elite Visions HQ screen (table, edit plan/fee/status, create agency + invite owner)
+- [x] Tests for money/limit/goal/paperwork/insights/CRM rules (80 passing)
+- [ ] Live check of an invited agent's login and invite emails — not run (would send real emails); needs a real agent email from the user
 
 Keep calculator, Lead Finder, My Listings, AI Reply Rules working as-is. Owner-only unless stated.
 
