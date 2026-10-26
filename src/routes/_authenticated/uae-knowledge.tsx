@@ -1,3 +1,4 @@
+import { useMembership } from '@/hooks/use-membership';
 import { createFileRoute } from '@tanstack/react-router';
 import { queryOptions, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
@@ -50,6 +51,7 @@ function FactCard({ fact, onChanged }: { fact: KnowledgeFact; onChanged: () => v
 
 function KnowledgePage() {
   const { data: facts } = useSuspenseQuery(knowledgeQuery);
+  const membership = useMembership();
   const client = useQueryClient();
   const add = useServerFn(addKnowledge);
   const [topic, setTopic] = useState(''), [text, setText] = useState(''), [source, setSource] = useState('');

@@ -1,3 +1,4 @@
+import { useMembership } from '@/hooks/use-membership';
 import { createFileRoute } from '@tanstack/react-router';
 import { queryOptions, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
@@ -23,6 +24,7 @@ export const Route = createFileRoute('/_authenticated/market-data')({
 
 function MarketDataPage() {
   const { data: rows } = useSuspenseQuery(marketQuery);
+  const membership = useMembership();
   const client = useQueryClient();
   const importFn = useServerFn(importMarketData);
   const fileRef = useRef<HTMLInputElement>(null);
