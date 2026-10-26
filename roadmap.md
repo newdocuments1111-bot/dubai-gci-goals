@@ -1,5 +1,19 @@
 # Roadmap — full app build (uploaded spec)
 
+## Current request: WhatsApp Cloud API (Meta, direct) — NOT STARTED
+- [ ] A. Per-agency WhatsApp settings (phone_number_id, WABA id, display number, status, test-recipient safety list); Demo Agency on Meta test number
+- [ ] A. Secrets WHATSAPP_ACCESS_TOKEN / WHATSAPP_APP_SECRET / WHATSAPP_VERIFY_TOKEN — user adds in Project Settings → Secrets after webhook is live
+- [ ] A. Webhook /api/public/whatsapp/webhook: GET verify, POST X-Hub-Signature-256; text, voice, image, location, buttons, statuses; stored inbox + retry job
+- [ ] A. Shared AI reply logic with Test Chat (ai_paused/flagged/stopped), Graph send, usage_events whatsapp_message + ai_reply, CRM fill
+- [ ] A. Agent takeover replies sent to WhatsApp; 24-hour rule; STOP/unsubscribe/توقف/إلغاء
+- [ ] A. Settings → WhatsApp page: callback URL, verify-token name, status, Send test message
+- [ ] B. Voice notes via media API + existing transcription
+- [ ] C. message_templates page (write, submit, sync); start-message rules (consent log, not stopped, approved, 9am–8pm Dubai, 7-day marketing gap); "Reply STOP to stop"; send queue approve/auto; send log
+- [ ] D. Wake old leads on new listing / price drop
+- [ ] E. Off-plan "New launch" matching
+- [ ] F. Rental renewals 90/60 days to tenant + landlord, agent task, outcome cancels reminders
+- [ ] G. Referral asks X days after close (default 30); referral leads source 'referral'
+
 ## Current request: AI Vision 2.0 (multi-agency, GCI, owner tools) — WhatsApp NOT connected
 - [x] 1. Agencies + members (hq_admin/owner/agent), agency_id everywhere, assigned agent on leads, Demo Agency backfill, access rules per role
 - [x] 1b. Onboarding: self sign-up creates agency; HQ creates agency + invites owner; owners invite agents within plan_logins (limit message verified); goal_setting_mode in Settings
