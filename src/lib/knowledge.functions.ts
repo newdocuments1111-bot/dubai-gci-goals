@@ -16,7 +16,7 @@ export const listKnowledge = createServerFn({ method: 'POST' }).middleware([requ
 });
 
 export const addKnowledge = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).inputValidator(knowledgeSchema).handler(async ({ data, context }) => {
-  await guard(context);
+  await hqGuard(context);
   const { error } = await context.supabase.from('uae_knowledge').insert({ ...data, last_verified: new Date().toISOString().slice(0, 10), needs_verification: false });
   if (error) throw new Error('Could not add the fact.');
   return { success: true };
@@ -24,7 +24,7 @@ export const addKnowledge = createServerFn({ method: 'POST' }).middleware([requi
 
 export const updateKnowledge = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
   .inputValidator(knowledgeSchema.extend({ id: z.string().uuid() })).handler(async ({ data, context }) => {
-    await guard(context);
+    await hqGuard(context);
     const { id, ...fields } = data;
     const { error } = await context.supabase.from('uae_knowledge').update({ ...fields, last_verified: new Date().toISOString().slice(0, 10), needs_verification: false }).eq('id', id);
     if (error) throw new Error('Could not update the fact.');
@@ -33,7 +33,7 @@ export const updateKnowledge = createServerFn({ method: 'POST' }).middleware([re
 
 export const deleteKnowledge = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
   .inputValidator(z.string().uuid()).handler(async ({ data, context }) => {
-    await guard(context);
+    await hqGuard(context);
     const { error } = await context.supabase.from('uae_knowledge').delete().eq('id', data);
     if (error) throw new Error('Could not delete the fact.');
     return { success: true };
