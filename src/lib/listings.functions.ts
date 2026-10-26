@@ -6,7 +6,7 @@ import { z } from 'zod';
 
 export const getListings = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const access = await getAccess(context.supabase, context.userId);
-  const { data, error } = await context.supabase.from('listings').select('*').order('created_at', { ascending: false });
+  const { data, error } = await context.supabase.from('listings').select('*').eq('agency_id', access.agencyId).order('created_at', { ascending: false });
   if (error) throw new Error('Could not load listings.');
   const paths = [...new Set((data ?? []).flatMap(r => [...r.photos, ...r.videos, r.floor_plan]).filter(p => p && !p.startsWith('https://')))];
   const mediaUrls: Record<string,string> = {};
@@ -55,7 +55,7 @@ export const deleteListing = createServerFn({ method: 'POST' }).middleware([requ
 export const confirmListings = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const access = await getAccess(context.supabase, context.userId);
   const last_checked = new Date().toISOString();
-  const { error } = await context.supabase.from('listings').update({ last_checked, needs_check: false, updated_at: last_checked }).not('id','is',null);
+  const { error } = await context.supabase.from('listings').update({ last_checked, needs_check: false, updated_at: last_checked }).eq('agency_id', access.agencyId);
   if (error) throw new Error('Could not confirm listings.');
   return { last_checked };
 });
@@ -82,7 +82,7 @@ export const duplicateListing = createServerFn({ method: 'POST' }).middleware([r
         for (const path of paths) {
           if (path.startsWith('https://')) { result.push(path); continue; }
           const bucket = path.startsWith('photos/') ? 'listing-photos' : 'listing-media';
-          const destination = `${bucket === 'listing-photos' ? 'photos' : 'listings'}/${crypto.randomUUID()}.${path.split('.').pop() || 'bin'}`;
+          const destination = `${bucket === 'listing-photos' ? 'photos' : 'listings'}/${access.agencyId}/${crypto.randomUUID()}.${path.split('.').pop() || 'bin'}`;
           const { error } = await context.supabase.storage.from(bucket).copy(path, destination);
           if (error) throw new Error('Could not copy listing media.');
           copied.push({ bucket, path: destination }); result.push(destination);
@@ -110,7 +110,7 @@ export const getSharePhoto = createServerFn({ method: 'POST' }).middleware([requ
     if (!path.startsWith('listings/')) return { url: '', error: 'Upload this photo to Lovable Cloud before sharing it.' };
     const { data: file, error: downloadError } = await context.supabase.storage.from('listing-media').download(path);
     if (downloadError || !file) throw new Error('Could not prepare photo.');
-    path = `photos/${crypto.randomUUID()}.${first.split('.').pop() || 'jpg'}`;
+    path = `photos/${access.agencyId}/${crypto.randomUUID()}.${first.split('.').pop() || 'jpg'}`;
     const { error: uploadError } = await context.supabase.storage.from('listing-photos').upload(path,file,{ contentType: file.type });
     if (uploadError) throw new Error('Could not prepare photo.');
     const { error: saveError } = await context.supabase.from('listings').update({ photos: [path,...listing.photos.slice(1)] }).eq('id',data);
