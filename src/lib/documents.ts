@@ -18,11 +18,18 @@ export function checklistFor(type: string, opts: { company?: boolean; poa?: bool
 export const clientNameSchema = z.string().trim().min(1, 'Client name is required').max(200)
   .refine(v => !/[/\\]/.test(v), 'No slashes in client names');
 
-/** Vault path: one folder per client inside the private documents bucket. */
-export function documentPath(client: string, filename: string) {
-  const safeClient = client.trim().replace(/[^a-zA-Z0-9 _-]/g, '').slice(0, 100);
+/** Vault folder: one folder per client inside the agency's own folder of the private documents bucket. */
+export function clientFolder(agencyId: string, client: string) {
+  return `${agencyId}/${client.trim().replace(/[^a-zA-Z0-9 _-]/g, '').slice(0, 100) || 'client'}`;
+}
+export function documentPath(agencyId: string, client: string, filename: string) {
   const safeFile = filename.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 200);
-  return `${safeClient}/${Date.now()}-${safeFile}`;
+  return `${clientFolder(agencyId, client)}/${Date.now()}-${safeFile}`;
+}
+/** A checklist item counts as received when an uploaded file name contains its first word. */
+export function documentReceived(item: string, fileNames: string[]) {
+  const key = item.split(' ')[0]!.toLowerCase().replace(/[^a-z]/g, '');
+  return key.length > 2 && fileNames.some(n => n.toLowerCase().includes(key));
 }
 
 /** Compliance records younger than the retention period cannot be deleted on request. */

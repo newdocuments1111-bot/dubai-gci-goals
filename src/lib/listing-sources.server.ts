@@ -9,6 +9,8 @@ import { listingSchema, needsCheck, type ListingInput } from './listings';
  * managed callback at the same 20:00 UTC slot instead of the SQL-only job. */
 export interface ListingSource {
   name: 'hubspot' | 'property-finder';
+  /** Each connected source belongs to exactly one agency. */
+  agencyId: string;
   fetch: () => Promise<Array<{ externalId: string; listing: ListingInput }>>;
 }
 
@@ -19,11 +21,11 @@ export async function syncListingSources(client: SupabaseClient<Database>, sourc
       const rows = (await source.fetch()).map(({ externalId, listing }) => {
         if (!externalId || externalId.length > 200) throw new Error('Invalid external listing identity');
         const validated = listingSchema.parse(listing);
-        return { ...validated, source: source.name, external_id: externalId, needs_check: needsCheck(validated.last_checked), updated_at: new Date().toISOString() };
+        return { ...validated, agency_id: source.agencyId, source: source.name, external_id: externalId, needs_check: needsCheck(validated.last_checked), updated_at: new Date().toISOString() };
       });
       // Explicit lookup avoids conflict inference against a partial index.
       for (const row of rows) {
-        const { data: existing, error: lookupError } = await client.from('listings').select('id').eq('source',row.source).eq('external_id',row.external_id).maybeSingle();
+        const { data: existing, error: lookupError } = await client.from('listings').select('id').eq('agency_id',row.agency_id).eq('source',row.source).eq('external_id',row.external_id).maybeSingle();
         if (lookupError) throw lookupError;
         const result = existing ? await client.from('listings').update(row).eq('id',existing.id) : await client.from('listings').insert(row);
         if (result.error) throw result.error;

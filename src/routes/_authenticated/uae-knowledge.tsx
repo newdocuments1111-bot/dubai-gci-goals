@@ -1,3 +1,4 @@
+import { useMembership } from '@/hooks/use-membership';
 import { createFileRoute } from '@tanstack/react-router';
 import { queryOptions, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
@@ -50,6 +51,7 @@ function FactCard({ fact, onChanged }: { fact: KnowledgeFact; onChanged: () => v
 
 function KnowledgePage() {
   const { data: facts } = useSuspenseQuery(knowledgeQuery);
+  const membership = useMembership();
   const client = useQueryClient();
   const add = useServerFn(addKnowledge);
   const [topic, setTopic] = useState(''), [text, setText] = useState(''), [source, setSource] = useState('');
@@ -57,6 +59,7 @@ function KnowledgePage() {
   const refresh = () => client.invalidateQueries({ queryKey: knowledgeQuery.queryKey });
   return <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
     <h1 className="mb-2 text-3xl font-bold">UAE Knowledge</h1>
+    {!membership.isHq && <p role="status" className="mb-4 rounded-md bg-muted p-3 text-sm">Shared by Elite Visions HQ for every agency — read only.</p>}
     <p className="mb-6 text-sm text-muted-foreground">The AI uses only these facts and always says fees are approximate and the agent will confirm. Facts older than 6 months show "please re-verify".</p>
     <div className="space-y-4">{facts.map(f => <FactCard key={f.id} fact={f} onChanged={refresh} />)}</div>
     <section className="mt-8 rounded-lg border border-dashed border-border p-4">

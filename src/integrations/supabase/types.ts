@@ -14,8 +14,83 @@ export type Database = {
   }
   public: {
     Tables: {
+      agencies: {
+        Row: {
+          created_at: string
+          goal_setting_mode: string
+          id: string
+          monthly_fee_aed: number
+          name: string
+          plan_logins: number
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          goal_setting_mode?: string
+          id?: string
+          monthly_fee_aed?: number
+          name: string
+          plan_logins?: number
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          goal_setting_mode?: string
+          id?: string
+          monthly_fee_aed?: number
+          name?: string
+          plan_logins?: number
+          status?: string
+        }
+        Relationships: []
+      }
+      agency_members: {
+        Row: {
+          agency_id: string
+          annual_gci_goal_aed: number | null
+          created_at: string
+          display_name: string
+          email: string
+          id: string
+          role: string
+          split_percent: number
+          user_id: string
+        }
+        Insert: {
+          agency_id: string
+          annual_gci_goal_aed?: number | null
+          created_at?: string
+          display_name?: string
+          email?: string
+          id?: string
+          role: string
+          split_percent?: number
+          user_id: string
+        }
+        Update: {
+          agency_id?: string
+          annual_gci_goal_aed?: number | null
+          created_at?: string
+          display_name?: string
+          email?: string
+          id?: string
+          role?: string
+          split_percent?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agency_members_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_reply_settings: {
         Row: {
+          agency_id: string
           agency_name: string
           fees: Json
           id: string
@@ -23,6 +98,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          agency_id?: string
           agency_name?: string
           fees?: Json
           id?: string
@@ -30,16 +106,26 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          agency_id?: string
           agency_name?: string
           fees?: Json
           id?: string
           rules?: Json
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ai_reply_settings_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: true
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       alerts: {
         Row: {
+          agency_id: string
           created_at: string
           id: string
           kind: string
@@ -48,6 +134,7 @@ export type Database = {
           read: boolean
         }
         Insert: {
+          agency_id?: string
           created_at?: string
           id?: string
           kind: string
@@ -56,6 +143,7 @@ export type Database = {
           read?: boolean
         }
         Update: {
+          agency_id?: string
           created_at?: string
           id?: string
           kind?: string
@@ -64,6 +152,13 @@ export type Database = {
           read?: boolean
         }
         Relationships: [
+          {
+            foreignKeyName: "alerts_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "alerts_lead_id_fkey"
             columns: ["lead_id"]
@@ -75,11 +170,14 @@ export type Database = {
       }
       app_settings: {
         Row: {
+          agency_id: string
           agency_name: string
           agent_name: string
           compliance_email: string
           holidays: string[]
           id: string
+          minutes_per_ai_reply: number
+          missed_lead_minutes: number
           mortgage_partner: string
           rera_brn: string
           retention_years: number
@@ -90,11 +188,14 @@ export type Database = {
           working_days: string[]
         }
         Insert: {
+          agency_id?: string
           agency_name?: string
           agent_name?: string
           compliance_email?: string
           holidays?: string[]
           id?: string
+          minutes_per_ai_reply?: number
+          missed_lead_minutes?: number
           mortgage_partner?: string
           rera_brn?: string
           retention_years?: number
@@ -105,11 +206,14 @@ export type Database = {
           working_days?: string[]
         }
         Update: {
+          agency_id?: string
           agency_name?: string
           agent_name?: string
           compliance_email?: string
           holidays?: string[]
           id?: string
+          minutes_per_ai_reply?: number
+          missed_lead_minutes?: number
           mortgage_partner?: string
           rera_brn?: string
           retention_years?: number
@@ -119,10 +223,20 @@ export type Database = {
           work_start?: string
           working_days?: string[]
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "app_settings_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: true
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       chat_messages: {
         Row: {
+          agency_id: string
+          author_id: string | null
           content: string
           created_at: string
           id: string
@@ -135,6 +249,8 @@ export type Database = {
           sent: boolean
         }
         Insert: {
+          agency_id?: string
+          author_id?: string | null
           content: string
           created_at?: string
           id?: string
@@ -147,6 +263,8 @@ export type Database = {
           sent?: boolean
         }
         Update: {
+          agency_id?: string
+          author_id?: string | null
           content?: string
           created_at?: string
           id?: string
@@ -160,6 +278,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "chat_messages_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "chat_messages_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: false
@@ -170,6 +295,7 @@ export type Database = {
       }
       consent_log: {
         Row: {
+          agency_id: string
           agreed_to: string
           created_at: string
           how: string
@@ -177,6 +303,7 @@ export type Database = {
           lead_id: string
         }
         Insert: {
+          agency_id?: string
           agreed_to: string
           created_at?: string
           how?: string
@@ -184,6 +311,7 @@ export type Database = {
           lead_id: string
         }
         Update: {
+          agency_id?: string
           agreed_to?: string
           created_at?: string
           how?: string
@@ -192,10 +320,87 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "consent_log_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "consent_log_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deals: {
+        Row: {
+          agency_id: string
+          agent_id: string
+          ai_handled: boolean
+          closed_at: string | null
+          commission_percent: number
+          created_at: string
+          deal_type: string
+          id: string
+          lead_id: string | null
+          listing_id: string | null
+          price_aed: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          agency_id?: string
+          agent_id?: string
+          ai_handled?: boolean
+          closed_at?: string | null
+          commission_percent: number
+          created_at?: string
+          deal_type: string
+          id?: string
+          lead_id?: string | null
+          listing_id?: string | null
+          price_aed: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          agency_id?: string
+          agent_id?: string
+          ai_handled?: boolean
+          closed_at?: string | null
+          commission_percent?: number
+          created_at?: string
+          deal_type?: string
+          id?: string
+          lead_id?: string | null
+          listing_id?: string | null
+          price_aed?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deals_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
             referencedColumns: ["id"]
           },
         ]
@@ -221,6 +426,7 @@ export type Database = {
       document_log: {
         Row: {
           action: string
+          agency_id: string
           client_name: string
           created_at: string
           id: string
@@ -228,6 +434,7 @@ export type Database = {
         }
         Insert: {
           action: string
+          agency_id?: string
           client_name: string
           created_at?: string
           id?: string
@@ -235,15 +442,25 @@ export type Database = {
         }
         Update: {
           action?: string
+          agency_id?: string
           client_name?: string
           created_at?: string
           id?: string
           path?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "document_log_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       follow_ups: {
         Row: {
+          agency_id: string
           created_at: string
           draft: string
           id: string
@@ -254,6 +471,7 @@ export type Database = {
           status: string
         }
         Insert: {
+          agency_id?: string
           created_at?: string
           draft: string
           id?: string
@@ -264,6 +482,7 @@ export type Database = {
           status?: string
         }
         Update: {
+          agency_id?: string
           created_at?: string
           draft?: string
           id?: string
@@ -275,6 +494,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "follow_ups_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "follow_ups_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: false
@@ -285,7 +511,11 @@ export type Database = {
       }
       leads: {
         Row: {
+          agency_id: string
           ai_paused: boolean
+          area: string
+          assigned_agent_id: string | null
+          budget: string
           created_at: string
           flagged: boolean
           hubspot_id: string | null
@@ -293,16 +523,22 @@ export type Database = {
           last_message_at: string | null
           learned: Json
           name: string
+          next_step: string
           opted_in: boolean
           phone: string
           score: string
           source: string
           stopped: boolean
           timezone: string
+          timing: string
           type: string
         }
         Insert: {
+          agency_id?: string
           ai_paused?: boolean
+          area?: string
+          assigned_agent_id?: string | null
+          budget?: string
           created_at?: string
           flagged?: boolean
           hubspot_id?: string | null
@@ -310,16 +546,22 @@ export type Database = {
           last_message_at?: string | null
           learned?: Json
           name?: string
+          next_step?: string
           opted_in?: boolean
           phone?: string
           score?: string
           source?: string
           stopped?: boolean
           timezone?: string
+          timing?: string
           type?: string
         }
         Update: {
+          agency_id?: string
           ai_paused?: boolean
+          area?: string
+          assigned_agent_id?: string | null
+          budget?: string
           created_at?: string
           flagged?: boolean
           hubspot_id?: string | null
@@ -327,18 +569,29 @@ export type Database = {
           last_message_at?: string | null
           learned?: Json
           name?: string
+          next_step?: string
           opted_in?: boolean
           phone?: string
           score?: string
           source?: string
           stopped?: boolean
           timezone?: string
+          timing?: string
           type?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "leads_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       listings: {
         Row: {
+          agency_id: string
           agent_highlights: string
           amenity_gym: boolean | null
           amenity_kids_play_area: boolean | null
@@ -387,6 +640,7 @@ export type Database = {
           view: string
         }
         Insert: {
+          agency_id?: string
           agent_highlights?: string
           amenity_gym?: boolean | null
           amenity_kids_play_area?: boolean | null
@@ -435,6 +689,7 @@ export type Database = {
           view?: string
         }
         Update: {
+          agency_id?: string
           agent_highlights?: string
           amenity_gym?: boolean | null
           amenity_kids_play_area?: boolean | null
@@ -482,7 +737,15 @@ export type Database = {
           videos?: string[]
           view?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "listings_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       market_transactions: {
         Row: {
@@ -522,6 +785,7 @@ export type Database = {
       }
       owners: {
         Row: {
+          agency_id: string
           agreed_to_updates: boolean
           area: string
           building: string
@@ -535,6 +799,7 @@ export type Database = {
           update_frequency: string
         }
         Insert: {
+          agency_id?: string
           agreed_to_updates?: boolean
           area?: string
           building?: string
@@ -548,6 +813,7 @@ export type Database = {
           update_frequency?: string
         }
         Update: {
+          agency_id?: string
           agreed_to_updates?: boolean
           area?: string
           building?: string
@@ -560,10 +826,19 @@ export type Database = {
           phone?: string
           update_frequency?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "owners_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payment_schedules: {
         Row: {
+          agency_id: string
           amount_aed: number
           created_at: string
           due_date: string
@@ -575,6 +850,7 @@ export type Database = {
           paid: boolean
         }
         Insert: {
+          agency_id?: string
           amount_aed: number
           created_at?: string
           due_date: string
@@ -586,6 +862,7 @@ export type Database = {
           paid?: boolean
         }
         Update: {
+          agency_id?: string
           amount_aed?: number
           created_at?: string
           due_date?: string
@@ -597,6 +874,13 @@ export type Database = {
           paid?: boolean
         }
         Relationships: [
+          {
+            foreignKeyName: "payment_schedules_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "payment_schedules_lead_id_fkey"
             columns: ["lead_id"]
@@ -643,8 +927,38 @@ export type Database = {
         }
         Relationships: []
       }
+      usage_events: {
+        Row: {
+          agency_id: string
+          created_at: string
+          id: string
+          type: string
+        }
+        Insert: {
+          agency_id: string
+          created_at?: string
+          id?: string
+          type: string
+        }
+        Update: {
+          agency_id?: string
+          created_at?: string
+          id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usage_events_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       viewings: {
         Row: {
+          agency_id: string
           created_at: string
           followup_sent: boolean
           id: string
@@ -656,6 +970,7 @@ export type Database = {
           status: string
         }
         Insert: {
+          agency_id?: string
           created_at?: string
           followup_sent?: boolean
           id?: string
@@ -667,6 +982,7 @@ export type Database = {
           status?: string
         }
         Update: {
+          agency_id?: string
           created_at?: string
           followup_sent?: boolean
           id?: string
@@ -678,6 +994,13 @@ export type Database = {
           status?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "viewings_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "viewings_lead_id_fkey"
             columns: ["lead_id"]
@@ -699,14 +1022,51 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      agency_booked_times: { Args: never; Returns: string[] }
       approve_chat_follow_up: {
         Args: { p_draft: string; p_id: string }
         Returns: undefined
       }
+      can_access_lead: { Args: { _lead: string }; Returns: boolean }
+      check_missed_leads: { Args: never; Returns: number }
+      create_my_agency: {
+        Args: { _display_name: string; _name: string }
+        Returns: string
+      }
       draft_old_lead_revivals: { Args: never; Returns: number }
       draft_scheduled_reminders: { Args: never; Returns: undefined }
+      hq_agency_overview: {
+        Args: never
+        Returns: {
+          agency_id: string
+          agency_name: string
+          ai_replies: number
+          ai_replies_month: number
+          closed_gci_aed: number
+          deals: number
+          flagged_chats: number
+          leads: number
+          logins_used: number
+          missed_leads: number
+          monthly_fee_aed: number
+          plan_logins: number
+          status: string
+          viewings: number
+          whatsapp_month: number
+        }[]
+      }
+      is_agency_member: { Args: { _agency: string }; Returns: boolean }
+      is_agency_owner: { Args: { _agency: string }; Returns: boolean }
+      is_hq_admin: { Args: never; Returns: boolean }
+      my_agency_id: { Args: never; Returns: string }
       refresh_listing_checks: { Args: never; Returns: number }
       reserve_demo_message: { Args: { p_visitor: string }; Returns: number }
+      set_goal_setting_mode: { Args: { _mode: string }; Returns: undefined }
+      set_my_goal: { Args: { _goal: number }; Returns: undefined }
+      storage_path_access: {
+        Args: { _bucket: string; _name: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

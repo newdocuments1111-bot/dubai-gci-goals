@@ -1,3 +1,4 @@
+import { useMembership } from '@/hooks/use-membership';
 import { createFileRoute } from '@tanstack/react-router';
 import { queryOptions, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
@@ -23,6 +24,7 @@ export const Route = createFileRoute('/_authenticated/market-data')({
 
 function MarketDataPage() {
   const { data: rows } = useSuspenseQuery(marketQuery);
+  const membership = useMembership();
   const client = useQueryClient();
   const importFn = useServerFn(importMarketData);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -49,6 +51,7 @@ function MarketDataPage() {
 
   return <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
     <h1 className="mb-2 text-3xl font-bold">Market Data</h1>
+    {!membership.isHq && <p role="status" className="mb-4 rounded-md bg-muted p-3 text-sm">Shared by Elite Visions HQ for every agency — read only.</p>}
     <p className="mb-6 text-sm text-muted-foreground">Real Dubai transactions only. Value updates and market facts use this data — never predictions. Each import shows its source and date.</p>
     <section className="mb-6 flex flex-wrap items-end gap-3 rounded-lg border border-border p-4">
       <label className="text-sm">Source<Input className="mt-1 w-64" maxLength={200} value={source} onChange={e => setSource(e.target.value)} /></label>

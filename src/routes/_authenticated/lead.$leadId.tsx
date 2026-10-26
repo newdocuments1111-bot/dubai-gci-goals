@@ -9,6 +9,9 @@ import { getLeadThread, saveLeadToHubSpot, updateLead, recordContactConsent } fr
 import { Checkbox } from '@/components/ui/checkbox';
 import { LeadChat } from '@/components/LeadChat';
 import { LeadDocuments } from '@/components/LeadDocuments';
+import { LeadDealPanel } from '@/components/LeadDealPanel';
+import { CoachPanel } from '@/components/CoachPanel';
+import { useMembership } from '@/hooks/use-membership';
 import { timezoneFromPhone } from '@/lib/leads-app';
 
 const threadQuery = (id: string) => queryOptions({ queryKey: ['lead', id], queryFn: () => getLeadThread({ data: id }) });
@@ -32,7 +35,7 @@ function LeadPage() {
   const [name, setName] = useState(lead.name), [phone, setPhone] = useState(lead.phone), [source, setSource] = useState(lead.source);
   const [busy, setBusy] = useState(false), [message, setMessage] = useState(''), [error, setError] = useState('');
   const refresh = () => client.invalidateQueries({ queryKey: ['lead', leadId] });
-  const learned = lead.learned as Record<string, unknown>;
+  const membership = useMembership();
 
   return <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
     <Button asChild variant="ghost" className="mb-4 px-0"><Link to="/leads"><ArrowLeft className="size-4" />Back to leads</Link></Button>
@@ -52,20 +55,25 @@ function LeadPage() {
           try { await update({ data: { id: leadId, name, phone, source: source as 'Other', timezone: timezoneFromPhone(phone) } }); refresh(); } finally { setBusy(false); } }}>
           <Save className="size-4" />Save
         </Button>
-        <Button variant="outline" disabled={busy} onClick={async () => { setBusy(true); setError(''); setMessage('');
+        {membership.isHq && <Button variant="outline" disabled={busy} onClick={async () => { setBusy(true); setError(''); setMessage('');
           try { await toHubSpot({ data: leadId }); setMessage('Saved to HubSpot with the chat summary.'); }
           catch (e) { setError(e instanceof Error ? e.message : 'Could not save to HubSpot.'); } finally { setBusy(false); } }}>
           Save to HubSpot
-        </Button>
+        </Button>}
       </div>
       {message && <p role="status" className="text-sm text-primary sm:col-span-4">{message}</p>}
       {error && <p role="alert" className="text-sm text-destructive sm:col-span-4">{error}</p>}
     </section>
-    <section className="mb-4 rounded-lg border border-border p-4 text-sm">
-      <h2 className="mb-1 font-semibold">What the AI learned</h2>
-      <p className="text-muted-foreground">{['budget', 'location', 'move_in'].map(k => `${k.replace('_', ' ')}: ${learned[k] ? String(learned[k]) : '—'}`).join(' · ')}</p>
+    <section aria-label="Lead record" className="mb-4 rounded-lg border border-border p-4 text-sm">
+      <h2 className="mb-1 font-semibold">Lead record <span className="text-xs font-normal text-muted-foreground">— fills itself from every chat</span></h2>
+      <dl className="grid gap-2 sm:grid-cols-5">
+        {([['Area', lead.area], ['Budget', lead.budget], ['Timing', lead.timing], ['Score', lead.score], ['Next step', lead.next_step]] as const).map(([k, v]) =>
+          <div key={k} className={k === 'Next step' ? 'sm:col-span-5' : ''}><dt className="text-xs text-muted-foreground">{k}</dt><dd>{v || '—'}</dd></div>)}
+      </dl>
     </section>
+    <LeadDealPanel lead={lead} onChanged={refresh} />
     <LeadChat lead={lead} messages={messages} onChanged={refresh} playAsClient />
+    {messages.some(m => m.role === 'owner') && <CoachPanel leadId={leadId} />}
     <label className="mt-4 flex items-center gap-2 text-sm"><Checkbox checked={lead.opted_in} disabled={busy || lead.stopped} onCheckedChange={async value => {
       setBusy(true); setError('');
       try { await consent({ data: { id: leadId, agreed: value === true } }); refresh(); }

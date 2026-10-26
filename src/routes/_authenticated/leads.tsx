@@ -9,6 +9,10 @@ import { Input } from '@/components/ui/input';
 import { createLead, listLeads } from '@/lib/leads-app.functions';
 import { timezoneFromPhone } from '@/lib/leads-app';
 import { useNavigate } from '@tanstack/react-router';
+import { useQuery } from '@tanstack/react-query';
+import { useMembership } from '@/hooks/use-membership';
+import { getDealOptions } from '@/lib/deals.functions';
+import { memberName } from '@/lib/agency';
 
 export const leadsQuery = queryOptions({ queryKey: ['leads'], queryFn: () => listLeads() });
 
@@ -28,11 +32,14 @@ function LeadsPage() {
   const { data: leads } = useSuspenseQuery(leadsQuery);
   const create = useServerFn(createLead);
   const navigate = useNavigate();
+  const membership = useMembership();
+  const { data: options } = useQuery({ queryKey: ['deal-options'], queryFn: () => getDealOptions(), enabled: membership.isOwner });
+  const agentName = (id: string | null) => memberName(options?.members.find(m => m.user_id === id));
   const [name, setName] = useState(''), [phone, setPhone] = useState(''), [busy, setBusy] = useState(false), [error, setError] = useState('');
 
   return <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
-    <div className="mb-2 flex flex-wrap items-center justify-between gap-3"><h1 className="text-3xl font-bold">Leads</h1><Button variant="outline" onClick={() => downloadCsv(leadsCsv(leads))}><Download className="size-4" />Export to CSV</Button></div>
-    <p className="mb-6 text-sm text-muted-foreground">Every conversation becomes a lead. Hot first. Scores use the same 3 signs as the Lead Finder: budget, location, move-in time.</p>
+    <div className="mb-2 flex flex-wrap items-center justify-between gap-3"><h1 className="text-3xl font-bold">Leads</h1>{membership.isOwner && <Button variant="outline" onClick={() => downloadCsv(leadsCsv(leads))}><Download className="size-4" />Export to CSV</Button>}</div>
+    <p className="mb-6 text-sm text-muted-foreground">{membership.isOwner ? 'All leads in your agency.' : 'Leads assigned to you.'} Every conversation becomes a lead. Hot first. Scores use the same 3 signs as the Lead Finder: budget, location, move-in time.</p>
     <section className="mb-6 flex flex-wrap items-end gap-3 rounded-lg border border-border p-4">
       <label className="text-sm">Name<Input className="mt-1 w-48" maxLength={200} value={name} onChange={e => setName(e.target.value)} /></label>
       <label className="text-sm">Phone (with country code)<Input className="mt-1 w-48" maxLength={50} placeholder="+971…" value={phone} onChange={e => setPhone(e.target.value)} /></label>
@@ -55,9 +62,11 @@ function LeadsPage() {
           {lead.flagged && <span className="rounded bg-warning/15 px-2 py-0.5 text-xs text-warning-foreground">Needs your confirmation</span>}
           {lead.ai_paused && <span className="rounded bg-muted px-2 py-0.5 text-xs">You are replying</span>}
           {lead.stopped && <span className="rounded bg-muted px-2 py-0.5 text-xs">Stopped</span>}
+          {membership.isOwner && options && <span className="ml-auto text-xs text-muted-foreground">Agent: {agentName(lead.assigned_agent_id)}</span>}
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
-          {['budget', 'location', 'move_in'].map(k => learned[k] ? `${k.replace('_', ' ')}: ${String(learned[k])}` : null).filter(Boolean).join(' · ') || 'Nothing learned yet'}
+          {[lead.area && `area: ${lead.area}`, lead.budget && `budget: ${lead.budget}`, lead.timing && `timing: ${lead.timing}`].filter(Boolean).join(' · ') || ['budget', 'location', 'move_in'].map(k => learned[k] ? `${k.replace('_', ' ')}: ${String(learned[k])}` : null).filter(Boolean).join(' · ') || 'Nothing learned yet'}
+          {lead.next_step && <span className="block text-xs">Next step: {lead.next_step}</span>}
         </p>
       </Link>;
     })}</div>

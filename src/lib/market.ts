@@ -39,3 +39,29 @@ export function salesForArea(rows: MarketTransaction[], area: string, building?:
   const scoped = match.length ? match : rows.filter(r => r.area === area);
   return scoped.sort((a, b) => b.transaction_date.localeCompare(a.transaction_date));
 }
+
+export type InsightRow = { area: string; propertyType: string; months: { month: string; avgPpsf: number; count: number }[]; latestPpsf: number; trendPct: number | null; sales: number };
+
+/** Average price per sq ft by area, property type and month (YYYY-MM), with the change between the last two months that have sales. */
+export function marketInsights(rows: Pick<MarketTransaction, 'area' | 'property_type' | 'transaction_date' | 'size_sqft' | 'price_aed'>[]): InsightRow[] {
+  const groups = new Map<string, { area: string; type: string; months: Map<string, { sum: number; count: number }> }>();
+  for (const r of rows) {
+    const size = Number(r.size_sqft), price = Number(r.price_aed);
+    if (!(size > 0) || !(price > 0)) continue;
+    const type = r.property_type.trim() || 'Any type';
+    const key = `${r.area.trim().toLowerCase()}|${type.toLowerCase()}`;
+    const g = groups.get(key) ?? { area: r.area.trim(), type, months: new Map() };
+    const month = r.transaction_date.slice(0, 7);
+    const m = g.months.get(month) ?? { sum: 0, count: 0 };
+    m.sum += price / size; m.count += 1;
+    g.months.set(month, m); groups.set(key, g);
+  }
+  return [...groups.values()].map(g => {
+    const months = [...g.months].sort(([a], [b]) => a.localeCompare(b)).map(([month, v]) => ({ month, avgPpsf: Math.round(v.sum / v.count), count: v.count }));
+    const last = months.at(-1)!, prev = months.at(-2);
+    return {
+      area: g.area, propertyType: g.type, months, latestPpsf: last.avgPpsf, sales: months.reduce((a, m) => a + m.count, 0),
+      trendPct: prev && prev.avgPpsf > 0 ? Math.round(((last.avgPpsf - prev.avgPpsf) / prev.avgPpsf) * 1000) / 10 : null,
+    };
+  }).sort((a, b) => a.area.localeCompare(b.area) || a.propertyType.localeCompare(b.propertyType));
+}

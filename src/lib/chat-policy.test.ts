@@ -59,3 +59,12 @@ describe('appointment availability from Settings', () => {
     expect(calculateFreeSlots(settings, ['2026-10-19T05:15:00.000Z'], now)).not.toContain(slots[1]);
   });
 });
+import { crmFields } from './chat-policy';
+describe('CRM fills itself', () => {
+  it('copies area, budget, timing and next step from the chat, keeping earlier values when nothing new is said', () => {
+    const previous = { area: 'JVC', budget: '', timing: 'Q1', next_step: 'Call back' };
+    expect(crmFields({ location: 'Dubai Marina', budget: 'AED 2.5M' }, 'Send 2 Marina options', previous))
+      .toEqual({ area: 'Dubai Marina', budget: 'AED 2.5M', timing: 'Q1', next_step: 'Send 2 Marina options' });
+    expect(crmFields({}, '', previous)).toEqual(previous);
+  });
+});
