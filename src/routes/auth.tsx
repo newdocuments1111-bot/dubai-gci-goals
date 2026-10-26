@@ -2,15 +2,14 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { isOwnerEmail } from "@/lib/owner";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Owner login — Dubai AI GCI" },
-      { name: "description", content: "Owner sign-in for the Dubai AI GCI lead finder." },
-      { property: "og:title", content: "Owner login — Dubai AI GCI" },
-      { property: "og:description", content: "Owner sign-in for the Dubai AI GCI lead finder." },
+      { title: "Sign in or create your agency — Dubai AI GCI" },
+      { name: "description", content: "Sign in to Dubai AI GCI, or create a new agency account for your team." },
+      { property: "og:title", content: "Sign in — Dubai AI GCI" },
+      { property: "og:description", content: "Agency sign-in and sign-up for the Dubai AI GCI assistant." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
@@ -19,43 +18,62 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+const field = "mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring";
+
 function AuthPage() {
   const navigate = useNavigate();
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [agencyName, setAgencyName] = useState("");
+  const [yourName, setYourName] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
-    setError(null);
-    if (!isOwnerEmail(email)) return setError("Only the owner can sign in.");
-    setBusy(true);
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    setError(null); setNotice(null); setBusy(true);
+    if (mode === "signin") {
+      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      setBusy(false);
+      if (error) return setError(/confirm/i.test(error.message) ? "Please confirm your email first — check your inbox." : "Wrong email or password.");
+      return navigate({ to: "/dashboard", replace: true });
+    }
+    if (!agencyName.trim()) { setBusy(false); return setError("Enter your agency name."); }
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim(), password,
+      options: { emailRedirectTo: `${window.location.origin}/onboarding`, data: { agency_name: agencyName.trim(), display_name: yourName.trim() } },
+    });
     setBusy(false);
-    if (error) return setError("Wrong email or password.");
-    navigate({ to: "/", replace: true });
+    if (error) return setError(/weak|pwned|leaked/i.test(error.message) ? "Choose a stronger password — this one is too easy to guess." : error.message);
+    if (data.session) return navigate({ to: "/onboarding", replace: true });
+    setNotice("Check your email and click the link to confirm. Then sign in to finish creating your agency.");
   };
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4">
       <form onSubmit={submit} className="w-full max-w-sm space-y-4 rounded-lg border border-border bg-card p-6">
         <div>
-          <h1 className="text-2xl font-bold">Owner login</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Private access to your real HubSpot leads.</p>
+          <h1 className="text-2xl font-bold">{mode === "signin" ? "Sign in" : "Create your agency"}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{mode === "signin" ? "Owners and agents sign in here." : "You become the owner and can invite your agents."}</p>
         </div>
-        <label className="block">
-          <span className="text-xs font-medium text-muted-foreground">Email</span>
-          <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
-        </label>
-        <label className="block">
-          <span className="text-xs font-medium text-muted-foreground">Password</span>
-          <input type="password" required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
-        </label>
+        {mode === "signup" && <>
+          <label className="block"><span className="text-xs font-medium text-muted-foreground">Agency name</span>
+            <input required maxLength={200} value={agencyName} onChange={(e) => setAgencyName(e.target.value)} className={field} /></label>
+          <label className="block"><span className="text-xs font-medium text-muted-foreground">Your name</span>
+            <input maxLength={200} value={yourName} onChange={(e) => setYourName(e.target.value)} className={field} /></label>
+        </>}
+        <label className="block"><span className="text-xs font-medium text-muted-foreground">Email</span>
+          <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={field} /></label>
+        <label className="block"><span className="text-xs font-medium text-muted-foreground">Password</span>
+          <input type="password" required minLength={mode === "signup" ? 8 : undefined} autoComplete={mode === "signin" ? "current-password" : "new-password"} value={password} onChange={(e) => setPassword(e.target.value)} className={field} /></label>
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-        <Button type="submit" className="w-full" disabled={busy}>{busy ? "Signing in…" : "Sign in"}</Button>
+        {notice && <p role="status" className="text-sm text-primary">{notice}</p>}
+        <Button type="submit" className="w-full" disabled={busy}>{busy ? "Please wait…" : mode === "signin" ? "Sign in" : "Create agency account"}</Button>
+        <button type="button" className="block w-full text-center text-sm text-primary underline" onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(null); setNotice(null); }}>
+          {mode === "signin" ? "New agency? Create an account" : "Already have a login? Sign in"}
+        </button>
         <Link to="/" className="block text-center text-sm text-muted-foreground underline">Back to calculator</Link>
       </form>
     </main>
