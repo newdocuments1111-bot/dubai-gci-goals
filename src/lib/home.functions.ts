@@ -42,7 +42,7 @@ export const getAgentHome = createServerFn({ method: 'POST' }).middleware([requi
     for (const m of last ?? []) { if (seen.has(m.lead_id)) continue; seen.add(m.lead_id); if (m.role === 'client') waitingOnMe.add(m.lead_id); }
   }
   const name = (id: string) => leads.find(l => l.id === id)?.name || 'A lead';
-  const needsMe: { text: string; leadId?: string }[] = [
+  const needsMe: { text: string; leadId?: string | undefined }[] = [
     ...missed.map(a => ({ text: a.message, leadId: a.lead_id ?? undefined })),
     ...[...waitingOnMe].map(id => ({ text: `Reply to ${name(id)} — you took over this chat.`, leadId: id })),
     ...leads.filter(l => l.flagged).map(l => ({ text: `Check ${l.name || 'a lead'} — the AI flagged a question for you.`, leadId: l.id })),
@@ -103,7 +103,7 @@ export const getOwnerHome = createServerFn({ method: 'POST' }).middleware([requi
     viewings: viewings.filter(v => v.lead_id && leadOwner.get(v.lead_id) === m.user_id && v.status !== 'cancelled').length,
   })));
 
-  const problems: { text: string; leadId?: string; kind: string }[] = [
+  const problems: { text: string; leadId?: string | undefined; kind: string }[] = [
     ...(alertsRes.data ?? []).map(x => ({ text: x.kind === 'aml' ? `⚠️ ${x.message}` : x.message, leadId: x.lead_id ?? undefined, kind: x.kind })),
     ...leads.filter(l => l.flagged).map(l => ({ text: `Flagged chat: ${l.name || 'a lead'} asked something the AI should not answer alone.`, leadId: l.id, kind: 'flagged' })),
     ...leads.filter(l => !l.assigned_agent_id).map(l => ({ text: `${l.name || 'A lead'} has no agent assigned.`, leadId: l.id, kind: 'unassigned' })),
