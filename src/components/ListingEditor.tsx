@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { emptyListing, listingSchema, type Listing, type ListingInput } from '@/lib/listings';
 import { saveListing } from '@/lib/listings.functions';
 import { ListingAiFields } from './ListingAiFields';
+import { useMembership } from '@/hooks/use-membership';
 
 export function ListingEditor({ listing, mediaUrls, onClose, onSaved }: { listing?: Listing | undefined; mediaUrls: Record<string,string>; onClose: () => void; onSaved: () => Promise<void> }) {
   const [form, setForm] = useState<ListingInput>(listing ? listingSchema.parse(listing) : emptyListing());
@@ -17,6 +18,7 @@ export function ListingEditor({ listing, mediaUrls, onClose, onSaved }: { listin
   const [previews, setPreviews] = useState<Record<string,string>>(mediaUrls);
   const [uploaded, setUploaded] = useState<string[]>([]);
   const save = useServerFn(saveListing);
+  const { agencyId } = useMembership();
   const set = <K extends keyof ListingInput>(key: K, value: ListingInput[K]) => setForm(f => ({ ...f, [key]: value }));
   async function cleanup(paths: string[]) {
     for (const bucket of ['listing-media','listing-photos']) {
@@ -33,7 +35,7 @@ export function ListingEditor({ listing, mediaUrls, onClose, onSaved }: { listin
         const validType = kind === 'floor_plan' ? file.type === 'application/pdf' || file.type.startsWith('image/') : file.type.startsWith(kind === 'photos' ? 'image/' : 'video/');
         if (file.size > 50 * 1024 * 1024 || !validType) throw new Error('Choose valid media files under 50 MB.');
         const ext = file.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || 'bin';
-        const path = `${kind === 'photos' ? 'photos' : 'listings'}/${crypto.randomUUID()}.${ext}`;
+        const path = `${kind === 'photos' ? 'photos' : 'listings'}/${agencyId}/${crypto.randomUUID()}.${ext}`;
         const { error } = await supabase.storage.from(kind === 'photos' ? 'listing-photos' : 'listing-media').upload(path, file, { contentType: file.type });
         if (error) throw new Error('Upload failed. Please try again.');
         paths.push(path);
