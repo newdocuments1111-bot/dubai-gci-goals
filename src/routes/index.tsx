@@ -95,10 +95,10 @@ function Index() {
           </div>
            <div className="flex flex-wrap justify-end gap-2">
            <Button asChild variant="outline" size="sm"><Link to="/demo">Try the AI demo</Link></Button>
-           {isOwnerEmail(session.email) && <Button asChild variant="outline" size="sm"><Link to="/listings">My listings</Link></Button>}
+           {session.email && <Button asChild variant="outline" size="sm"><Link to="/dashboard">My home</Link></Button>}
            {session.email
             ? <Button variant="outline" size="sm" onClick={async () => { await supabase.auth.signOut(); }}>Sign out</Button>
-             : <Button asChild variant="outline" size="sm"><Link to="/auth">Owner login</Link></Button>}
+             : <Button asChild variant="outline" size="sm"><Link to="/auth">Agency login</Link></Button>}
            </div>
         </header>
 
@@ -169,7 +169,7 @@ function Index() {
                 <Num label="Listings → deals" value={rates.listingsToDeals} onChange={setRate("listingsToDeals")} suffix="%" max={100} />
               </div>
               <p className="mt-3 text-xs text-muted-foreground">These % are examples. Change them to your own.</p>
-              {isOwnerEmail(session.email) && (
+              {Boolean(session.email) && (
                 <Button variant="outline" size="sm" className="mt-3" disabled={loadingRates} onClick={() => void useRealRates()}>
                   {loadingRates ? "Loading…" : "Use my real rates"}
                 </Button>
