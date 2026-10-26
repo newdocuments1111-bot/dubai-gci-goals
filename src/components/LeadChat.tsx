@@ -11,6 +11,9 @@ import { ChatMediaInput } from './ChatMediaInput';
 export function LeadChat({ lead, messages, onChanged, playAsClient }: { lead: Lead; messages: (ChatMessage & { media_url?: string | null })[]; onChanged: () => void; playAsClient: boolean }) {
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false), [error, setError] = useState('');
+  // In Test Chat you can play the client, or reply as yourself (the agent) after taking over.
+  const [asClient, setAsClient] = useState(playAsClient && !lead.ai_paused);
+  useEffect(() => { setAsClient(playAsClient && !lead.ai_paused); }, [lead.ai_paused, playAsClient]);
   const sendClient = useServerFn(sendClientMessage), sendOwner = useServerFn(sendOwnerMessage), pause = useServerFn(setAiPaused);
   const boxRef = useRef<HTMLTextAreaElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
@@ -22,7 +25,7 @@ export function LeadChat({ lead, messages, onChanged, playAsClient }: { lead: Le
     if (!content || busy) return;
     setBusy(true); setError('');
     try {
-      if (playAsClient) await sendClient({ data: { leadId: lead.id, content } });
+      if (asClient) await sendClient({ data: { leadId: lead.id, content } });
       else await sendOwner({ data: { leadId: lead.id, content } });
       setText(''); onChanged();
     } catch (e) { setError(e instanceof Error ? e.message : 'Could not send.'); }
@@ -54,10 +57,15 @@ export function LeadChat({ lead, messages, onChanged, playAsClient }: { lead: Le
       ))}
       <div ref={endRef} />
     </div>
-    {playAsClient && <ChatMediaInput key={lead.id} leadId={lead.id} onChanged={onChanged} disabled={busy} />}
+    {playAsClient && <div className="flex items-center gap-2 border-t border-border px-3 pt-2 text-xs" role="radiogroup" aria-label="Write as">
+      <span className="text-muted-foreground">Write as:</span>
+      {([[true, 'Client (test)'], [false, 'Me (agent)']] as const).map(([value, label]) => <button key={label} type="button" role="radio" aria-checked={asClient === value} onClick={() => setAsClient(value)}
+        className={`rounded-md px-2 py-1 ${asClient === value ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>{label}</button>)}
+    </div>}
+    {asClient && <ChatMediaInput key={lead.id} leadId={lead.id} onChanged={onChanged} disabled={busy} />}
     <div className="flex items-end gap-2 border-t border-border p-3">
-      <textarea ref={boxRef} aria-label={playAsClient ? 'Write as the client' : 'Write as yourself'} rows={1} maxLength={10000}
-        placeholder={playAsClient ? 'Write as the client…' : 'Write your reply…'}
+      <textarea ref={boxRef} aria-label={asClient ? 'Write as the client' : 'Write as yourself'} rows={1} maxLength={10000}
+        placeholder={asClient ? 'Write as the client…' : 'Write your reply…'}
         className="max-h-32 min-h-10 flex-1 resize-y rounded-md border border-input bg-background px-3 py-2 text-sm"
         value={text} onChange={e => setText(e.target.value)}
         onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send(); } }} />
