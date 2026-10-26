@@ -14,6 +14,8 @@ export const settingsSchema = z.object({
   compliance_email: z.string().trim().max(200).refine(v => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), 'Enter a valid email'),
   retention_years: z.number().int().min(1).max(30),
   mortgage_partner: z.string().trim().max(200),
+  missed_lead_minutes: z.number().int().min(1).max(1440),
+  minutes_per_ai_reply: z.number().min(0).max(120),
 });
 export type AppSettings = z.infer<typeof settingsSchema>;
 
@@ -23,6 +25,7 @@ export const defaultSettings: AppSettings = {
   work_start: '09:00', work_end: '18:00', viewing_minutes: 30,
   holidays: ['2026-01-01','2026-03-20','2026-03-21','2026-03-22','2026-05-27','2026-05-28','2026-06-26','2026-08-30','2026-12-01','2026-12-02','2026-12-03'],
   compliance_email: '', retention_years: 5, mortgage_partner: '',
+  missed_lead_minutes: 15, minutes_per_ai_reply: 2,
 };
 
 /** True when the date (YYYY-MM-DD) is a working day and not a holiday. */
