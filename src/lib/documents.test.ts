@@ -20,8 +20,8 @@ describe('checklistFor', () => {
 
 describe('documentPath', () => {
   it('uses one folder per client and strips unsafe characters', () => {
-    expect(documentPath('Jane Doe', 'passport copy.pdf')).toMatch(/^Jane Doe\/\d+-passport_copy\.pdf$/);
-    expect(documentPath('a/b', 'x.pdf')).not.toContain('a/b/');
+    expect(documentPath('agency-1', 'Jane Doe', 'passport copy.pdf')).toMatch(/^agency-1\/Jane Doe\/\d+-passport_copy\.pdf$/);
+    expect(documentPath('agency-1', 'a/b', 'x.pdf')).not.toContain('a/b/');
   });
 });
 
