@@ -6,8 +6,8 @@ import { z } from 'zod';
 const guard = (context: { supabase: Parameters<typeof getAccess>[0]; userId: string }) => getAccess(context.supabase, context.userId);
 
 export const listFollowUps = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
-  await guard(context);
-  const { data, error } = await context.supabase.from('follow_ups').select('*, leads(name)').order('created_at', { ascending: false });
+  const access = await guard(context);
+  const { data, error } = await context.supabase.from('follow_ups').select('*, leads(name)').eq('agency_id', access.agencyId).order('created_at', { ascending: false });
   if (error) throw new Error('Could not load follow-ups.');
   return data;
 });

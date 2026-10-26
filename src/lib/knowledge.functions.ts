@@ -1,10 +1,12 @@
 import { createServerFn } from '@tanstack/react-start';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
-import { getAccess } from './agency-access';
+import { getAccess, requireHq } from './agency-access';
 import { knowledgeSchema } from './knowledge';
 import { z } from 'zod';
 
 const guard = (context: { supabase: Parameters<typeof getAccess>[0]; userId: string }) => getAccess(context.supabase, context.userId);
+/** Shared reference data: every agency reads it, only Elite Visions HQ changes it. */
+const hqGuard = (context: { supabase: Parameters<typeof getAccess>[0] }) => requireHq(context.supabase);
 
 export const listKnowledge = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   await guard(context);

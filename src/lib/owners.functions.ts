@@ -20,8 +20,8 @@ export type OwnerInput = z.infer<typeof ownerSchema>;
 export const emptyOwner = (): OwnerInput => ({ name: '', phone: '', agreed_to_updates: false, handover_date: null, kind: 'owner', update_frequency: 'quarterly', area: '', building: '', lease_end: null });
 
 export const listOwners = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
-  await guard(context);
-  const { data, error } = await context.supabase.from('owners').select('*').order('created_at', { ascending: false });
+  const access = await guard(context);
+  const { data, error } = await context.supabase.from('owners').select('*').eq('agency_id', access.agencyId).order('created_at', { ascending: false });
   if (error) throw new Error('Could not load owners.');
   return data;
 });

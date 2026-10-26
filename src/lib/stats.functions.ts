@@ -15,13 +15,13 @@ export type ManagerStats = {
 };
 
 export const getManagerStats = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).handler(async ({ context }): Promise<ManagerStats> => {
-  await guard(context);
+  const { agencyId } = await guard(context);
   const [{ data: leads, error: e1 }, { data: viewings, error: e2 }, { data: messages, error: e3 }, { data: listings, error: e4 }, { data: alerts, error: e5 }] = await Promise.all([
-    context.supabase.from('leads').select('id,source,score,created_at'),
-    context.supabase.from('viewings').select('kind,status,created_at'),
-    context.supabase.from('chat_messages').select('lead_id,role,created_at').eq('role', 'ai').order('created_at'),
-    context.supabase.from('listings').select('status'),
-    context.supabase.from('alerts').select('message').eq('kind', 'hot'),
+    context.supabase.from('leads').select('id,source,score,created_at').eq('agency_id', agencyId),
+    context.supabase.from('viewings').select('kind,status,created_at').eq('agency_id', agencyId),
+    context.supabase.from('chat_messages').select('lead_id,role,created_at').eq('agency_id', agencyId).eq('role', 'ai').order('created_at'),
+    context.supabase.from('listings').select('status').eq('agency_id', agencyId),
+    context.supabase.from('alerts').select('message').eq('agency_id', agencyId).eq('kind', 'hot'),
   ]);
   if (e1 || e2 || e3 || e4 || e5) throw new Error('Could not load statistics.');
 
