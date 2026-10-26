@@ -1,5 +1,17 @@
 # Roadmap — full app build (uploaded spec)
 
+## Current request: AI Vision 2.0 (multi-agency, GCI, owner tools) — WhatsApp NOT connected
+- [ ] 1. Agencies + members (hq_admin/owner/agent), agency_id everywhere, assigned agent on leads, Demo Agency backfill, RLS per role
+- [ ] 1b. Onboarding: self sign-up creates agency; HQ creates agency + invites owner; owners invite agents within plan_logins; goal_setting_mode
+- [ ] 2. Deals + GCI (agent/agency share), lead → deal
+- [ ] 3. Agent home (GCI month/year, goal bar, hot leads, today's viewings, follow-ups due, AI daily summary)
+- [ ] 4. Owner home (GCI, agency share, per agent, AI-handled deals, kept vs no-shows, problems), missed-lead alerts, leaderboard, Coach me, Market insights, Hours saved (estimate)
+- [ ] 5. CRM fills itself from every chat (area, budget, timing, score, next step)
+- [ ] 6. Prepare paperwork (checklist + Form F / Ejari draft, "Draft – agent must check")
+- [ ] 7. Usage meter (usage_events, AI replies logged)
+- [ ] 8. Elite Visions HQ screen
+- [ ] Tests for money/limit/goal rules, end-to-end checks
+
 Keep calculator, Lead Finder, My Listings, AI Reply Rules working as-is. Owner-only unless stated.
 
 ## Current request: media, agency demo, phone app, export, revival
