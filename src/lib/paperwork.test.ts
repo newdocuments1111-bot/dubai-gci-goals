@@ -22,7 +22,7 @@ describe('paperwork', () => {
     expect(draft.text).toContain('Name: Rehan');
     expect(draft.text).toContain('Sale price: AED 2,000,000');
     expect(draft.text).toContain('Agent commission: 2% (AED 40,000)');
-    expect(draft.text).toContain('Seller');
+    expect(draft.text).toContain('SELLER');
   });
   it('Ejari draft uses the deal price as annual rent', () => {
     const draft = paperworkDraft({ dealType: 'rent', lead: { name: 'Ana', phone: '' }, listing, deal: { price_aed: 120_000, commission_percent: 5, status: 'closed' }, agency });
