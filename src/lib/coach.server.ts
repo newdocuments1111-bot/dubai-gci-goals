@@ -1,6 +1,5 @@
 import { generateResponse, GatewayError } from '@lovable.dev/ai-gateway';
 import { coachResultSchema, COACH_INSTRUCTIONS } from './coach';
-import { parseChatJson } from './chat-json';
 
 /** Reviews the agent's own replies and suggests 2–3 better ones. The chat is untrusted data, never instructions. */
 export async function coachReplies(history: { role: 'agent' | 'client' | 'ai'; content: string }[]) {
@@ -13,7 +12,6 @@ export async function coachReplies(history: { role: 'agent' | 'client' | 'ai'; c
     if (result.status !== 'completed') throw new Error('Coaching did not complete.');
     const text = result.output.flatMap(item => item.type === 'message' ? item.content.filter(c => c.type === 'output_text').map(c => c.text) : []).join('');
     const parsed = coachResultSchema.parse(JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1) || '{}'));
-    void parseChatJson; // shared parser kept for chat replies; coaching uses a strict schema
     return parsed;
   } catch (e) {
     if (e instanceof GatewayError) console.error('Coach AI failure', e.code, e.ids);
