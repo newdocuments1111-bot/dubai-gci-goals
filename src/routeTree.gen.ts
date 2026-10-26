@@ -13,6 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DemoRouteImport } from './routes/demo'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as AuthenticatedAiReplyRulesRouteImport } from './routes/_authenticated/ai-reply-rules'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDealsRouteImport } from './routes/_authenticated/deals'
@@ -49,6 +51,16 @@ const AuthRoute = AuthRouteImport.update({
 const DemoRoute = DemoRouteImport.update({
   id: '/demo',
   path: '/demo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WelcomeRoute = WelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAiReplyRulesRoute =
@@ -150,6 +162,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/demo': typeof DemoRoute
+  '/onboarding': typeof OnboardingRoute
+  '/welcome': typeof WelcomeRoute
   '/ai-reply-rules': typeof AuthenticatedAiReplyRulesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/deals': typeof AuthenticatedDealsRoute
@@ -173,6 +187,8 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/demo': typeof DemoRoute
+  '/onboarding': typeof OnboardingRoute
+  '/welcome': typeof WelcomeRoute
   '/ai-reply-rules': typeof AuthenticatedAiReplyRulesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/deals': typeof AuthenticatedDealsRoute
@@ -198,6 +214,8 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/demo': typeof DemoRoute
+  '/onboarding': typeof OnboardingRoute
+  '/welcome': typeof WelcomeRoute
   '/_authenticated/ai-reply-rules': typeof AuthenticatedAiReplyRulesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/deals': typeof AuthenticatedDealsRoute
@@ -223,6 +241,8 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/demo'
+    | '/onboarding'
+    | '/welcome'
     | '/ai-reply-rules'
     | '/dashboard'
     | '/deals'
@@ -246,6 +266,8 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/demo'
+    | '/onboarding'
+    | '/welcome'
     | '/ai-reply-rules'
     | '/dashboard'
     | '/deals'
@@ -270,6 +292,8 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/demo'
+    | '/onboarding'
+    | '/welcome'
     | '/_authenticated/ai-reply-rules'
     | '/_authenticated/dashboard'
     | '/_authenticated/deals'
@@ -295,6 +319,8 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   DemoRoute: typeof DemoRoute
+  OnboardingRoute: typeof OnboardingRoute
+  WelcomeRoute: typeof WelcomeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -325,6 +351,20 @@ declare module '@tanstack/react-router' {
       path: '/demo'
       fullPath: '/demo'
       preLoaderRoute: typeof DemoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/welcome': {
+      id: '/welcome'
+      path: '/welcome'
+      fullPath: '/welcome'
+      preLoaderRoute: typeof WelcomeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/ai-reply-rules': {
@@ -506,6 +546,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   DemoRoute: DemoRoute,
+  OnboardingRoute: OnboardingRoute,
+  WelcomeRoute: WelcomeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

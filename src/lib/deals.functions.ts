@@ -88,3 +88,13 @@ export const getPaperwork = createServerFn({ method: 'POST' }).middleware([requi
       vaultFiles,
     };
   });
+
+/** Light listing + team options for the deal form. */
+export const getDealOptions = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
+  const access = await getAccess(context.supabase, context.userId);
+  const [{ data: listings }, { data: members }] = await Promise.all([
+    context.supabase.from('listings').select('id,title,price_aed,status,completion').eq('agency_id', access.agencyId).order('created_at', { ascending: false }),
+    context.supabase.from('agency_members').select('user_id,display_name,email').eq('agency_id', access.agencyId).in('role', ['owner', 'agent']),
+  ]);
+  return { access, listings: (listings ?? []).map(l => ({ ...l, price_aed: Number(l.price_aed) })), members: [...new Map((members ?? []).map(m => [m.user_id, m])).values()] };
+});
