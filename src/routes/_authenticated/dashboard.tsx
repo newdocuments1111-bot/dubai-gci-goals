@@ -79,7 +79,7 @@ function AgentHome() {
         <p className="mt-1 text-xs text-muted-foreground">{data.progress}% reached (closed deals this year)</p>
         {data.canSetGoal ? <form className="mt-2 flex gap-2" onSubmit={async e => { e.preventDefault(); setGoalMsg('');
           const r = await saveGoal({ data: Math.max(0, Number(goal.replace(/[^\d.]/g, '')) || 0) });
-          if ('error' in r) setGoalMsg(r.error); else { setGoalMsg('Goal saved.'); client.invalidateQueries({ queryKey: ['home'] }); } }}>
+          if ('error' in r) setGoalMsg(r.error); else { await client.invalidateQueries({ queryKey: ['home'] }); setGoalMsg('Goal saved.'); } }}>
           <Input aria-label="Yearly GCI goal in AED" inputMode="numeric" placeholder="e.g. 1,000,000" value={goal} onChange={e => setGoal(e.target.value)} className="h-8" />
           <Button size="sm" variant="outline" type="submit">Save</Button>
         </form> : <p className="mt-2 text-xs text-muted-foreground">Your owner sets goals in this agency.</p>}
