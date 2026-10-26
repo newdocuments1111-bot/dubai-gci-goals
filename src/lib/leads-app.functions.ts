@@ -1,6 +1,6 @@
 import { createServerFn } from '@tanstack/react-start';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
-import { isOwnerEmail } from './owner';
+import { getAccess } from './agency-access';
 import { leadSchema, scoreLead, amlRedFlags, inQuietHours } from './leads-app';
 import { feesSummary } from './ai-reply-rules';
 import { CHAT_SYSTEM, chatAnswerSchema, appointmentState, appointmentTransition, mergeLearned, chatLeadScore } from './chat-policy';
@@ -9,10 +9,10 @@ import type { Json } from '@/integrations/supabase/types';
 import { eligibleForAI, mapsLink } from './listings';
 import { z } from 'zod';
 
-const guard = (email: string | undefined) => { if (!isOwnerEmail(email)) throw new Error('Owner access required.'); };
+const guard = (context: { supabase: Parameters<typeof getAccess>[0]; userId: string }) => getAccess(context.supabase, context.userId);
 
 export const listLeads = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
-  guard(context.claims.email as string | undefined);
+  await guard(context);
   const { data, error } = await context.supabase.from('leads').select('*').order('last_message_at', { ascending: false, nullsFirst: false });
   if (error) throw new Error('Could not load leads.');
   const order = { Hot: 0, Warm: 1, Cold: 2 };
@@ -21,7 +21,7 @@ export const listLeads = createServerFn({ method: 'POST' }).middleware([requireS
 
 export const createLead = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
   .inputValidator(leadSchema).handler(async ({ data, context }) => {
-    guard(context.claims.email as string | undefined);
+    await guard(context);
     const { data: lead, error } = await context.supabase.from('leads').insert(data).select('id').single();
     if (error) throw new Error('Could not create the lead.');
     return lead;
@@ -29,7 +29,7 @@ export const createLead = createServerFn({ method: 'POST' }).middleware([require
 
 export const updateLead = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
   .inputValidator(leadSchema.partial().extend({ id: z.string().uuid() })).handler(async ({ data, context }) => {
-    guard(context.claims.email as string | undefined);
+    await guard(context);
     const { id, ...fields } = data;
     const clean: { name?: string; phone?: string; type?: string; source?: string; timezone?: string } = {};
     if (fields.name !== undefined) clean.name = fields.name;
@@ -44,7 +44,7 @@ export const updateLead = createServerFn({ method: 'POST' }).middleware([require
 
 export const getLeadThread = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
   .inputValidator(z.string().uuid()).handler(async ({ data, context }) => {
-    guard(context.claims.email as string | undefined);
+    await guard(context);
     const [{ data: lead, error }, { data: messages }] = await Promise.all([
       context.supabase.from('leads').select('*').eq('id', data).single(),
       context.supabase.from('chat_messages').select('*').eq('lead_id', data).order('created_at'),
@@ -61,7 +61,7 @@ export const getLeadThread = createServerFn({ method: 'POST' }).middleware([requ
 /** Pause or resume the AI on a conversation. The AI never replies while paused. */
 export const setAiPaused = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
   .inputValidator(z.object({ id: z.string().uuid(), paused: z.boolean() })).handler(async ({ data, context }) => {
-    guard(context.claims.email as string | undefined);
+    await guard(context);
     const { error } = await context.supabase.from('leads').update({ ai_paused: data.paused }).eq('id', data.id);
     if (error) throw new Error('Could not update the conversation.');
     return { success: true };
@@ -96,7 +96,7 @@ async function buildAiContext(supabase: typeof import('@/integrations/supabase/c
 export const sendClientMessage = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
   .inputValidator(z.object({ leadId: z.string().uuid(), content: z.string().trim().min(1).max(10000), media: z.object({ path: z.string().max(200), kind: z.enum(['audio','image']) }).optional() }))
   .handler(async ({ data, context }) => {
-    guard(context.claims.email as string | undefined);
+    await guard(context);
     const { data: lead, error: leadError } = await context.supabase.from('leads').select('*').eq('id', data.leadId).single();
     if (leadError || !lead) throw new Error('Lead not found.');
 
@@ -188,7 +188,7 @@ export const sendClientMessage = createServerFn({ method: 'POST' }).middleware([
 export const sendOwnerMessage = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
   .inputValidator(z.object({ leadId: z.string().uuid(), content: z.string().trim().min(1).max(10000) }))
   .handler(async ({ data, context }) => {
-    guard(context.claims.email as string | undefined);
+    await guard(context);
     const { error } = await context.supabase.from('chat_messages').insert({ lead_id: data.leadId, role: 'owner', content: data.content, sent: true });
     if (error) throw new Error('Could not send the message.');
     await context.supabase.from('leads').update({ last_message_at: new Date().toISOString() }).eq('id', data.leadId);
@@ -197,7 +197,7 @@ export const sendOwnerMessage = createServerFn({ method: 'POST' }).middleware([r
 
 export const saveLeadToHubSpot = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
   .inputValidator(z.string().uuid()).handler(async ({ data, context }) => {
-    guard(context.claims.email as string | undefined);
+    await guard(context);
     const { data: lead } = await context.supabase.from('leads').select('*').eq('id', data).single();
     if (!lead) throw new Error('Lead not found.');
     const { data: messages } = await context.supabase.from('chat_messages').select('role,content').eq('lead_id', data).order('created_at').limit(30);
@@ -209,7 +209,7 @@ export const saveLeadToHubSpot = createServerFn({ method: 'POST' }).middleware([
   });
 
 export const listAlerts = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
-  guard(context.claims.email as string | undefined);
+  await guard(context);
   const { data, error } = await context.supabase.from('alerts').select('*').order('created_at', { ascending: false }).limit(50);
   if (error) throw new Error('Could not load alerts.');
   return data;
@@ -217,14 +217,14 @@ export const listAlerts = createServerFn({ method: 'POST' }).middleware([require
 
 export const markAlertRead = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
   .inputValidator(z.string().uuid()).handler(async ({ data, context }) => {
-    guard(context.claims.email as string | undefined);
+    await guard(context);
     await context.supabase.from('alerts').update({ read: true }).eq('id', data);
     return { success: true };
   });
 
 export const recordContactConsent = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
   .inputValidator(z.object({ id: z.string().uuid(), agreed: z.boolean() })).handler(async ({ data, context }) => {
-    guard(context.claims.email as string | undefined);
+    await guard(context);
     const { error: logError } = await context.supabase.from('consent_log').insert({ lead_id: data.id, agreed_to: data.agreed ? 'Agreed to future property check-ins' : 'Withdrew future property check-in consent', how: 'Owner recorded client agreement' });
     if (logError) throw new Error('Could not record consent.');
     const { error } = await context.supabase.from('leads').update({ opted_in: data.agreed }).eq('id', data.id);

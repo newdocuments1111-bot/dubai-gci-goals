@@ -1,12 +1,12 @@
 import { createServerFn } from '@tanstack/react-start';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
-import { isOwnerEmail } from './owner';
+import { getAccess } from './agency-access';
 import { z } from 'zod';
 
-const guard = (email: string | undefined) => { if (!isOwnerEmail(email)) throw new Error('Owner access required.'); };
+const guard = (context: { supabase: Parameters<typeof getAccess>[0]; userId: string }) => getAccess(context.supabase, context.userId);
 
 export const listViewings = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
-  guard(context.claims.email as string | undefined);
+  await guard(context);
   const { data, error } = await context.supabase.from('viewings').select('*, leads(name), listings(title)').order('starts_at');
   if (error) throw new Error('Could not load viewings.');
   return data;
@@ -14,7 +14,7 @@ export const listViewings = createServerFn({ method: 'POST' }).middleware([requi
 
 /** Free slots over the next 14 days: working days/hours from Settings, skipping holidays and existing bookings. */
 export const freeSlots = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
-  guard(context.claims.email as string | undefined);
+  await guard(context);
   const { availableViewingSlots } = await import('./viewings.server');
   return availableViewingSlots(context.supabase);
 });
@@ -22,7 +22,7 @@ export const freeSlots = createServerFn({ method: 'POST' }).middleware([requireS
 export const bookViewing = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
   .inputValidator(z.object({ lead_id: z.string().uuid().nullable(), listing_id: z.string().uuid().nullable(), kind: z.enum(['viewing', 'valuation']), starts_at: z.string().datetime({ offset: true }) }))
   .handler(async ({ data, context }) => {
-    guard(context.claims.email as string | undefined);
+    await guard(context);
     const { data: clash } = await context.supabase.from('viewings').select('id').eq('status', 'booked').eq('starts_at', data.starts_at).maybeSingle();
     if (clash) return { error: 'That slot is already booked. Pick another.' };
     const { error } = await context.supabase.from('viewings').insert(data);
@@ -33,7 +33,7 @@ export const bookViewing = createServerFn({ method: 'POST' }).middleware([requir
 export const setViewingStatus = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
   .inputValidator(z.object({ id: z.string().uuid(), status: z.enum(['done', 'no-show', 'cancelled']) }))
   .handler(async ({ data, context }) => {
-    guard(context.claims.email as string | undefined);
+    await guard(context);
     const { error } = await context.supabase.from('viewings').update({ status: data.status }).eq('id', data.id);
     if (error) throw new Error('Could not update the viewing.');
     if (data.status === 'done') {

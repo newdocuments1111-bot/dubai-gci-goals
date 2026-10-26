@@ -1,8 +1,8 @@
 import { createServerFn } from '@tanstack/react-start';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
-import { isOwnerEmail } from './owner';
+import { getAccess } from './agency-access';
 
-const guard = (email: string | undefined) => { if (!isOwnerEmail(email)) throw new Error('Owner access required.'); };
+const guard = (context: { supabase: Parameters<typeof getAccess>[0]; userId: string }) => getAccess(context.supabase, context.userId);
 
 export type ManagerStats = {
   leadsBySource: Record<string, number>;
@@ -15,7 +15,7 @@ export type ManagerStats = {
 };
 
 export const getManagerStats = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).handler(async ({ context }): Promise<ManagerStats> => {
-  guard(context.claims.email as string | undefined);
+  await guard(context);
   const [{ data: leads, error: e1 }, { data: viewings, error: e2 }, { data: messages, error: e3 }, { data: listings, error: e4 }, { data: alerts, error: e5 }] = await Promise.all([
     context.supabase.from('leads').select('id,source,score,created_at'),
     context.supabase.from('viewings').select('kind,status,created_at'),

@@ -1,11 +1,11 @@
 import { createServerFn } from '@tanstack/react-start';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
-import { isOwnerEmail } from './owner';
+import { getAccess } from './agency-access';
 import { listingSchema, needsCheck, mapsLink } from './listings';
 import { z } from 'zod';
 
 export const getListings = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
-  if (!isOwnerEmail(context.claims.email as string | undefined)) throw new Error('Owner access required.');
+  const access = await getAccess(context.supabase, context.userId);
   const { data, error } = await context.supabase.from('listings').select('*').order('created_at', { ascending: false });
   if (error) throw new Error('Could not load listings.');
   const paths = [...new Set((data ?? []).flatMap(r => [...r.photos, ...r.videos, r.floor_plan]).filter(p => p && !p.startsWith('https://')))];
@@ -25,7 +25,7 @@ export const getListings = createServerFn({ method: 'POST' }).middleware([requir
 export const saveListing = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
   .inputValidator(z.object({ id: z.string().uuid().optional(), listing: listingSchema }))
   .handler(async ({ data, context }) => {
-    if (!isOwnerEmail(context.claims.email as string | undefined)) throw new Error('Owner access required.');
+    const access = await getAccess(context.supabase, context.userId);
     const row = { ...data.listing, maps_url: mapsLink(data.listing), needs_check: needsCheck(data.listing.last_checked), updated_at: new Date().toISOString() };
     const result = data.id ? await context.supabase.from('listings').update(row).eq('id', data.id).select('id').single() : await context.supabase.from('listings').insert(row).select('id').single();
     if (result.error) throw new Error('Could not save listing.');
@@ -34,14 +34,14 @@ export const saveListing = createServerFn({ method: 'POST' }).middleware([requir
 export const importListings = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
   .inputValidator(z.array(listingSchema).min(1).max(500))
   .handler(async ({ data, context }) => {
-    if (!isOwnerEmail(context.claims.email as string | undefined)) throw new Error('Owner access required.');
+    const access = await getAccess(context.supabase, context.userId);
     const { error } = await context.supabase.from('listings').insert(data.map(r => ({ ...r, maps_url: mapsLink(r), source: 'csv', needs_check: needsCheck(r.last_checked) })));
     if (error) throw new Error('Import failed. No listings were added.');
     return { count: data.length };
   });
 export const deleteListing = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
   .inputValidator(z.string().uuid()).handler(async ({ data, context }) => {
-    if (!isOwnerEmail(context.claims.email as string | undefined)) throw new Error('Owner access required.');
+    const access = await getAccess(context.supabase, context.userId);
     const { data: row } = await context.supabase.from('listings').select('photos,videos,floor_plan').eq('id', data).single();
     const { error } = await context.supabase.from('listings').delete().eq('id', data);
     if (error) throw new Error('Could not delete listing.');
@@ -53,7 +53,7 @@ export const deleteListing = createServerFn({ method: 'POST' }).middleware([requ
     return { success: true };
   });
 export const confirmListings = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
-  if (!isOwnerEmail(context.claims.email as string | undefined)) throw new Error('Owner access required.');
+  const access = await getAccess(context.supabase, context.userId);
   const last_checked = new Date().toISOString();
   const { error } = await context.supabase.from('listings').update({ last_checked, needs_check: false, updated_at: last_checked }).not('id','is',null);
   if (error) throw new Error('Could not confirm listings.');
@@ -62,7 +62,7 @@ export const confirmListings = createServerFn({ method: 'POST' }).middleware([re
 export const setListingStatus = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
   .inputValidator(z.object({ id: z.string().uuid(), status: z.enum(['Available', 'Reserved', 'Sold']) }))
   .handler(async ({ data, context }) => {
-    if (!isOwnerEmail(context.claims.email as string | undefined)) throw new Error('Owner access required.');
+    const access = await getAccess(context.supabase, context.userId);
     const { data: row, error: readError } = await context.supabase.from('listings').select('permit_number').eq('id', data.id).single();
     if (readError || !row) throw new Error('Could not find listing.');
     if (data.status === 'Available' && !row.permit_number.trim()) return { success: false, message: 'Add a DLD / Trakheesi permit number in Edit before marking this listing Available.' };
@@ -72,7 +72,7 @@ export const setListingStatus = createServerFn({ method: 'POST' }).middleware([r
   });
 export const duplicateListing = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
   .inputValidator(z.string().uuid()).handler(async ({ data, context }) => {
-    if (!isOwnerEmail(context.claims.email as string | undefined)) throw new Error('Owner access required.');
+    const access = await getAccess(context.supabase, context.userId);
     const { data: original, error: readError } = await context.supabase.from('listings').select('*').eq('id', data).single();
     if (readError || !original) throw new Error('Could not find listing.');
     const copied: { bucket: string; path: string }[] = [];
@@ -100,7 +100,7 @@ export const duplicateListing = createServerFn({ method: 'POST' }).middleware([r
   });
 
 export const getSharePhoto = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).inputValidator(z.string().uuid()).handler(async ({ data, context }) => {
-  if (!isOwnerEmail(context.claims.email as string | undefined)) throw new Error('Owner access required.');
+  const access = await getAccess(context.supabase, context.userId);
   const { data: listing, error } = await context.supabase.from('listings').select('photos').eq('id',data).single();
   if (error || !listing) throw new Error('Could not load photo.');
   const first = listing.photos[0];

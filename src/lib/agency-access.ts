@@ -33,7 +33,7 @@ export async function requireOwner(supabase: Client, userId: string) {
   return access;
 }
 
-export async function requireHq(supabase: Client, userId: string) {
+export async function requireHq(supabase: Client) {
   const { data, error } = await supabase.rpc('is_hq_admin');
   if (error || data !== true) throw new Error('Only Elite Visions HQ can do this.');
   return true;

@@ -1,6 +1,6 @@
 import { createServerFn } from '@tanstack/react-start';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
-import { isOwnerEmail } from './owner';
+import { getAccess } from './agency-access';
 
 export const prepareChatMedia = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
   .inputValidator((data: FormData) => {
@@ -10,7 +10,7 @@ export const prepareChatMedia = createServerFn({ method: 'POST' }).middleware([r
     if (!file.size || file.size > 8 * 1024 * 1024 || !/^(audio\/(webm|mp4|mpeg|wav|x-wav|ogg|m4a)|image\/(jpeg|png|webp))(;.*)?$/.test(file.type)) throw new Error('Choose audio or a JPG, PNG or WebP image under 8 MB.');
     return { file, leadId };
   }).handler(async ({ data, context }) => {
-    if (!isOwnerEmail(context.claims.email as string | undefined)) throw new Error('Owner access required.');
+    const access = await getAccess(context.supabase, context.userId);
     const { data: lead } = await context.supabase.from('leads').select('id').eq('id', data.leadId).single();
     if (!lead) throw new Error('Lead not found.');
     const { inspectMedia } = await import('./media.server');

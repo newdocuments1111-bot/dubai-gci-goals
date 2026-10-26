@@ -1,9 +1,9 @@
 import { createServerFn } from '@tanstack/react-start';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
-import { isOwnerEmail } from './owner';
+import { getAccess } from './agency-access';
 import { z } from 'zod';
 
-const guard = (email: string | undefined) => { if (!isOwnerEmail(email)) throw new Error('Owner access required.'); };
+const guard = (context: { supabase: Parameters<typeof getAccess>[0]; userId: string }) => getAccess(context.supabase, context.userId);
 
 export const ownerSchema = z.object({
   name: z.string().trim().min(1, 'Name is required').max(200),
@@ -20,7 +20,7 @@ export type OwnerInput = z.infer<typeof ownerSchema>;
 export const emptyOwner = (): OwnerInput => ({ name: '', phone: '', agreed_to_updates: false, handover_date: null, kind: 'owner', update_frequency: 'quarterly', area: '', building: '', lease_end: null });
 
 export const listOwners = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
-  guard(context.claims.email as string | undefined);
+  await guard(context);
   const { data, error } = await context.supabase.from('owners').select('*').order('created_at', { ascending: false });
   if (error) throw new Error('Could not load owners.');
   return data;
@@ -28,7 +28,7 @@ export const listOwners = createServerFn({ method: 'POST' }).middleware([require
 
 export const saveOwner = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
   .inputValidator(ownerSchema.extend({ id: z.string().uuid().optional() })).handler(async ({ data, context }) => {
-    guard(context.claims.email as string | undefined);
+    await guard(context);
     const { id, ...fields } = data;
     const { error } = id
       ? await context.supabase.from('owners').update(fields).eq('id', id)
@@ -39,7 +39,7 @@ export const saveOwner = createServerFn({ method: 'POST' }).middleware([requireS
 
 export const deleteOwner = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
   .inputValidator(z.string().uuid()).handler(async ({ data, context }) => {
-    guard(context.claims.email as string | undefined);
+    await guard(context);
     const { error } = await context.supabase.from('owners').delete().eq('id', data);
     if (error) throw new Error('Could not delete the owner.');
     return { success: true };
