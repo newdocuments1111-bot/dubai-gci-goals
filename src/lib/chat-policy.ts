@@ -16,6 +16,7 @@ export const chatAnswerSchema = z.object({
   appointment: missingAsUndefined(z.enum(['none', 'invite', 'accept', 'decline', 'choose']).default('none')),
   slotIndex: missingAsUndefined(z.number().int().min(0).max(1).optional()),
   hotReason: missingAsUndefined(z.string().max(500).default('')), flag: modelBoolean, stopped: modelBoolean,
+  next_step: missingAsUndefined(z.string().max(300).default('')),
 });
 export function appointmentState(learned: Record<string, unknown>) {
   const result = appointmentStateSchema.safeParse(learned['_appointment']);
@@ -33,6 +34,11 @@ export function chatLeadScore(learned: Record<string, unknown>, intent: 'none' |
   if (intent !== 'none' || learned['_hotIntent'] === true) return 'Hot';
   if (learned['location'] && learned['purpose'] && learned['budget'] && learned['move_in']) return 'Hot';
   return scoreLead(learned);
+}
+/** The lead record fills itself from what the client said: area, budget, timing and next step. */
+export function crmFields(learned: Record<string, unknown>, nextStep: string, previous: { area: string; budget: string; timing: string; next_step: string }) {
+  const text = (v: unknown, fallback: string) => (v === undefined || v === null || !String(v).trim() ? fallback : String(v).trim().slice(0, 300));
+  return { area: text(learned['location'], previous.area), budget: text(learned['budget'], previous.budget), timing: text(learned['move_in'], previous.timing), next_step: text(nextStep, previous.next_step) };
 }
 /** Model interpretations cannot skip invitation, agreement, or selection. */
 export function appointmentTransition(state: AppointmentState | undefined, action: string, slots: string[], slotIndex?: number): AppointmentState | undefined {
@@ -55,4 +61,4 @@ Documents: explain the general checklist from UAE Knowledge for their situation,
 Appointment policy: naturally ask "Can we book an appointment, so we can understand your needs clearly?" and output appointment=invite. Do not offer times before the client explicitly agrees to an invitation. When appointmentState.phase=invited and the CURRENT client message explicitly says yes/agrees to an appointment, output appointment=accept. Just interest in a viewing/offer is NOT consent to a suggested time. When phase=offered, choose ONLY a slot from its saved slots, ONLY when the current message selects that exact time or first/second option; output appointment=choose and zero-based slotIndex. If ambiguous, ask one clarification. Never announce a booking yourself: the server books and confirms it. When phase=invited, do NOT re-ask the unanswered invitation in different words; answer the current request and leave room for the client to respond. Do not repeat the invitation after agreement or after booking. A decline outputs appointment=decline. When no times are free say so honestly, no deferred promise.
 Ask for the appointment only after location, purpose, budget and timing are known (or when the client asks for a viewing): "Can we book an appointment, so we can understand your needs clearly?" If they say no, keep helping and do not push. Mark intent=viewing when the client wants a viewing/valuation/appointment, intent=offer when they want to make an offer. A lead is Hot when location+purpose+budget+move_in are all known, or on viewing/offer intent; suggest the appointment if not already invited/offered/booked.
 Preserve already learned facts unless the client corrects them. Extract only what the client actually said. Reply in the client's current language. Never claim to be human or the agent; be honest if asked about AI. For explicit stop/unsubscribe, confirm once, stopped=true and no booking action.
-Return JSON only with reply, language, learned (budget,location,move_in,purpose and other stated facts; purpose is "living" or "investment"), type (buyer/seller/landlord/tenant/other), intent (none/viewing/offer), appointment (none/invite/accept/decline/choose), optional slotIndex (0 or 1), hotReason, flag, stopped. Use flag for private uncertainty/advice concerns, never mention private AML alerts.`;
+Return JSON only with reply, language, learned (budget,location,move_in,purpose and other stated facts; purpose is "living" or "investment"), type (buyer/seller/landlord/tenant/other), intent (none/viewing/offer), appointment (none/invite/accept/decline/choose), optional slotIndex (0 or 1), hotReason, flag, stopped, next_step (one short practical next step for the agent, in English, e.g. "Send two Marina 2-bed options under AED 2.5M"). Use flag for private uncertainty/advice concerns, never mention private AML alerts.`;

@@ -3,7 +3,8 @@ import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 import { getAccess } from './agency-access';
 import { leadSchema, scoreLead, amlRedFlags, inQuietHours } from './leads-app';
 import { feesSummary } from './ai-reply-rules';
-import { CHAT_SYSTEM, chatAnswerSchema, appointmentState, appointmentTransition, mergeLearned, chatLeadScore } from './chat-policy';
+import { CHAT_SYSTEM, chatAnswerSchema, appointmentState, appointmentTransition, mergeLearned, chatLeadScore, crmFields } from './chat-policy';
+import { requireHq, requireOwner } from './agency-access';
 import { checklistFor } from './documents';
 import type { Json } from '@/integrations/supabase/types';
 import { eligibleForAI, mapsLink } from './listings';
@@ -12,8 +13,8 @@ import { z } from 'zod';
 const guard = (context: { supabase: Parameters<typeof getAccess>[0]; userId: string }) => getAccess(context.supabase, context.userId);
 
 export const listLeads = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
-  await guard(context);
-  const { data, error } = await context.supabase.from('leads').select('*').order('last_message_at', { ascending: false, nullsFirst: false });
+  const access = await guard(context);
+  const { data, error } = await context.supabase.from('leads').select('*').eq('agency_id', access.agencyId).order('last_message_at', { ascending: false, nullsFirst: false });
   if (error) throw new Error('Could not load leads.');
   const order = { Hot: 0, Warm: 1, Cold: 2 };
   return data.sort((a, b) => order[a.score as keyof typeof order] - order[b.score as keyof typeof order]);
@@ -67,12 +68,12 @@ export const setAiPaused = createServerFn({ method: 'POST' }).middleware([requir
     return { success: true };
   });
 
-async function buildAiContext(supabase: typeof import('@/integrations/supabase/client').supabase) {
+async function buildAiContext(supabase: typeof import('@/integrations/supabase/client').supabase, agencyId: string) {
   const [{ data: rules }, { data: knowledge }, { data: listings }, { data: settings }] = await Promise.all([
-    supabase.from('ai_reply_settings').select('agency_name,rules,fees').eq('id', 'owner').maybeSingle(),
+    supabase.from('ai_reply_settings').select('agency_name,rules,fees').eq('agency_id', agencyId).maybeSingle(),
     supabase.from('uae_knowledge').select('topic,fact,last_verified'),
-    supabase.from('listings').select('*').eq('status', 'Available'),
-    supabase.from('app_settings').select('*').eq('id', 'owner').maybeSingle(),
+    supabase.from('listings').select('*').eq('agency_id', agencyId).eq('status', 'Available'),
+    supabase.from('app_settings').select('*').eq('agency_id', agencyId).maybeSingle(),
   ]);
   const eligible = (listings ?? []).filter(l => eligibleForAI(l)).map(l => ({
     id: l.id, sample: l.is_sample, title: l.title, community: l.community, project: l.project, type: l.property_type, bedrooms: l.bedrooms,
@@ -96,7 +97,7 @@ async function buildAiContext(supabase: typeof import('@/integrations/supabase/c
 export const sendClientMessage = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
   .inputValidator(z.object({ leadId: z.string().uuid(), content: z.string().trim().min(1).max(10000), media: z.object({ path: z.string().max(200), kind: z.enum(['audio','image']) }).optional() }))
   .handler(async ({ data, context }) => {
-    await guard(context);
+    const access = await guard(context);
     const { data: lead, error: leadError } = await context.supabase.from('leads').select('*').eq('id', data.leadId).single();
     if (leadError || !lead) throw new Error('Lead not found.');
 
@@ -116,9 +117,9 @@ export const sendClientMessage = createServerFn({ method: 'POST' }).middleware([
     const { data: recent, error: historyError } = await context.supabase.from('chat_messages').select('role,content').eq('lead_id', data.leadId).order('created_at', { ascending: false }).limit(40);
     if (historyError) throw new Error('Could not read this conversation.');
     const history = (recent ?? []).reverse();
-    const ctx = await buildAiContext(context.supabase);
+    const ctx = await buildAiContext(context.supabase, lead.agency_id);
     const { availableViewingSlots } = await import('./viewings.server');
-    const slots = await availableViewingSlots(context.supabase);
+    const slots = await availableViewingSlots(context.supabase, lead.agency_id);
     const previous = (lead.learned ?? {}) as Record<string, unknown>;
     const state = appointmentState(previous);
     const { generateJson } = await import('./chat.server');
@@ -152,7 +153,7 @@ export const sendClientMessage = createServerFn({ method: 'POST' }).middleware([
       const chosen = nextState?.phase === 'booked' ? nextState.slots[0] : undefined;
       if (chosen) {
         // Re-read real availability immediately before inserting; never trust generated times.
-        const freshSlots = await availableViewingSlots(context.supabase);
+        const freshSlots = await availableViewingSlots(context.supabase, lead.agency_id);
         if (!freshSlots.includes(chosen)) {
           nextState = { phase: 'offered', slots: freshSlots.slice(0, 2) };
           reply = freshSlots.length ? `Sorry, that time is no longer free. ${nextState.slots.map(timeLabel).join(' or ')} (Dubai time) ${nextState.slots.length === 1 ? 'is' : 'are'} available. Which works for you?` : 'Sorry, that time is no longer free, and there are no other free times in the next two weeks.';
@@ -173,7 +174,7 @@ export const sendClientMessage = createServerFn({ method: 'POST' }).middleware([
     if (nextState) learned['_appointment'] = nextState;
     else delete learned['_appointment'];
     const type = ai.type ?? lead.type;
-    const { error: updateError } = await context.supabase.from('leads').update({ learned: learned as Json, score, type, flagged: lead.flagged || ai.flag, stopped: lead.stopped || ai.stopped }).eq('id', data.leadId);
+    const { error: updateError } = await context.supabase.from('leads').update({ learned: learned as Json, score, type, flagged: lead.flagged || ai.flag, stopped: lead.stopped || ai.stopped, ...crmFields(learned, ai.next_step, lead) }).eq('id', data.leadId);
     if (updateError) throw new Error('Could not update the conversation.');
     const { error: replyError } = await context.supabase.from('chat_messages').insert({ lead_id: data.leadId, role: 'ai', content: reply, language: ai.language, sent: !inQuietHours(lead.timezone) });
     if (replyError) throw new Error('Could not save the reply.');
@@ -198,6 +199,8 @@ export const sendOwnerMessage = createServerFn({ method: 'POST' }).middleware([r
 export const saveLeadToHubSpot = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
   .inputValidator(z.string().uuid()).handler(async ({ data, context }) => {
     await guard(context);
+    // HubSpot is Elite Visions' own connected account, so only HQ may push contacts into it.
+    await requireHq(context.supabase);
     const { data: lead } = await context.supabase.from('leads').select('*').eq('id', data).single();
     if (!lead) throw new Error('Lead not found.');
     const { data: messages } = await context.supabase.from('chat_messages').select('role,content').eq('lead_id', data).order('created_at').limit(30);
@@ -209,8 +212,8 @@ export const saveLeadToHubSpot = createServerFn({ method: 'POST' }).middleware([
   });
 
 export const listAlerts = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
-  await guard(context);
-  const { data, error } = await context.supabase.from('alerts').select('*').order('created_at', { ascending: false }).limit(50);
+  const access = await guard(context);
+  const { data, error } = await context.supabase.from('alerts').select('*').eq('agency_id', access.agencyId).order('created_at', { ascending: false }).limit(50);
   if (error) throw new Error('Could not load alerts.');
   return data;
 });
@@ -230,4 +233,30 @@ export const recordContactConsent = createServerFn({ method: 'POST' }).middlewar
     const { error } = await context.supabase.from('leads').update({ opted_in: data.agreed }).eq('id', data.id);
     if (error) throw new Error('Could not update consent.');
     return { success: true };
+  });
+
+/** Owner assigns a lead to an agent in the same agency (the database rejects anyone else). */
+export const assignLead = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ id: z.string().uuid(), agentId: z.string().uuid() })).handler(async ({ data, context }) => {
+    await requireOwner(context.supabase, context.userId);
+    const { error } = await context.supabase.from('leads').update({ assigned_agent_id: data.agentId }).eq('id', data.id);
+    if (error) throw new Error(error.message.includes('agent') ? error.message : 'Could not assign the lead.');
+    return { success: true };
+  });
+
+/** "Coach me": the AI reviews the agent's own replies and suggests 2–3 better ones. */
+export const coachChat = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
+  .inputValidator(z.string().uuid()).handler(async ({ data, context }) => {
+    await guard(context);
+    const { data: messages, error } = await context.supabase.from('chat_messages').select('role,content,created_at').eq('lead_id', data).order('created_at', { ascending: false }).limit(40);
+    if (error) throw new Error('Could not read this conversation.');
+    const history = (messages ?? []).reverse();
+    if (!history.some(m => m.role === 'owner')) return { summary: 'There are no agent-written replies in this chat yet. Take over and reply yourself, then ask for coaching.', suggestions: [] as { instead_of: string; try: string; why: string }[] };
+    const { coachReplies } = await import('./coach.server');
+    try {
+      return await coachReplies(history.map(m => ({ role: m.role === 'owner' ? 'agent' : m.role === 'client' ? 'client' : 'ai', content: m.content.slice(0, 2000) })));
+    } catch (e) {
+      console.error(e);
+      throw new Error('Coaching is not available right now. Please try again.');
+    }
   });
