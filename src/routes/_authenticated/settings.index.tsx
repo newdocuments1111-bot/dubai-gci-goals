@@ -33,6 +33,9 @@ function SettingsPage() {
 
   return <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
     <h1 className="mb-6 text-3xl font-bold">Settings</h1>
+    {data.isOwner && <Link to="/settings/whatsapp" className="mb-6 flex items-center justify-between rounded-lg border border-border p-4 text-sm hover:bg-muted">
+      <span><strong>WhatsApp</strong><br /><span className="text-muted-foreground">Connection, test mode, safety list and test message</span></span><span aria-hidden>→</span>
+    </Link>}
     <form className="space-y-6" onSubmit={async e => { e.preventDefault(); setBusy(true); setError(''); setMessage('');
       try { await save({ data: form }); if (goalMode !== data.goalMode) await saveMode({ data: goalMode }); await client.invalidateQueries({ queryKey: settingsQuery.queryKey }); setMessage('Settings saved.'); }
       catch { setError('Could not save settings. Your changes are still here.'); } finally { setBusy(false); } }}>
