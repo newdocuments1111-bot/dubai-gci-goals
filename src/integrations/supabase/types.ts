@@ -823,6 +823,77 @@ export type Database = {
         }
         Relationships: []
       }
+      message_templates: {
+        Row: {
+          agency_id: string
+          body: string
+          category: string
+          created_at: string
+          created_by: string | null
+          examples: Json
+          id: string
+          label: string
+          language: string
+          meta_body: string
+          meta_status: string
+          meta_template_id: string | null
+          name: string
+          rejection_reason: string | null
+          status_checked_at: string | null
+          submitted_at: string | null
+          updated_at: string
+          variables: string[]
+        }
+        Insert: {
+          agency_id?: string
+          body: string
+          category: string
+          created_at?: string
+          created_by?: string | null
+          examples?: Json
+          id?: string
+          label: string
+          language?: string
+          meta_body?: string
+          meta_status?: string
+          meta_template_id?: string | null
+          name: string
+          rejection_reason?: string | null
+          status_checked_at?: string | null
+          submitted_at?: string | null
+          updated_at?: string
+          variables?: string[]
+        }
+        Update: {
+          agency_id?: string
+          body?: string
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          examples?: Json
+          id?: string
+          label?: string
+          language?: string
+          meta_body?: string
+          meta_status?: string
+          meta_template_id?: string | null
+          name?: string
+          rejection_reason?: string | null
+          status_checked_at?: string | null
+          submitted_at?: string | null
+          updated_at?: string
+          variables?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_templates_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       owners: {
         Row: {
           agency_id: string
@@ -1057,6 +1128,113 @@ export type Database = {
           },
         ]
       }
+      whatsapp_outbox: {
+        Row: {
+          agency_id: string
+          approved_at: string | null
+          approved_by: string | null
+          attempts: number
+          block_reason: string | null
+          category: string
+          chat_message_id: string | null
+          claimed_until: string | null
+          created_at: string
+          created_by: string | null
+          error: string | null
+          id: string
+          lead_id: string
+          preview: string
+          purpose: string
+          send_after: string
+          sent_at: string | null
+          status: string
+          template_id: string | null
+          template_name: string
+          updated_at: string
+          variables: Json
+          wa_message_id: string | null
+        }
+        Insert: {
+          agency_id: string
+          approved_at?: string | null
+          approved_by?: string | null
+          attempts?: number
+          block_reason?: string | null
+          category?: string
+          chat_message_id?: string | null
+          claimed_until?: string | null
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          id?: string
+          lead_id: string
+          preview?: string
+          purpose?: string
+          send_after?: string
+          sent_at?: string | null
+          status?: string
+          template_id?: string | null
+          template_name?: string
+          updated_at?: string
+          variables?: Json
+          wa_message_id?: string | null
+        }
+        Update: {
+          agency_id?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          attempts?: number
+          block_reason?: string | null
+          category?: string
+          chat_message_id?: string | null
+          claimed_until?: string | null
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          id?: string
+          lead_id?: string
+          preview?: string
+          purpose?: string
+          send_after?: string
+          sent_at?: string | null
+          status?: string
+          template_id?: string | null
+          template_name?: string
+          updated_at?: string
+          variables?: Json
+          wa_message_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_outbox_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_outbox_chat_message_id_fkey"
+            columns: ["chat_message_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_outbox_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_outbox_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "message_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       whatsapp_settings: {
         Row: {
           agency_id: string
@@ -1064,7 +1242,9 @@ export type Database = {
           display_number: string
           id: string
           last_webhook_at: string | null
+          marketing_gap_days: number
           phone_number_id: string
+          send_mode: string
           status: string
           status_detail: string
           test_mode: boolean
@@ -1078,7 +1258,9 @@ export type Database = {
           display_number?: string
           id?: string
           last_webhook_at?: string | null
+          marketing_gap_days?: number
           phone_number_id?: string
+          send_mode?: string
           status?: string
           status_detail?: string
           test_mode?: boolean
@@ -1092,7 +1274,9 @@ export type Database = {
           display_number?: string
           id?: string
           last_webhook_at?: string | null
+          marketing_gap_days?: number
           phone_number_id?: string
+          send_mode?: string
           status?: string
           status_detail?: string
           test_mode?: boolean
@@ -1212,6 +1396,40 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "whatsapp_webhook_events"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      claim_whatsapp_outbox: {
+        Args: { p_ids: string[]; p_limit: number }
+        Returns: {
+          agency_id: string
+          approved_at: string | null
+          approved_by: string | null
+          attempts: number
+          block_reason: string | null
+          category: string
+          chat_message_id: string | null
+          claimed_until: string | null
+          created_at: string
+          created_by: string | null
+          error: string | null
+          id: string
+          lead_id: string
+          preview: string
+          purpose: string
+          send_after: string
+          sent_at: string | null
+          status: string
+          template_id: string | null
+          template_name: string
+          updated_at: string
+          variables: Json
+          wa_message_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "whatsapp_outbox"
           isOneToOne: false
           isSetofReturn: true
         }
