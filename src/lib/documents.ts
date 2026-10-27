@@ -18,13 +18,20 @@ export function checklistFor(type: string, opts: { company?: boolean; poa?: bool
 export const clientNameSchema = z.string().trim().min(1, 'Client name is required').max(200)
   .refine(v => !/[/\\]/.test(v), 'No slashes in client names');
 
-/** Vault folder: one folder per client inside the agency's own folder of the private documents bucket. */
-export function clientFolder(agencyId: string, client: string) {
-  return `${agencyId}/${client.trim().replace(/[^a-zA-Z0-9 _-]/g, '').slice(0, 100) || 'client'}`;
+/** Vault folder: one folder per lead inside the agency's own folder of the private documents bucket. */
+export function leadFolder(agencyId: string, leadId: string) {
+  return `${agencyId}/${leadId}`;
 }
-export function documentPath(agencyId: string, client: string, filename: string) {
-  const safeFile = filename.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 200);
-  return `${clientFolder(agencyId, client)}/${Date.now()}-${safeFile}`;
+export function documentPath(agencyId: string, leadId: string, filename: string, now = Date.now()) {
+  const safeFile = filename.replace(/[^a-zA-Z0-9._-]/g, '_').replace(/^\.+/, '').slice(0, 200) || 'file';
+  return `${leadFolder(agencyId, leadId)}/${now}-${safeFile}`;
+}
+/** Only a single file directly inside this lead's folder — never another lead, agency or sub-folder. */
+export function isLeadDocumentPath(path: string, agencyId: string, leadId: string) {
+  const prefix = `${leadFolder(agencyId, leadId)}/`;
+  if (!path.startsWith(prefix)) return false;
+  const file = path.slice(prefix.length);
+  return /^[a-zA-Z0-9._-]{1,220}$/.test(file) && !file.startsWith('.');
 }
 /** A checklist item counts as received when an uploaded file name contains its first word. */
 export function documentReceived(item: string, fileNames: string[]) {
