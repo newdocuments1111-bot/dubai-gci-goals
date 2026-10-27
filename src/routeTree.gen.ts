@@ -25,7 +25,6 @@ import { Route as AuthenticatedListingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedMarketDataRouteImport } from './routes/_authenticated/market-data'
 import { Route as AuthenticatedMarketInsightsRouteImport } from './routes/_authenticated/market-insights'
 import { Route as AuthenticatedOwnersRouteImport } from './routes/_authenticated/owners'
-import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedStatsRouteImport } from './routes/_authenticated/stats'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as AuthenticatedTestChatRouteImport } from './routes/_authenticated/test-chat'
@@ -33,6 +32,7 @@ import { Route as AuthenticatedUaeKnowledgeRouteImport } from './routes/_authent
 import { Route as AuthenticatedViewingsRouteImport } from './routes/_authenticated/viewings'
 import { Route as AuthenticatedLeadLeadIdRouteImport } from './routes/_authenticated/lead.$leadId'
 import { Route as AuthenticatedListingListingIdRouteImport } from './routes/_authenticated/listing.$listingId'
+import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -115,11 +115,6 @@ const AuthenticatedOwnersRoute = AuthenticatedOwnersRouteImport.update({
   path: '/owners',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedStatsRoute = AuthenticatedStatsRouteImport.update({
   id: '/stats',
   path: '/stats',
@@ -157,6 +152,12 @@ const AuthenticatedListingListingIdRoute =
     path: '/listing/$listingId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSettingsIndexRoute =
+  AuthenticatedSettingsIndexRouteImport.update({
+    id: '/settings/',
+    path: '/settings/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -174,7 +175,6 @@ export interface FileRoutesByFullPath {
   '/market-data': typeof AuthenticatedMarketDataRoute
   '/market-insights': typeof AuthenticatedMarketInsightsRoute
   '/owners': typeof AuthenticatedOwnersRoute
-  '/settings': typeof AuthenticatedSettingsRoute
   '/stats': typeof AuthenticatedStatsRoute
   '/team': typeof AuthenticatedTeamRoute
   '/test-chat': typeof AuthenticatedTestChatRoute
@@ -182,6 +182,7 @@ export interface FileRoutesByFullPath {
   '/viewings': typeof AuthenticatedViewingsRoute
   '/lead/$leadId': typeof AuthenticatedLeadLeadIdRoute
   '/listing/$listingId': typeof AuthenticatedListingListingIdRoute
+  '/settings/': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -199,7 +200,6 @@ export interface FileRoutesByTo {
   '/market-data': typeof AuthenticatedMarketDataRoute
   '/market-insights': typeof AuthenticatedMarketInsightsRoute
   '/owners': typeof AuthenticatedOwnersRoute
-  '/settings': typeof AuthenticatedSettingsRoute
   '/stats': typeof AuthenticatedStatsRoute
   '/team': typeof AuthenticatedTeamRoute
   '/test-chat': typeof AuthenticatedTestChatRoute
@@ -207,6 +207,7 @@ export interface FileRoutesByTo {
   '/viewings': typeof AuthenticatedViewingsRoute
   '/lead/$leadId': typeof AuthenticatedLeadLeadIdRoute
   '/listing/$listingId': typeof AuthenticatedListingListingIdRoute
+  '/settings': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -226,7 +227,6 @@ export interface FileRoutesById {
   '/_authenticated/market-data': typeof AuthenticatedMarketDataRoute
   '/_authenticated/market-insights': typeof AuthenticatedMarketInsightsRoute
   '/_authenticated/owners': typeof AuthenticatedOwnersRoute
-  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/stats': typeof AuthenticatedStatsRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/_authenticated/test-chat': typeof AuthenticatedTestChatRoute
@@ -234,6 +234,7 @@ export interface FileRoutesById {
   '/_authenticated/viewings': typeof AuthenticatedViewingsRoute
   '/_authenticated/lead/$leadId': typeof AuthenticatedLeadLeadIdRoute
   '/_authenticated/listing/$listingId': typeof AuthenticatedListingListingIdRoute
+  '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -253,7 +254,6 @@ export interface FileRouteTypes {
     | '/market-data'
     | '/market-insights'
     | '/owners'
-    | '/settings'
     | '/stats'
     | '/team'
     | '/test-chat'
@@ -261,6 +261,7 @@ export interface FileRouteTypes {
     | '/viewings'
     | '/lead/$leadId'
     | '/listing/$listingId'
+    | '/settings/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -278,7 +279,6 @@ export interface FileRouteTypes {
     | '/market-data'
     | '/market-insights'
     | '/owners'
-    | '/settings'
     | '/stats'
     | '/team'
     | '/test-chat'
@@ -286,6 +286,7 @@ export interface FileRouteTypes {
     | '/viewings'
     | '/lead/$leadId'
     | '/listing/$listingId'
+    | '/settings'
   id:
     | '__root__'
     | '/'
@@ -304,7 +305,6 @@ export interface FileRouteTypes {
     | '/_authenticated/market-data'
     | '/_authenticated/market-insights'
     | '/_authenticated/owners'
-    | '/_authenticated/settings'
     | '/_authenticated/stats'
     | '/_authenticated/team'
     | '/_authenticated/test-chat'
@@ -312,6 +312,7 @@ export interface FileRouteTypes {
     | '/_authenticated/viewings'
     | '/_authenticated/lead/$leadId'
     | '/_authenticated/listing/$listingId'
+    | '/_authenticated/settings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -437,13 +438,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOwnersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/settings': {
-      id: '/_authenticated/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/stats': {
       id: '/_authenticated/stats'
       path: '/stats'
@@ -493,6 +487,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedListingListingIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/settings/': {
+      id: '/_authenticated/settings/'
+      path: '/settings'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -507,7 +508,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMarketDataRoute: typeof AuthenticatedMarketDataRoute
   AuthenticatedMarketInsightsRoute: typeof AuthenticatedMarketInsightsRoute
   AuthenticatedOwnersRoute: typeof AuthenticatedOwnersRoute
-  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedStatsRoute: typeof AuthenticatedStatsRoute
   AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
   AuthenticatedTestChatRoute: typeof AuthenticatedTestChatRoute
@@ -515,6 +515,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedViewingsRoute: typeof AuthenticatedViewingsRoute
   AuthenticatedLeadLeadIdRoute: typeof AuthenticatedLeadLeadIdRoute
   AuthenticatedListingListingIdRoute: typeof AuthenticatedListingListingIdRoute
+  AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -528,7 +529,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMarketDataRoute: AuthenticatedMarketDataRoute,
   AuthenticatedMarketInsightsRoute: AuthenticatedMarketInsightsRoute,
   AuthenticatedOwnersRoute: AuthenticatedOwnersRoute,
-  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedStatsRoute: AuthenticatedStatsRoute,
   AuthenticatedTeamRoute: AuthenticatedTeamRoute,
   AuthenticatedTestChatRoute: AuthenticatedTestChatRoute,
@@ -536,6 +536,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedViewingsRoute: AuthenticatedViewingsRoute,
   AuthenticatedLeadLeadIdRoute: AuthenticatedLeadLeadIdRoute,
   AuthenticatedListingListingIdRoute: AuthenticatedListingListingIdRoute,
+  AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
