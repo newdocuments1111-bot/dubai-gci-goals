@@ -9,7 +9,7 @@ import { approveQueueItem, cancelQueueItem, editQueueVariables, getQueue, saveSe
 import { canApprove, canCancel, canEditVariables, QUEUE_PURPOSES, QUEUE_STATUSES, queueStatusLabel, type QueueStatus } from '@/lib/whatsapp-templates';
 import { waStatusLabel } from '@/lib/whatsapp';
 
-type Filters = { status?: QueueStatus; purpose?: (typeof QUEUE_PURPOSES)[number] };
+type Filters = { status?: QueueStatus | undefined; purpose?: (typeof QUEUE_PURPOSES)[number] | undefined };
 const queueQuery = (f: Filters) => queryOptions({ queryKey: ['queue', f.status ?? '', f.purpose ?? ''], queryFn: () => getQueue({ data: f }) });
 
 export const Route = createFileRoute('/_authenticated/queue')({

@@ -34,8 +34,8 @@ export function SendTemplatePanel({ lead }: { lead: Lead }) {
     if (!template) return;
     setBusy(true); setNote(null);
     try {
-      const r = await queue({ data: { leadId: lead.id, templateId: template.id, variables: values } });
-      if ('error' in r && r.error && !('status' in r)) setNote({ ok: false, text: r.error });
+      const r = await queue({ data: { leadId: lead.id, templateId: template.id, variables: values } }) as { error?: string | null; status?: string; block_reason?: string | null; send_after?: string };
+      if (r.error && !r.status) setNote({ ok: false, text: r.error });
       else if (r.status === 'blocked') setNote({ ok: false, text: `Added to the queue but blocked: ${r.block_reason}` });
       else if (r.status === 'sent') setNote({ ok: true, text: 'Sent on WhatsApp.' });
       else if (r.status === 'scheduled') setNote({ ok: true, text: `Scheduled for ${when(r.send_after)} (9am–8pm Dubai only).` });
