@@ -11,7 +11,7 @@ import { WEEKDAYS, type AppSettings } from '@/lib/settings';
 
 const settingsQuery = queryOptions({ queryKey: ['app-settings'], queryFn: () => getSettings() });
 
-export const Route = createFileRoute('/_authenticated/settings')({
+export const Route = createFileRoute('/_authenticated/settings/')({
   head: () => ({ meta: [
     { title: 'Settings — Dubai AI GCI' }, { name: 'description', content: 'Private owner settings: agent, working hours, holidays, compliance and document retention.' },
     { property: 'og:title', content: 'Settings — Dubai AI GCI' }, { property: 'og:description', content: 'Owner settings for the Dubai AI GCI assistant.' },

@@ -22,6 +22,7 @@ const NAV: readonly NavItem[] = [
   { to: '/team', label: 'Team', show: 'owner' },
   { to: '/ai-reply-rules', label: 'AI Reply Rules', show: 'owner' },
   { to: '/settings', label: 'Settings' },
+  { to: '/settings/whatsapp', label: 'WhatsApp', show: 'owner' },
   { to: '/hq', label: 'Elite Visions HQ', show: 'hq' },
   { to: '/', label: 'Calculator' },
 ];
