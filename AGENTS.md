@@ -36,3 +36,5 @@
 - Document Vault files live in the private "documents" bucket under one folder per client name; 10-minute signed links only, every upload/view/delete logged in document_log, deletion blocked inside the retention period.
 - Private pages render inside OwnerLayout (role-aware nav + "Powered by Elite Visions" footer) from _authenticated/route.tsx.
 - Chat coaching uses the generated @lovable.dev/ai-gateway contract in coach.server.ts; the conversation is passed as untrusted data.
+- WhatsApp uses Meta's Cloud API directly (user-owned app, secrets WHATSAPP_ACCESS_TOKEN/APP_SECRET/VERIFY_TOKEN): the signed webhook stores every change in whatsapp_webhook_events before processing (claim RPC, backoff, recovery on later deliveries) so retries never double-reply.
+- Test Chat and WhatsApp share one reply brain in ai-reply.server.ts; every outbound WhatsApp send goes through deliverChatMessage, which rechecks sendBlockReason (safety list in test mode, STOP, 24-hour window) from browser-safe whatsapp.ts so no path can skip the rules.

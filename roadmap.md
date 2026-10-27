@@ -1,13 +1,14 @@
 # Roadmap — full app build (uploaded spec)
 
-## Current request: WhatsApp Cloud API (Meta, direct) — NOT STARTED
-- [ ] A. Per-agency WhatsApp settings (phone_number_id, WABA id, display number, status, test-recipient safety list); Demo Agency on Meta test number
-- [ ] A. Secrets WHATSAPP_ACCESS_TOKEN / WHATSAPP_APP_SECRET / WHATSAPP_VERIFY_TOKEN — user adds in Project Settings → Secrets after webhook is live
-- [ ] A. Webhook /api/public/whatsapp/webhook: GET verify, POST X-Hub-Signature-256; text, voice, image, location, buttons, statuses; stored inbox + retry job
-- [ ] A. Shared AI reply logic with Test Chat (ai_paused/flagged/stopped), Graph send, usage_events whatsapp_message + ai_reply, CRM fill
-- [ ] A. Agent takeover replies sent to WhatsApp; 24-hour rule; STOP/unsubscribe/توقف/إلغاء
-- [ ] A. Settings → WhatsApp page: callback URL, verify-token name, status, Send test message
-- [ ] B. Voice notes via media API + existing transcription
+## Current request: WhatsApp Cloud API (Meta, direct) — part 1 (A + B) built; parts 2–3 later
+- [x] A. Per-agency WhatsApp settings (phone_number_id, WABA id, display number, status, test-recipient safety list); Demo Agency on Meta test number
+- [ ] A. Secrets WHATSAPP_ACCESS_TOKEN / WHATSAPP_APP_SECRET / WHATSAPP_VERIFY_TOKEN — waiting on the user to add them in Project Settings → Secrets
+- [x] A. Webhook /api/public/whatsapp/webhook: GET verify, POST X-Hub-Signature-256; text, voice, image, location, buttons, statuses; stored inbox + recovery on later deliveries
+- [x] A. Shared AI reply logic with Test Chat (ai_paused/flagged/stopped), Graph send, usage_events whatsapp_message + ai_reply, CRM fill
+- [x] A. Agent takeover replies sent to WhatsApp; 24-hour rule; STOP/unsubscribe/توقف/إلغاء
+- [x] A. Settings → WhatsApp page: callback URL, verify-token name, status, test mode, safety list, Send test message
+- [x] B. Voice notes via media API + existing transcription
+- [ ] Live test from a real phone — waiting on secrets + Meta webhook setup
 - [ ] C. message_templates page (write, submit, sync); start-message rules (consent log, not stopped, approved, 9am–8pm Dubai, 7-day marketing gap); "Reply STOP to stop"; send queue approve/auto; send log
 - [ ] D. Wake old leads on new listing / price drop
 - [ ] E. Off-plan "New launch" matching
