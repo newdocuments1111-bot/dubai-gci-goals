@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 import { getAccess } from './agency-access';
-import { leadSchema, scoreLead, amlRedFlags } from './leads-app';
+import { leadSchema, amlRedFlags } from './leads-app';
 import { requireHq, requireOwner } from './agency-access';
 import { sendBlockReason } from './whatsapp';
 import { z } from 'zod';
