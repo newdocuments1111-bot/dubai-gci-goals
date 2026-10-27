@@ -1,11 +1,12 @@
 # Roadmap — full app build (uploaded spec)
 
 ## Current request: vault storage fix + WhatsApp part 2 (templates + send queue)
-- [ ] Vault: private, lead folders, owner/assigned agent/HQ only, server-only signed links, every view logged; re-run security scan
-- [ ] message_templates + Templates page (write, preview, submit to Meta, Sync status, webhook status updates, marketing STOP line)
-- [ ] whatsapp_outbox + send rules (consent log, not stopped, approved, 9am–8pm Dubai, 7-day marketing gap, safety list) with tests
-- [ ] Per-agency approve/auto setting, Queue page (filters, approve/edit/cancel, send log; agents own leads only), lead "Send template"
-- [ ] 5-minute send job (usage_events, WhatsApp id for ticks); publish
+- [x] Vault: private, lead folders, owner/assigned agent/HQ only, server-only signed links, every view logged; security scan clean
+- [x] message_templates + Templates page (write, preview, submit to Meta, Sync status, webhook status updates, marketing STOP line)
+- [x] whatsapp_outbox + send rules (consent log, not stopped, approved, 9am–8pm Dubai, 7-day marketing gap, safety list) with tests
+- [x] Per-agency approve/auto setting, Queue page (filters, approve/edit/cancel, send log; agents own leads only), lead "Send template"
+- [x] 5-minute send job (usage_events, WhatsApp id for ticks); published
+- [ ] First real template submitted to Meta and sent — waiting on the user (Meta review up to 48h); agent-role session not tested end-to-end (no agent account)
 
 
 ## Current request: WhatsApp Cloud API (Meta, direct) — part 1 (A + B) built; parts 2–3 later
