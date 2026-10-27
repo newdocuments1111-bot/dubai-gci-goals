@@ -18,12 +18,6 @@
 - Missed-lead alerts are created by check_missed_leads() when the home or HQ screen loads (no polling job), since alerts are only shown in the app.
 - Paperwork (Form F / Ejari) drafts and checklists come from browser-safe paperwork.ts using vault file names; drafts are always labelled as drafts and never filed anywhere.
 - Market insights (price per sq ft by area/type/month) are computed in browser-safe market.ts from shared market_transactions; shared market data and UAE knowledge are read by every agency and edited only by HQ.
-- Listing freshness and future AI eligibility derive from timestamps in the browser-safe listings module; nightly SQL persists the check flag without replacing the exact-time read filter.
-- Inventory sources use source/external_id identity and source adapters; connected adapters must upsert inventory before the nightly freshness check, never confirm unchanged listings automatically.
-- Listing map fallback, filtering, permit validation and WhatsApp content use browser-safe listings helpers with unit tests; enforce permits again in the database to protect every write path.
-- Listing details use their own authenticated route and Embla swipe gallery; duplicated listings copy uploaded photos, videos and floor plans into independent paths so deleting either unit cannot break the other.
-- Store shareable photos separately from private videos/floor plans; resolve sharing through an owner-checked function that verifies permanent public access, never copy expiring signed or bundled asset URLs.
-- Listing AI detail validation and field definitions live in a browser-safe helper shared by CSV, editor and details views to keep optional values consistent.
 - Future reply defaults and validation live in a browser-safe module; app_settings and ai_reply_settings hold one row per agency (unique agency_id, owner-only writes), without activating messaging automation.
 - Owner app modules: settings.ts, knowledge.ts, market.ts, leads-app.ts, documents.ts are browser-safe helpers with unit tests; their *.functions.ts counterparts use requireSupabaseAuth + agency access checks.
 - Test Chat and WhatsApp share one reply brain in ai-reply.server.ts (model call via chat.server.ts generateJson); Test Chat queues replies in client quiet hours, WhatsApp answers immediately.
@@ -37,3 +31,4 @@
 - Private pages render inside OwnerLayout (role-aware nav + "Powered by Elite Visions" footer) from _authenticated/route.tsx.
 - Chat coaching uses the generated @lovable.dev/ai-gateway contract in coach.server.ts; the conversation is passed as untrusted data.
 - WhatsApp uses Meta's Cloud API directly; the signed webhook stores each change in whatsapp_webhook_events before processing (claim RPC, backoff) so retries never double-reply. Every send goes through deliverChatMessage, which rechecks sendBlockReason (test-mode safety list, STOP, 24-hour window) from browser-safe whatsapp.ts. Template messages go only through whatsapp_outbox (server-written, claim RPC) and processOutbox, which re-runs outboxDecision from whatsapp-templates.ts before every send and records the chat message before calling Meta so an uncertain send is never repeated.
+- Subdirectories have their own AGENTS.md (src/lib/AGENTS.md holds the listings rules); read it before changing files there.
