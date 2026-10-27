@@ -175,13 +175,11 @@ export async function generateLeadReply(
       : "There are no free appointment times in the next two weeks in our current schedule.";
     if (!offered.length) nextState = state;
     else {
-      const { error } = await supabase
-        .from("consent_log")
-        .insert({
-          lead_id: lead.id,
-          agreed_to: "Appointment agreed; choosing a time",
-          how: `Client explicitly agreed in ${opts.where}`,
-        });
+      const { error } = await supabase.from("consent_log").insert({
+        lead_id: lead.id,
+        agreed_to: "Appointment agreed; choosing a time",
+        how: `Client explicitly agreed in ${opts.where}`,
+      });
       if (error) throw new Error("Could not record appointment agreement.");
     }
   }
@@ -196,14 +194,12 @@ export async function generateLeadReply(
           ? `Sorry, that time is no longer free. ${nextState.slots.map(timeLabel).join(" or ")} (Dubai time) ${nextState.slots.length === 1 ? "is" : "are"} available. Which works for you?`
           : "Sorry, that time is no longer free, and there are no other free times in the next two weeks.";
       } else {
-        const { error } = await supabase
-          .from("viewings")
-          .insert({
-            lead_id: lead.id,
-            listing_id: null,
-            kind: ["seller", "landlord"].includes(ai.type ?? lead.type) ? "valuation" : "viewing",
-            starts_at: chosen,
-          });
+        const { error } = await supabase.from("viewings").insert({
+          lead_id: lead.id,
+          listing_id: null,
+          kind: ["seller", "landlord"].includes(ai.type ?? lead.type) ? "valuation" : "viewing",
+          starts_at: chosen,
+        });
         if (error) {
           if (error.code !== "23505") throw new Error("Could not book the appointment. No booking was confirmed.");
           nextState = { phase: "invited", slots: [] };
@@ -254,13 +250,13 @@ export async function generateLeadReply(
       .from("consent_log")
       .insert({ lead_id: lead.id, agreed_to: "Stopped all messages", how: `Client said stop in ${opts.where}` });
   if (score === "Hot" && (lead.score !== "Hot" || ai.intent === "offer")) {
-    await supabase
-      .from("alerts")
-      .insert({
-        lead_id: lead.id,
-        kind: "hot",
-        message: `HOT: ${lead.name || "A lead"} — ${ai.hotReason || (ai.intent !== "none" ? `requested a ${ai.intent}` : "area, budget and move-in time are known")}.`,
-      });
+    await supabase.from("alerts").insert({
+      lead_id: lead.id,
+      kind: "hot",
+      message: `HOT: ${lead.name || "A lead"} — ${ai.hotReason || (ai.intent !== "none" ? `requested a ${ai.intent}` : "area, budget and move-in time are known")}.`,
+    });
   }
-  return { id: saved.id, reply, stopped: ai.stopped };
+  // Lets the WhatsApp handler know whether this reply changed an appointment (it must then always be sent).
+  const appointmentChanged = JSON.stringify(nextState ?? null) !== JSON.stringify(state ?? null);
+  return { id: saved.id, reply, stopped: ai.stopped, appointmentChanged };
 }
