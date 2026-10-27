@@ -35,11 +35,9 @@ function ResetPasswordPage() {
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY" || (session && isRecoveryLink)) setReady("yes");
     });
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session && isRecoveryLink) setReady("yes");
-      else setTimeout(() => setReady(r => (r === "checking" ? "no" : r)), 2500);
-    });
-    return () => sub.subscription.unsubscribe();
+    supabase.auth.getSession().then(({ data }) => { if (data.session && isRecoveryLink) setReady("yes"); });
+    const timer = setTimeout(() => setReady(r => (r === "checking" ? "no" : r)), 3000);
+    return () => { clearTimeout(timer); sub.subscription.unsubscribe(); };
   }, []);
 
   const submit = async (e: FormEvent) => {
