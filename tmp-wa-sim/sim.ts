@@ -3,7 +3,7 @@ import { supabaseAdmin as admin } from '@/integrations/supabase/client.server';
 import { storeWebhook, processEvents, verifyMetaSignature } from '@/lib/whatsapp.server';
 
 const start = new Date().toISOString();
-const FROM = '971500000917';
+const FROM = '918328448065';
 const PHONE_ID = '1429713293548712';
 const msg = (id: string, body: string) => ({ object: 'whatsapp_business_account', entry: [{ id: '1135797042296710', changes: [{ field: 'messages', value: {
   messaging_product: 'whatsapp', metadata: { display_phone_number: '15551729366', phone_number_id: PHONE_ID },
