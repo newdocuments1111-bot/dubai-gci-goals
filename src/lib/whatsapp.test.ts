@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { describeIncoming, isStopMessage, normalizeRecipients, sendBlockReason, splitWebhookPayload, withinServiceWindow } from './whatsapp';
+import { appIsSubscribed, connectionSummary, describeIncoming, META_APP_ID, missingScopes, isStopMessage, normalizeRecipients, sendBlockReason, splitWebhookPayload, withinServiceWindow } from './whatsapp';
 
 const settings = { phone_number_id: '1429713293548712', test_mode: true, test_recipients: ['919989649633', '918328448065'] };
 const now = new Date('2026-10-27T10:00:00Z');
@@ -59,5 +59,34 @@ describe('webhook payload', () => {
   it('reads button replies and locations as text', () => {
     expect(describeIncoming({ type: 'interactive', interactive: { button_reply: { title: 'Yes, book it' } } }).content).toBe('Yes, book it');
     expect(describeIncoming({ type: 'location', location: { latitude: 25.08, longitude: 55.14, name: 'Marina Walk' } }).content).toContain('https://www.google.com/maps?q=25.08,55.14');
+  });
+});
+
+describe('connection check', () => {
+  const okFindings = {
+    token: { valid: true, missing: [], expiresAt: 0 },
+    subscription: { subscribed: true, fixedNow: false },
+    phone: { ok: true, number: '+1 555-172-9366', name: 'Test Number', status: 'CONNECTED', quality: 'GREEN', mode: 'LIVE' },
+  };
+  it('needs both WhatsApp permissions on the token', () => {
+    expect(missingScopes(['whatsapp_business_messaging', 'public_profile'])).toEqual(['whatsapp_business_management']);
+    expect(missingScopes(['whatsapp_business_messaging', 'whatsapp_business_management'])).toEqual([]);
+  });
+  it('detects our app only by its own app id, not Meta’s test app', () => {
+    const metaOnly = { data: [{ whatsapp_business_api_data: { id: '2202427980234937' } }] };
+    expect(appIsSubscribed(metaOnly)).toBe(false);
+    expect(appIsSubscribed({ data: [...metaOnly.data, { whatsapp_business_api_data: { id: META_APP_ID } }] })).toBe(true);
+    expect(META_APP_ID).toBe('969605275709145');
+  });
+  it('is not ready while the app is unsubscribed', () => {
+    expect(connectionSummary({ ...okFindings, subscription: { subscribed: false, fixedNow: false } }).ok).toBe(false);
+  });
+  it('is not ready when a permission is missing', () => {
+    expect(connectionSummary({ ...okFindings, token: { valid: true, missing: ['whatsapp_business_management'] } }).ok).toBe(false);
+  });
+  it('is ready when token, subscription and number all pass, and keeps the note within 500 characters', () => {
+    const r = connectionSummary(okFindings);
+    expect(r.ok).toBe(true);
+    expect(r.detail.length).toBeLessThanOrEqual(500);
   });
 });

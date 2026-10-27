@@ -2,7 +2,7 @@ import { createHmac, createHash, timingSafeEqual } from 'node:crypto';
 import { supabaseAdmin } from '@/integrations/supabase/client.server';
 import type { Tables } from '@/integrations/supabase/types';
 import { amlRedFlags, timezoneFromPhone } from './leads-app';
-import { describeIncoming, isStopMessage, phoneDigits, sendBlockReason, splitWebhookPayload, stopConfirmation, truncateForWhatsApp } from './whatsapp';
+import { appIsSubscribed, connectionSummary, META_APP_ID, missingScopes, type ConnectionFindings, describeIncoming, isStopMessage, phoneDigits, sendBlockReason, splitWebhookPayload, stopConfirmation, truncateForWhatsApp } from './whatsapp';
 
 const GRAPH = 'https://graph.facebook.com/v25.0';
 const MAX_MEDIA_BYTES = 8 * 1024 * 1024;
@@ -20,8 +20,8 @@ function accessToken() {
   return token;
 }
 
-async function graph(path: string, init: RequestInit = {}) {
-  const res = await fetch(`${GRAPH}${path}`, { ...init, headers: { Authorization: `Bearer ${accessToken()}`, 'Content-Type': 'application/json', ...(init.headers ?? {}) } });
+async function graph(path: string, init: RequestInit = {}, token?: string) {
+  const res = await fetch(`${GRAPH}${path}`, { ...init, headers: { Authorization: `Bearer ${token ?? accessToken()}`, 'Content-Type': 'application/json', ...(init.headers ?? {}) } });
   const text = await res.text();
   if (!res.ok) {
     console.error(`WhatsApp Graph request failed [${res.status}]: ${text}`);
@@ -47,8 +47,44 @@ export async function sendHelloWorld(phoneNumberId: string, to: string) {
   return sentId(await graph(`/${phoneNumberId}/messages`, { method: 'POST', body: JSON.stringify({ messaging_product: 'whatsapp', to: phoneDigits(to), type: 'template', template: { name: 'hello_world', language: { code: 'en_US' } } }) }));
 }
 
-export async function checkPhoneNumber(phoneNumberId: string) {
-  return graph(`/${phoneNumberId}?fields=display_phone_number,verified_name,quality_rating`);
+const errText = (e: unknown) => (e instanceof Error ? e.message : 'Could not reach Meta.').replace(/^Meta refused the request /, '').slice(0, 160);
+
+/** Token permissions, app subscription (subscribes our app if missing) and number health — never returns any secret. */
+export async function runConnectionChecks(phoneNumberId: string, wabaId: string) {
+  const f: ConnectionFindings = { token: { valid: false, missing: [] }, subscription: { subscribed: false, fixedNow: false }, phone: { ok: false } };
+  try {
+    const secret = process.env['WHATSAPP_APP_SECRET'];
+    let scopes: string[] = [];
+    if (secret) {
+      const d = obj((await graph(`/debug_token?input_token=${encodeURIComponent(accessToken())}`, {}, `${META_APP_ID}|${secret}`))['data']);
+      f.token.valid = d['is_valid'] === true;
+      f.token.expiresAt = typeof d['expires_at'] === 'number' ? d['expires_at'] : null;
+      scopes = Array.isArray(d['scopes']) ? d['scopes'].map(String) : [];
+      if (!f.token.valid) f.token.error = String(obj(d['error'])['message'] ?? 'Meta says the token is not valid');
+    } else {
+      const p = (await graph('/me/permissions'))['data'];
+      f.token.valid = true;
+      scopes = Array.isArray(p) ? p.filter(x => obj(x)['status'] === 'granted').map(x => String(obj(x)['permission'])) : [];
+    }
+    f.token.missing = missingScopes(scopes);
+  } catch (e) { f.token.error = errText(e); }
+
+  if (!wabaId) f.subscription.error = 'Add the WhatsApp Business Account ID first';
+  else try {
+    f.subscription.subscribed = appIsSubscribed(await graph(`/${wabaId}/subscribed_apps`));
+    if (!f.subscription.subscribed) {
+      await graph(`/${wabaId}/subscribed_apps`, { method: 'POST' });
+      f.subscription.subscribed = appIsSubscribed(await graph(`/${wabaId}/subscribed_apps`));
+      f.subscription.fixedNow = f.subscription.subscribed;
+    }
+  } catch (e) { f.subscription.error = errText(e); }
+
+  try {
+    const n = await graph(`/${phoneNumberId}?fields=display_phone_number,verified_name,quality_rating,status,account_mode`);
+    f.phone = { ok: true, number: String(n['display_phone_number'] ?? ''), name: String(n['verified_name'] ?? ''), status: String(n['status'] ?? ''), quality: String(n['quality_rating'] ?? ''), mode: String(n['account_mode'] ?? '') };
+  } catch (e) { f.phone = { ok: false, error: errText(e) }; }
+
+  return connectionSummary(f);
 }
 
 /** Download incoming media with a hard size cap. The temporary Meta URL is never stored. */

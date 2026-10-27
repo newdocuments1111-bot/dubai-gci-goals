@@ -147,3 +147,42 @@ export function describeIncoming(message: unknown): { kind: 'text' | 'audio' | '
   const label = type === 'document' ? 'a document' : type === 'video' ? 'a video' : type === 'sticker' ? 'a sticker' : type === 'contacts' ? 'a contact card' : 'a message type we cannot read';
   return { kind: 'unsupported', content: `[Client sent ${label}. It was not opened or kept. Ask them to type their question; never ask for documents in chat.]` };
 }
+
+/** Our Meta app ("Elite Visions"). It must be subscribed to each WhatsApp Business Account, or real messages never reach the webhook. */
+export const META_APP_ID = '969605275709145';
+export const REQUIRED_SCOPES = ['whatsapp_business_messaging', 'whatsapp_business_management'] as const;
+
+export function missingScopes(granted: readonly string[]) {
+  return REQUIRED_SCOPES.filter(s => !granted.includes(s));
+}
+
+/** True when the Graph `subscribed_apps` response lists the given app. */
+export function appIsSubscribed(response: unknown, appId = META_APP_ID) {
+  const list = (response as { data?: unknown[] } | null)?.data;
+  if (!Array.isArray(list)) return false;
+  return list.some(item => {
+    const app = (item as { whatsapp_business_api_data?: { id?: unknown }; id?: unknown } | null);
+    return String(app?.whatsapp_business_api_data?.id ?? app?.id ?? '') === appId;
+  });
+}
+
+export type ConnectionFindings = {
+  token: { valid: boolean; missing: string[]; expiresAt?: number | null; error?: string };
+  subscription: { subscribed: boolean; fixedNow: boolean; error?: string };
+  phone: { ok: boolean; name?: string; number?: string; status?: string; quality?: string; mode?: string; error?: string };
+};
+
+/** One plain-language line for the Settings page (max 500 characters), and whether everything is ready. */
+export function connectionSummary(f: ConnectionFindings) {
+  const parts: string[] = [];
+  if (!f.token.valid) parts.push(`Access token problem: ${f.token.error ?? 'not valid'}`);
+  else if (f.token.missing.length) parts.push(`Access token is missing permission: ${f.token.missing.join(', ')}`);
+  else parts.push(`Access token valid with messaging + management permissions${f.token.expiresAt === 0 ? ' (never expires)' : f.token.expiresAt ? ` (expires ${new Date(f.token.expiresAt * 1000).toISOString().slice(0, 10)})` : ''}`);
+  if (f.subscription.error) parts.push(`App subscription problem: ${f.subscription.error}`);
+  else if (f.subscription.subscribed) parts.push(f.subscription.fixedNow ? 'App was not subscribed to the business account — subscribed it now' : 'App is subscribed to the business account');
+  else parts.push('App is NOT subscribed to the business account, so incoming messages cannot arrive');
+  if (f.phone.ok) parts.push(`Number ${[f.phone.number, f.phone.name && `"${f.phone.name}"`].filter(Boolean).join(' ')}: ${[f.phone.status, f.phone.quality && `quality ${f.phone.quality}`, f.phone.mode].filter(Boolean).join(', ')}`);
+  else parts.push(`Number check failed: ${f.phone.error ?? 'unknown error'}`);
+  const ok = f.token.valid && f.token.missing.length === 0 && f.subscription.subscribed && !f.subscription.error && f.phone.ok;
+  return { ok, detail: parts.join(' · ').slice(0, 500) };
+}

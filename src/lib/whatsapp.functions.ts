@@ -54,21 +54,14 @@ async function managerSettings(context: { supabase: Parameters<typeof getAccess>
   return { access, settings: data };
 }
 
-/** Asks Meta for the number's details with the access token, and records whether the connection works. */
+/** Checks the token's permissions, subscribes our Meta app to the business account if missing, and reads the number's health. */
 export const checkWhatsAppConnection = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const { settings } = await managerSettings(context);
-  const { checkPhoneNumber } = await import('./whatsapp.server');
+  const { runConnectionChecks } = await import('./whatsapp.server');
   const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
-  try {
-    const info = await checkPhoneNumber(settings.phone_number_id);
-    const detail = [info['verified_name'], info['display_phone_number'], info['quality_rating'] && `quality ${String(info['quality_rating'])}`].filter(Boolean).join(' · ');
-    await supabaseAdmin.from('whatsapp_settings').update({ status: 'connected', status_detail: String(detail).slice(0, 500), checked_at: new Date().toISOString() }).eq('id', settings.id);
-    return { ok: true, detail: String(detail) };
-  } catch (e) {
-    const detail = e instanceof Error ? e.message : 'Could not reach Meta.';
-    await supabaseAdmin.from('whatsapp_settings').update({ status: 'error', status_detail: detail.slice(0, 500), checked_at: new Date().toISOString() }).eq('id', settings.id);
-    return { ok: false, detail };
-  }
+  const result = await runConnectionChecks(settings.phone_number_id, settings.waba_id ?? '');
+  await supabaseAdmin.from('whatsapp_settings').update({ status: result.ok ? 'connected' : 'error', status_detail: result.detail, checked_at: new Date().toISOString() }).eq('id', settings.id);
+  return result;
 });
 
 /** Sends Meta's "hello_world" template — only ever to a number on the safety list. */
