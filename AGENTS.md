@@ -26,7 +26,7 @@
 - Listing AI detail validation and field definitions live in a browser-safe helper shared by CSV, editor and details views to keep optional values consistent.
 - Future reply defaults and validation live in a browser-safe module; app_settings and ai_reply_settings hold one row per agency (unique agency_id, owner-only writes), without activating messaging automation.
 - Owner app modules: settings.ts, knowledge.ts, market.ts, leads-app.ts, documents.ts are browser-safe helpers with unit tests; their *.functions.ts counterparts use requireSupabaseAuth + agency access checks.
-- The AI reply brain lives in src/lib/chat.server.ts (createOpenAI + generateText against the Lovable AI gateway, openai/gpt-6-astra); conversation flow in leads-app.functions.ts inserts client/AI/owner messages, checks AML flags privately, and queues replies during client quiet hours (9pm-8am).
+- Test Chat and WhatsApp share one reply brain in ai-reply.server.ts (model call via chat.server.ts generateJson); Test Chat queues replies in client quiet hours, WhatsApp answers immediately.
 - Test Chat policy and consent transitions live in browser-safe chat-policy.ts with tests; persist invitation/offered/selected state in reserved learned fields so generated prose cannot bypass booking agreement. Shared viewing-slots.ts and viewings.server.ts calculate availability for both chat and Viewings; recheck slots before booking and confirm only after a successful insert.
 - New media and public-demo AI calls use the generated @lovable.dev/ai-gateway contracts; existing text and HubSpot calls retain their transport and model to avoid unrelated behavior changes.
 - Chat media is inspected before private storage; identity-document images never enter storage or model conversation history, and owner-only thread reads resolve short-lived media links.
@@ -36,3 +36,4 @@
 - Document Vault files live in the private "documents" bucket under one folder per client name; 10-minute signed links only, every upload/view/delete logged in document_log, deletion blocked inside the retention period.
 - Private pages render inside OwnerLayout (role-aware nav + "Powered by Elite Visions" footer) from _authenticated/route.tsx.
 - Chat coaching uses the generated @lovable.dev/ai-gateway contract in coach.server.ts; the conversation is passed as untrusted data.
+- WhatsApp uses Meta's Cloud API directly; the signed webhook stores each change in whatsapp_webhook_events before processing (claim RPC, backoff) so retries never double-reply. Every send goes through deliverChatMessage, which rechecks sendBlockReason (test-mode safety list, STOP, 24-hour window) from browser-safe whatsapp.ts.
