@@ -32,7 +32,7 @@ export function LeadChat({ lead, messages, onChanged, playAsClient }: { lead: Le
       if (asClient) await sendClient({ data: { leadId: lead.id, content } });
       else await sendOwner({ data: { leadId: lead.id, content } });
       setText(''); onChanged();
-    } catch (e) { setError(e instanceof Error ? e.message : 'Could not send.'); }
+    } catch (e) { setError(e instanceof Error ? e.message : 'Could not send.'); onChanged(); }
     finally { setBusy(false); boxRef.current?.focus(); }
   };
 
@@ -78,7 +78,7 @@ export function LeadChat({ lead, messages, onChanged, playAsClient }: { lead: Le
     {asClient && <ChatMediaInput key={lead.id} leadId={lead.id} onChanged={onChanged} disabled={busy} />}
     <div className="flex items-end gap-2 border-t border-border p-3">
       <textarea ref={boxRef} aria-label={asClient ? 'Write as the client' : 'Write as yourself'} rows={1} maxLength={10000}
-        placeholder={asClient ? 'Write as the client…' : 'Write your reply…'}
+        placeholder={asClient ? 'Write as the client…' : onWhatsApp ? 'Write your reply (sent on WhatsApp)…' : 'Write your reply…'}
         className="max-h-32 min-h-10 flex-1 resize-y rounded-md border border-input bg-background px-3 py-2 text-sm"
         value={text} onChange={e => setText(e.target.value)}
         onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send(); } }} />
