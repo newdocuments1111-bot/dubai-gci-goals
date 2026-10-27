@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { checklistFor, deleteBlocked, documentPath, POA_ITEM } from './documents';
+import { checklistFor, deleteBlocked, documentPath, isLeadDocumentPath, POA_ITEM } from './documents';
 
 describe('checklistFor', () => {
   it('buyer (individual) includes mortgage pre-approval letter', () => {
@@ -19,9 +19,19 @@ describe('checklistFor', () => {
 });
 
 describe('documentPath', () => {
-  it('uses one folder per client and strips unsafe characters', () => {
-    expect(documentPath('agency-1', 'Jane Doe', 'passport copy.pdf')).toMatch(/^agency-1\/Jane Doe\/\d+-passport_copy\.pdf$/);
-    expect(documentPath('agency-1', 'a/b', 'x.pdf')).not.toContain('a/b/');
+  it('uses one folder per lead inside the agency folder and strips unsafe characters', () => {
+    expect(documentPath('agency-1', 'lead-1', 'passport copy.pdf', 1000)).toBe('agency-1/lead-1/1000-passport_copy.pdf');
+    expect(documentPath('agency-1', 'lead-1', '../../x.pdf', 1000)).toBe('agency-1/lead-1/1000-_.._x.pdf');
+  });
+});
+
+describe('isLeadDocumentPath', () => {
+  it('only accepts a file directly in this lead folder of this agency', () => {
+    expect(isLeadDocumentPath('agency-1/lead-1/1000-a.pdf', 'agency-1', 'lead-1')).toBe(true);
+    expect(isLeadDocumentPath('agency-1/lead-2/1000-a.pdf', 'agency-1', 'lead-1')).toBe(false);
+    expect(isLeadDocumentPath('agency-2/lead-1/1000-a.pdf', 'agency-1', 'lead-1')).toBe(false);
+    expect(isLeadDocumentPath('agency-1/lead-1/../lead-2/a.pdf', 'agency-1', 'lead-1')).toBe(false);
+    expect(isLeadDocumentPath('agency-1/lead-1/sub/a.pdf', 'agency-1', 'lead-1')).toBe(false);
   });
 });
 

@@ -5,7 +5,7 @@ import { LogOut } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useMembership } from '@/hooks/use-membership';
 
-type NavItem = { to: string; label: string; show?: 'owner' | 'hq' };
+type NavItem = { to: string; label: string; show?: 'owner' | 'hq' | 'manager' };
 const NAV: readonly NavItem[] = [
   { to: '/dashboard', label: 'Home' },
   { to: '/test-chat', label: 'Test Chat' },
@@ -23,6 +23,8 @@ const NAV: readonly NavItem[] = [
   { to: '/ai-reply-rules', label: 'AI Reply Rules', show: 'owner' },
   { to: '/settings', label: 'Settings' },
   { to: '/settings/whatsapp', label: 'WhatsApp', show: 'owner' },
+  { to: '/templates', label: 'Templates', show: 'manager' },
+  { to: '/queue', label: 'Send queue' },
   { to: '/hq', label: 'Elite Visions HQ', show: 'hq' },
   { to: '/', label: 'Calculator' },
 ];
@@ -32,7 +34,7 @@ export function OwnerLayout() {
   const membership = useMembership();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const items = NAV.filter(i => !i.show || (i.show === 'owner' ? membership.isOwner : membership.isHq));
+  const items = NAV.filter(i => !i.show || (i.show === 'owner' ? membership.isOwner : i.show === 'manager' ? membership.isOwner || membership.isHq : membership.isHq));
   const signOut = async () => {
     await queryClient.cancelQueries();
     queryClient.clear();

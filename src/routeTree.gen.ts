@@ -27,8 +27,10 @@ import { Route as AuthenticatedListingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedMarketDataRouteImport } from './routes/_authenticated/market-data'
 import { Route as AuthenticatedMarketInsightsRouteImport } from './routes/_authenticated/market-insights'
 import { Route as AuthenticatedOwnersRouteImport } from './routes/_authenticated/owners'
+import { Route as AuthenticatedQueueRouteImport } from './routes/_authenticated/queue'
 import { Route as AuthenticatedStatsRouteImport } from './routes/_authenticated/stats'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
+import { Route as AuthenticatedTemplatesRouteImport } from './routes/_authenticated/templates'
 import { Route as AuthenticatedTestChatRouteImport } from './routes/_authenticated/test-chat'
 import { Route as AuthenticatedUaeKnowledgeRouteImport } from './routes/_authenticated/uae-knowledge'
 import { Route as AuthenticatedViewingsRouteImport } from './routes/_authenticated/viewings'
@@ -36,6 +38,7 @@ import { Route as AuthenticatedLeadLeadIdRouteImport } from './routes/_authentic
 import { Route as AuthenticatedListingListingIdRouteImport } from './routes/_authenticated/listing.$listingId'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
 import { Route as AuthenticatedSettingsWhatsappRouteImport } from './routes/_authenticated/settings.whatsapp'
+import { Route as ApiPublicWhatsappOutboxRouteImport } from './routes/api/public/whatsapp/outbox'
 import { Route as ApiPublicWhatsappWebhookRouteImport } from './routes/api/public/whatsapp/webhook'
 
 const IndexRoute = IndexRouteImport.update({
@@ -129,6 +132,11 @@ const AuthenticatedOwnersRoute = AuthenticatedOwnersRouteImport.update({
   path: '/owners',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedQueueRoute = AuthenticatedQueueRouteImport.update({
+  id: '/queue',
+  path: '/queue',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedStatsRoute = AuthenticatedStatsRouteImport.update({
   id: '/stats',
   path: '/stats',
@@ -137,6 +145,11 @@ const AuthenticatedStatsRoute = AuthenticatedStatsRouteImport.update({
 const AuthenticatedTeamRoute = AuthenticatedTeamRouteImport.update({
   id: '/team',
   path: '/team',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTemplatesRoute = AuthenticatedTemplatesRouteImport.update({
+  id: '/templates',
+  path: '/templates',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedTestChatRoute = AuthenticatedTestChatRouteImport.update({
@@ -178,6 +191,11 @@ const AuthenticatedSettingsWhatsappRoute =
     path: '/settings/whatsapp',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicWhatsappOutboxRoute = ApiPublicWhatsappOutboxRouteImport.update({
+  id: '/api/public/whatsapp/outbox',
+  path: '/api/public/whatsapp/outbox',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicWhatsappWebhookRoute =
   ApiPublicWhatsappWebhookRouteImport.update({
     id: '/api/public/whatsapp/webhook',
@@ -203,8 +221,10 @@ export interface FileRoutesByFullPath {
   '/market-data': typeof AuthenticatedMarketDataRoute
   '/market-insights': typeof AuthenticatedMarketInsightsRoute
   '/owners': typeof AuthenticatedOwnersRoute
+  '/queue': typeof AuthenticatedQueueRoute
   '/stats': typeof AuthenticatedStatsRoute
   '/team': typeof AuthenticatedTeamRoute
+  '/templates': typeof AuthenticatedTemplatesRoute
   '/test-chat': typeof AuthenticatedTestChatRoute
   '/uae-knowledge': typeof AuthenticatedUaeKnowledgeRoute
   '/viewings': typeof AuthenticatedViewingsRoute
@@ -212,6 +232,7 @@ export interface FileRoutesByFullPath {
   '/listing/$listingId': typeof AuthenticatedListingListingIdRoute
   '/settings/whatsapp': typeof AuthenticatedSettingsWhatsappRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/api/public/whatsapp/outbox': typeof ApiPublicWhatsappOutboxRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -232,8 +253,10 @@ export interface FileRoutesByTo {
   '/market-data': typeof AuthenticatedMarketDataRoute
   '/market-insights': typeof AuthenticatedMarketInsightsRoute
   '/owners': typeof AuthenticatedOwnersRoute
+  '/queue': typeof AuthenticatedQueueRoute
   '/stats': typeof AuthenticatedStatsRoute
   '/team': typeof AuthenticatedTeamRoute
+  '/templates': typeof AuthenticatedTemplatesRoute
   '/test-chat': typeof AuthenticatedTestChatRoute
   '/uae-knowledge': typeof AuthenticatedUaeKnowledgeRoute
   '/viewings': typeof AuthenticatedViewingsRoute
@@ -241,6 +264,7 @@ export interface FileRoutesByTo {
   '/listing/$listingId': typeof AuthenticatedListingListingIdRoute
   '/settings/whatsapp': typeof AuthenticatedSettingsWhatsappRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
+  '/api/public/whatsapp/outbox': typeof ApiPublicWhatsappOutboxRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
 }
 export interface FileRoutesById {
@@ -263,8 +287,10 @@ export interface FileRoutesById {
   '/_authenticated/market-data': typeof AuthenticatedMarketDataRoute
   '/_authenticated/market-insights': typeof AuthenticatedMarketInsightsRoute
   '/_authenticated/owners': typeof AuthenticatedOwnersRoute
+  '/_authenticated/queue': typeof AuthenticatedQueueRoute
   '/_authenticated/stats': typeof AuthenticatedStatsRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
+  '/_authenticated/templates': typeof AuthenticatedTemplatesRoute
   '/_authenticated/test-chat': typeof AuthenticatedTestChatRoute
   '/_authenticated/uae-knowledge': typeof AuthenticatedUaeKnowledgeRoute
   '/_authenticated/viewings': typeof AuthenticatedViewingsRoute
@@ -272,6 +298,7 @@ export interface FileRoutesById {
   '/_authenticated/listing/$listingId': typeof AuthenticatedListingListingIdRoute
   '/_authenticated/settings/whatsapp': typeof AuthenticatedSettingsWhatsappRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/api/public/whatsapp/outbox': typeof ApiPublicWhatsappOutboxRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
 }
 export interface FileRouteTypes {
@@ -294,8 +321,10 @@ export interface FileRouteTypes {
     | '/market-data'
     | '/market-insights'
     | '/owners'
+    | '/queue'
     | '/stats'
     | '/team'
+    | '/templates'
     | '/test-chat'
     | '/uae-knowledge'
     | '/viewings'
@@ -303,6 +332,7 @@ export interface FileRouteTypes {
     | '/listing/$listingId'
     | '/settings/whatsapp'
     | '/settings/'
+    | '/api/public/whatsapp/outbox'
     | '/api/public/whatsapp/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -323,8 +353,10 @@ export interface FileRouteTypes {
     | '/market-data'
     | '/market-insights'
     | '/owners'
+    | '/queue'
     | '/stats'
     | '/team'
+    | '/templates'
     | '/test-chat'
     | '/uae-knowledge'
     | '/viewings'
@@ -332,6 +364,7 @@ export interface FileRouteTypes {
     | '/listing/$listingId'
     | '/settings/whatsapp'
     | '/settings'
+    | '/api/public/whatsapp/outbox'
     | '/api/public/whatsapp/webhook'
   id:
     | '__root__'
@@ -353,8 +386,10 @@ export interface FileRouteTypes {
     | '/_authenticated/market-data'
     | '/_authenticated/market-insights'
     | '/_authenticated/owners'
+    | '/_authenticated/queue'
     | '/_authenticated/stats'
     | '/_authenticated/team'
+    | '/_authenticated/templates'
     | '/_authenticated/test-chat'
     | '/_authenticated/uae-knowledge'
     | '/_authenticated/viewings'
@@ -362,6 +397,7 @@ export interface FileRouteTypes {
     | '/_authenticated/listing/$listingId'
     | '/_authenticated/settings/whatsapp'
     | '/_authenticated/settings/'
+    | '/api/public/whatsapp/outbox'
     | '/api/public/whatsapp/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -374,6 +410,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   WelcomeRoute: typeof WelcomeRoute
+  ApiPublicWhatsappOutboxRoute: typeof ApiPublicWhatsappOutboxRoute
   ApiPublicWhatsappWebhookRoute: typeof ApiPublicWhatsappWebhookRoute
 }
 
@@ -505,6 +542,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOwnersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/queue': {
+      id: '/_authenticated/queue'
+      path: '/queue'
+      fullPath: '/queue'
+      preLoaderRoute: typeof AuthenticatedQueueRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/stats': {
       id: '/_authenticated/stats'
       path: '/stats'
@@ -517,6 +561,13 @@ declare module '@tanstack/react-router' {
       path: '/team'
       fullPath: '/team'
       preLoaderRoute: typeof AuthenticatedTeamRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/templates': {
+      id: '/_authenticated/templates'
+      path: '/templates'
+      fullPath: '/templates'
+      preLoaderRoute: typeof AuthenticatedTemplatesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/test-chat': {
@@ -568,6 +619,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsWhatsappRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/whatsapp/outbox': {
+      id: '/api/public/whatsapp/outbox'
+      path: '/api/public/whatsapp/outbox'
+      fullPath: '/api/public/whatsapp/outbox'
+      preLoaderRoute: typeof ApiPublicWhatsappOutboxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/whatsapp/webhook': {
       id: '/api/public/whatsapp/webhook'
       path: '/api/public/whatsapp/webhook'
@@ -589,8 +647,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMarketDataRoute: typeof AuthenticatedMarketDataRoute
   AuthenticatedMarketInsightsRoute: typeof AuthenticatedMarketInsightsRoute
   AuthenticatedOwnersRoute: typeof AuthenticatedOwnersRoute
+  AuthenticatedQueueRoute: typeof AuthenticatedQueueRoute
   AuthenticatedStatsRoute: typeof AuthenticatedStatsRoute
   AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
+  AuthenticatedTemplatesRoute: typeof AuthenticatedTemplatesRoute
   AuthenticatedTestChatRoute: typeof AuthenticatedTestChatRoute
   AuthenticatedUaeKnowledgeRoute: typeof AuthenticatedUaeKnowledgeRoute
   AuthenticatedViewingsRoute: typeof AuthenticatedViewingsRoute
@@ -611,8 +671,10 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMarketDataRoute: AuthenticatedMarketDataRoute,
   AuthenticatedMarketInsightsRoute: AuthenticatedMarketInsightsRoute,
   AuthenticatedOwnersRoute: AuthenticatedOwnersRoute,
+  AuthenticatedQueueRoute: AuthenticatedQueueRoute,
   AuthenticatedStatsRoute: AuthenticatedStatsRoute,
   AuthenticatedTeamRoute: AuthenticatedTeamRoute,
+  AuthenticatedTemplatesRoute: AuthenticatedTemplatesRoute,
   AuthenticatedTestChatRoute: AuthenticatedTestChatRoute,
   AuthenticatedUaeKnowledgeRoute: AuthenticatedUaeKnowledgeRoute,
   AuthenticatedViewingsRoute: AuthenticatedViewingsRoute,
@@ -634,6 +696,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   WelcomeRoute: WelcomeRoute,
+  ApiPublicWhatsappOutboxRoute: ApiPublicWhatsappOutboxRoute,
   ApiPublicWhatsappWebhookRoute: ApiPublicWhatsappWebhookRoute,
 }
 export const routeTree = rootRouteImport

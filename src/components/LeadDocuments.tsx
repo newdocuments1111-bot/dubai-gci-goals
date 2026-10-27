@@ -4,32 +4,31 @@ import { queryOptions, useQueryClient, useSuspenseQuery } from '@tanstack/react-
 import { CheckCircle2, Circle, Download, Trash2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { deleteDocument, listDocuments, logDocumentUpload, openDocument } from '@/lib/documents.functions';
-import { checklistFor, documentPath, documentReceived } from '@/lib/documents';
-import { useMembership } from '@/hooks/use-membership';
+import { deleteDocument, finishDocumentUpload, listDocuments, openDocument, startDocumentUpload } from '@/lib/documents.functions';
+import { checklistFor, documentReceived } from '@/lib/documents';
 import type { Lead } from '@/lib/leads-app';
 
-const docsQuery = (client: string) => queryOptions({ queryKey: ['documents', client], queryFn: () => listDocuments({ data: client }) });
+const docsQuery = (leadId: string) => queryOptions({ queryKey: ['documents', leadId], queryFn: () => listDocuments({ data: { leadId } }) });
 
 /** Document Vault for one lead: checklist + private uploads with 10-minute signed links. */
 export function LeadDocuments({ lead }: { lead: Lead }) {
-  const client = lead.name || lead.id;
-  const { data: files } = useSuspenseQuery(docsQuery(client));
+  const leadId = lead.id;
+  const { data: files } = useSuspenseQuery(docsQuery(leadId));
   const queryClient = useQueryClient();
-  const logUpload = useServerFn(logDocumentUpload), open = useServerFn(openDocument), del = useServerFn(deleteDocument);
+  const startUpload = useServerFn(startDocumentUpload), finishUpload = useServerFn(finishDocumentUpload), open = useServerFn(openDocument), del = useServerFn(deleteDocument);
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), [note, setNote] = useState('');
   const checklist = checklistFor(lead.type, {});
-  const { agencyId } = useMembership();
-  const refresh = () => queryClient.invalidateQueries({ queryKey: ['documents', client] });
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['documents', leadId] });
 
   const upload = async (file: File) => {
     setBusy(true); setError(''); setNote('');
     try {
-      const path = documentPath(agencyId, client, file.name);
-      const { error: upError } = await supabase.storage.from('documents').upload(path, file);
+      // The server checks access and hands out a one-time upload link; the vault itself is closed to the browser.
+      const { path, token } = await startUpload({ data: { leadId, filename: file.name } });
+      const { error: upError } = await supabase.storage.from('documents').uploadToSignedUrl(path, token, file);
       if (upError) throw upError;
-      await logUpload({ data: { client, path } });
+      await finishUpload({ data: { leadId, path } });
       setNote('Uploaded.'); refresh();
     } catch { setError('Could not upload the document.'); }
     finally { setBusy(false); if (fileRef.current) fileRef.current.value = ''; }
@@ -37,7 +36,7 @@ export function LeadDocuments({ lead }: { lead: Lead }) {
 
   return <section aria-label="Document vault" className="rounded-lg border border-border p-4">
     <h2 className="mb-1 font-semibold">Document Vault</h2>
-    <p className="mb-3 text-xs text-muted-foreground">Private — only your agency can open these, via 10-minute links. Every upload, view and deletion is logged. Never share documents in chat.</p>
+    <p className="mb-3 text-xs text-muted-foreground">Private — only the agency owner, the assigned agent and HQ can open these, via 10-minute links. Every upload, view and deletion is logged. Never share documents in chat.</p>
     <h3 className="mb-2 text-sm font-medium">Checklist ({lead.type})</h3>
     <ul className="mb-4 space-y-1 text-sm">
       {checklist.map(item => {
@@ -51,8 +50,8 @@ export function LeadDocuments({ lead }: { lead: Lead }) {
     {files.length > 0 && <ul className="mt-3 space-y-1 text-sm">{files.map(f => (
       <li key={f.path} className="flex items-center gap-2">
         <span className="min-w-0 flex-1 truncate">{f.name.replace(/^\d+-/, '')}</span>
-        <Button variant="ghost" size="sm" aria-label={`Open ${f.name}`} onClick={async () => { const r = await open({ data: { client, path: f.path } }); window.open(r.url, '_blank', 'noopener'); }}><Download className="size-4" /></Button>
-        <Button variant="ghost" size="sm" aria-label={`Delete ${f.name}`} onClick={async () => { const r = await del({ data: { client, path: f.path, uploadedAt: f.created_at } }); if (r.error) { setError(r.error); return; } refresh(); }}><Trash2 className="size-4" /></Button>
+        <Button variant="ghost" size="sm" aria-label={`Open ${f.name}`} onClick={async () => { const r = await open({ data: { leadId, path: f.path } }); window.open(r.url, '_blank', 'noopener'); }}><Download className="size-4" /></Button>
+        <Button variant="ghost" size="sm" aria-label={`Delete ${f.name}`} onClick={async () => { const r = await del({ data: { leadId, path: f.path } }); if (r.error) { setError(r.error); return; } refresh(); }}><Trash2 className="size-4" /></Button>
       </li>))}
     </ul>}
   </section>;

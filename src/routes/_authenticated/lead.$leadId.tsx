@@ -11,6 +11,7 @@ import { LeadChat } from '@/components/LeadChat';
 import { LeadDocuments } from '@/components/LeadDocuments';
 import { LeadDealPanel } from '@/components/LeadDealPanel';
 import { CoachPanel } from '@/components/CoachPanel';
+import { SendTemplatePanel } from '@/components/SendTemplatePanel';
 import { useMembership } from '@/hooks/use-membership';
 import { timezoneFromPhone } from '@/lib/leads-app';
 
@@ -80,6 +81,7 @@ function LeadPage() {
       catch (e) { setError(e instanceof Error ? e.message : 'Could not record consent.'); }
       finally { setBusy(false); }
     }} />Client agreed to future property check-ins</label>
+    <SendTemplatePanel lead={lead} />
     <div className="mt-4"><Suspense fallback={<p className="text-sm text-muted-foreground">Loading documents…</p>}><LeadDocuments lead={lead} /></Suspense></div>
   </main>;
 }

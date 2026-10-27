@@ -2,6 +2,7 @@ import { createHmac, createHash, timingSafeEqual } from 'node:crypto';
 import { supabaseAdmin } from '@/integrations/supabase/client.server';
 import type { Tables } from '@/integrations/supabase/types';
 import { amlRedFlags, timezoneFromPhone } from './leads-app';
+import { mapMetaStatus } from './whatsapp-templates';
 import { appIsSubscribed, connectionSummary, META_APP_ID, missingScopes, type ConnectionFindings, describeIncoming, isStopMessage, phoneDigits, sendBlockReason, splitWebhookPayload, stopConfirmation, truncateForWhatsApp } from './whatsapp';
 
 const GRAPH = 'https://graph.facebook.com/v25.0';
@@ -45,6 +46,69 @@ export async function sendText(phoneNumberId: string, to: string, body: string) 
 /** Meta's built-in "hello_world" template, available on every test number. Used only by "Send test message". */
 export async function sendHelloWorld(phoneNumberId: string, to: string) {
   return sentId(await graph(`/${phoneNumberId}/messages`, { method: 'POST', body: JSON.stringify({ messaging_product: 'whatsapp', to: phoneDigits(to), type: 'template', template: { name: 'hello_world', language: { code: 'en_US' } } }) }));
+}
+
+/** Send an approved template; params fill {{1}}, {{2}}… in order. */
+export async function sendTemplate(phoneNumberId: string, to: string, name: string, language: string, params: string[]) {
+  return sentId(await graph(`/${phoneNumberId}/messages`, { method: 'POST', body: JSON.stringify({
+    messaging_product: 'whatsapp', to: phoneDigits(to), type: 'template',
+    template: { name, language: { code: language }, ...(params.length ? { components: [{ type: 'body', parameters: params.map(text => ({ type: 'text', text })) }] } : {}) },
+  }) }));
+}
+
+/** Submit a new template to the WhatsApp Business Account for Meta review. */
+export async function createMetaTemplate(wabaId: string, t: { name: string; language: string; category: string; metaBody: string; examples: string[] }) {
+  const body = await graph(`/${wabaId}/message_templates`, { method: 'POST', body: JSON.stringify({
+    name: t.name, language: t.language, category: t.category.toUpperCase(),
+    components: [{ type: 'BODY', text: t.metaBody, ...(t.examples.length ? { example: { body_text: [t.examples] } } : {}) }],
+  }) });
+  const id = String(body['id'] ?? '');
+  if (!id) throw new WhatsAppApiError('Meta did not return a template id.');
+  return { id, status: mapMetaStatus(String(body['status'] ?? 'PENDING')) };
+}
+
+export type MetaTemplate = { id: string; name: string; language: string; status: string; rejected_reason: string };
+
+/** Every template on the business account (up to 500). */
+export async function listMetaTemplates(wabaId: string) {
+  const out: MetaTemplate[] = [];
+  let after = '';
+  for (let page = 0; page < 5; page++) {
+    const body = await graph(`/${wabaId}/message_templates?fields=id,name,language,status,rejected_reason&limit=100${after ? `&after=${encodeURIComponent(after)}` : ''}`);
+    for (const t of (body['data'] as unknown[] | undefined) ?? []) {
+      const o = obj(t);
+      out.push({ id: String(o['id'] ?? ''), name: String(o['name'] ?? ''), language: String(o['language'] ?? ''), status: String(o['status'] ?? ''), rejected_reason: String(o['rejected_reason'] ?? '') });
+    }
+    after = String(obj(obj(body['paging'])['cursors'])['after'] ?? '');
+    if (!after || !obj(body['paging'])['next']) break;
+  }
+  return out;
+}
+
+/** Meta's reason codes ("NONE", "INVALID_FORMAT") → readable text, empty when there is no reason. */
+export function rejectionText(reason: string) {
+  const r = reason.trim();
+  if (!r || r.toUpperCase() === 'NONE') return null;
+  return r.replace(/_/g, ' ').toLowerCase().replace(/^./, c => c.toUpperCase()).slice(0, 500);
+}
+
+/** message_template_status_update webhook: approve / reject / pause the matching template. */
+async function applyTemplateStatus(admin: Admin, entryId: string, value: Obj) {
+  const status = mapMetaStatus(String(value['event'] ?? ''));
+  const metaId = String(value['message_template_id'] ?? '');
+  const patch = { meta_status: status, rejection_reason: rejectionText(String(value['reason'] ?? '')), status_checked_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+  if (metaId) {
+    const { data, error } = await admin.from('message_templates').update(patch).eq('meta_template_id', metaId).select('id');
+    if (error) throw new Error(`Could not update the template: ${error.message}`);
+    if (data?.length) return `Template ${String(value['message_template_name'] ?? '')} is now ${status}`;
+  }
+  const { data: settings } = await admin.from('whatsapp_settings').select('agency_id').eq('waba_id', entryId);
+  const agencies = (settings ?? []).map(s => s.agency_id);
+  if (!agencies.length) return 'No agency uses this business account';
+  const { data, error } = await admin.from('message_templates').update({ ...patch, ...(metaId ? { meta_template_id: metaId } : {}) })
+    .in('agency_id', agencies).eq('name', String(value['message_template_name'] ?? '')).eq('language', String(value['message_template_language'] ?? '')).select('id');
+  if (error) throw new Error(`Could not update the template: ${error.message}`);
+  return data?.length ? `Template ${String(value['message_template_name'] ?? '')} is now ${status}` : 'No matching template in the app';
 }
 
 const errText = (e: unknown) => (e instanceof Error ? e.message : 'Could not reach Meta.').replace(/^Meta refused the request /, '').slice(0, 160);
@@ -175,7 +239,10 @@ export async function processEvents(admin: Admin, ids: string[], extra: number) 
 /** Returns an outcome note, or null to retry later (status for a message not saved yet). */
 async function processEvent(admin: Admin, ev: Event): Promise<string | null> {
   const payload = obj(ev.payload);
-  if (ev.kind === 'other') return `Stored (${String(payload['field'] ?? 'unknown')})`;
+  if (ev.kind === 'other') {
+    if (payload['field'] === 'message_template_status_update') return applyTemplateStatus(admin, String(payload['entry_id'] ?? ''), obj(payload['value']));
+    return `Stored (${String(payload['field'] ?? 'unknown')})`;
+  }
   if (ev.kind === 'status') {
     const s = obj(payload['status']);
     const errors = (s['errors'] as unknown[] | undefined) ?? [];
@@ -331,7 +398,7 @@ export async function deliverChatMessage(admin: Admin, messageId: string, opts: 
 }
 
 /** Apply status callbacks that arrived before the sent message id was saved. */
-async function reconcileStatuses(admin: Admin, wamid: string) {
+export async function reconcileStatuses(admin: Admin, wamid: string) {
   const { data } = await admin.from('whatsapp_webhook_events').select('id').eq('kind', 'status').eq('wa_id', wamid).is('processed_at', null);
   if (data?.length) await processEvents(admin, data.map(r => r.id), 0);
 }
