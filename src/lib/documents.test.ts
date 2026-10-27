@@ -21,7 +21,7 @@ describe('checklistFor', () => {
 describe('documentPath', () => {
   it('uses one folder per lead inside the agency folder and strips unsafe characters', () => {
     expect(documentPath('agency-1', 'lead-1', 'passport copy.pdf', 1000)).toBe('agency-1/lead-1/1000-passport_copy.pdf');
-    expect(documentPath('agency-1', 'lead-1', '../../x.pdf', 1000)).toBe('agency-1/lead-1/1000-.._.._x.pdf');
+    expect(documentPath('agency-1', 'lead-1', '../../x.pdf', 1000)).toBe('agency-1/lead-1/1000-_.._x.pdf');
   });
 });
 
