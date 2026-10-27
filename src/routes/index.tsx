@@ -188,6 +188,9 @@ function Index() {
 
         <LeadFinder key={session.email ?? "guest"} isOwner={isOwnerEmail(session.email)} />
       </div>
+      <footer className="mx-auto mt-10 max-w-5xl border-t border-border px-4 py-4 text-center text-xs text-muted-foreground">
+        <Link to="/privacy" className="hover:text-foreground hover:underline">Privacy</Link>
+      </footer>
     </main>
   );
 }
