@@ -26,6 +26,13 @@ type Form = { id?: string; label: string; category: TemplateCategory; language: 
 const EMPTY: Form = { label: '', category: 'marketing', language: 'en', body: '', examples: {} };
 const EXAMPLE_HINTS: Record<string, string> = { name: 'Sara', property: '2-bed apartment in Marina Gate', area: 'Dubai Marina', price: 'AED 2,400,000' };
 
+/** Known blanks get a sample value automatically (still editable). */
+const withHints = (body: string, examples: Record<string, string>) => {
+  const next = { ...examples };
+  for (const t of templateTokens(body)) if (next[t] === undefined && EXAMPLE_HINTS[t]) next[t] = EXAMPLE_HINTS[t];
+  return next;
+};
+
 const chip = (s: string) => s === 'approved' ? 'bg-primary text-primary-foreground' : s === 'rejected' || s === 'disabled' ? 'bg-destructive text-destructive-foreground' : 'bg-muted';
 
 function TemplatesPage() {
@@ -101,7 +108,7 @@ function TemplatesPage() {
       </div>
       <div>
         <label className="block text-sm">Message
-          <textarea ref={bodyRef} rows={5} maxLength={1000} className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="Hi {{name}}, a new {{property}} just came up in {{area}} at {{price}}. Would you like the photos and a viewing time this week?" value={form.body} onChange={e => setForm(f => ({ ...f, body: e.target.value }))} />
+          <textarea ref={bodyRef} rows={5} maxLength={1000} className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="Hi {{name}}, a new {{property}} just came up in {{area}} at {{price}}. Would you like the photos and a viewing time this week?" value={form.body} onChange={e => { const body = e.target.value; setForm(f => ({ ...f, body, examples: withHints(body, f.examples) })); }} />
         </label>
         <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
           <span className="text-muted-foreground">Add a blank:</span>
