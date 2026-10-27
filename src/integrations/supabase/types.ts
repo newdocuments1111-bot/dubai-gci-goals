@@ -237,9 +237,11 @@ export type Database = {
         Row: {
           agency_id: string
           author_id: string | null
+          channel: string
           content: string
           created_at: string
           id: string
+          in_reply_to: string | null
           language: string
           lead_id: string
           media_kind: string | null
@@ -247,13 +249,22 @@ export type Database = {
           original_content: string | null
           role: string
           sent: boolean
+          wa_delivered_at: string | null
+          wa_error: string | null
+          wa_failed_at: string | null
+          wa_message_id: string | null
+          wa_read_at: string | null
+          wa_sent_at: string | null
+          wa_status: string | null
         }
         Insert: {
           agency_id?: string
           author_id?: string | null
+          channel?: string
           content: string
           created_at?: string
           id?: string
+          in_reply_to?: string | null
           language?: string
           lead_id: string
           media_kind?: string | null
@@ -261,13 +272,22 @@ export type Database = {
           original_content?: string | null
           role: string
           sent?: boolean
+          wa_delivered_at?: string | null
+          wa_error?: string | null
+          wa_failed_at?: string | null
+          wa_message_id?: string | null
+          wa_read_at?: string | null
+          wa_sent_at?: string | null
+          wa_status?: string | null
         }
         Update: {
           agency_id?: string
           author_id?: string | null
+          channel?: string
           content?: string
           created_at?: string
           id?: string
+          in_reply_to?: string | null
           language?: string
           lead_id?: string
           media_kind?: string | null
@@ -275,6 +295,13 @@ export type Database = {
           original_content?: string | null
           role?: string
           sent?: boolean
+          wa_delivered_at?: string | null
+          wa_error?: string | null
+          wa_failed_at?: string | null
+          wa_message_id?: string | null
+          wa_read_at?: string | null
+          wa_sent_at?: string | null
+          wa_status?: string | null
         }
         Relationships: [
           {
@@ -532,6 +559,7 @@ export type Database = {
           timezone: string
           timing: string
           type: string
+          whatsapp_last_inbound_at: string | null
         }
         Insert: {
           agency_id?: string
@@ -555,6 +583,7 @@ export type Database = {
           timezone?: string
           timing?: string
           type?: string
+          whatsapp_last_inbound_at?: string | null
         }
         Update: {
           agency_id?: string
@@ -578,6 +607,7 @@ export type Database = {
           timezone?: string
           timing?: string
           type?: string
+          whatsapp_last_inbound_at?: string | null
         }
         Relationships: [
           {
@@ -1017,18 +1047,164 @@ export type Database = {
           },
         ]
       }
+      whatsapp_settings: {
+        Row: {
+          agency_id: string
+          checked_at: string | null
+          display_number: string
+          id: string
+          last_webhook_at: string | null
+          phone_number_id: string
+          status: string
+          status_detail: string
+          test_mode: boolean
+          test_recipients: string[]
+          updated_at: string
+          waba_id: string
+        }
+        Insert: {
+          agency_id: string
+          checked_at?: string | null
+          display_number?: string
+          id?: string
+          last_webhook_at?: string | null
+          phone_number_id?: string
+          status?: string
+          status_detail?: string
+          test_mode?: boolean
+          test_recipients?: string[]
+          updated_at?: string
+          waba_id?: string
+        }
+        Update: {
+          agency_id?: string
+          checked_at?: string | null
+          display_number?: string
+          id?: string
+          last_webhook_at?: string | null
+          phone_number_id?: string
+          status?: string
+          status_detail?: string
+          test_mode?: boolean
+          test_recipients?: string[]
+          updated_at?: string
+          waba_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_settings_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: true
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_webhook_events: {
+        Row: {
+          agency_id: string | null
+          attempts: number
+          claimed_until: string | null
+          delivery_key: string
+          id: string
+          kind: string
+          next_attempt_at: string
+          outcome: string
+          payload: Json
+          phone_number_id: string
+          processed_at: string | null
+          processing_error: string | null
+          received_at: string
+          wa_id: string
+        }
+        Insert: {
+          agency_id?: string | null
+          attempts?: number
+          claimed_until?: string | null
+          delivery_key: string
+          id?: string
+          kind: string
+          next_attempt_at?: string
+          outcome?: string
+          payload: Json
+          phone_number_id?: string
+          processed_at?: string | null
+          processing_error?: string | null
+          received_at?: string
+          wa_id?: string
+        }
+        Update: {
+          agency_id?: string | null
+          attempts?: number
+          claimed_until?: string | null
+          delivery_key?: string
+          id?: string
+          kind?: string
+          next_attempt_at?: string
+          outcome?: string
+          payload?: Json
+          phone_number_id?: string
+          processed_at?: string | null
+          processing_error?: string | null
+          received_at?: string
+          wa_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_webhook_events_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
       agency_booked_times: { Args: never; Returns: string[] }
+      apply_whatsapp_status: {
+        Args: {
+          p_at: string
+          p_error: string
+          p_status: string
+          p_wa_id: string
+        }
+        Returns: boolean
+      }
       approve_chat_follow_up: {
         Args: { p_draft: string; p_id: string }
         Returns: undefined
       }
       can_access_lead: { Args: { _lead: string }; Returns: boolean }
       check_missed_leads: { Args: never; Returns: number }
+      claim_whatsapp_events: {
+        Args: { p_extra: number; p_ids: string[] }
+        Returns: {
+          agency_id: string | null
+          attempts: number
+          claimed_until: string | null
+          delivery_key: string
+          id: string
+          kind: string
+          next_attempt_at: string
+          outcome: string
+          payload: Json
+          phone_number_id: string
+          processed_at: string | null
+          processing_error: string | null
+          received_at: string
+          wa_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "whatsapp_webhook_events"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       create_my_agency: {
         Args: { _display_name: string; _name: string }
         Returns: string

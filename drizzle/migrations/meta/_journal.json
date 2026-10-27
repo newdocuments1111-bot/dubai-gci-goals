@@ -78,6 +78,13 @@
       "when": 1793020017688,
       "tag": "0010_lock_scheduled_reminders_function",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1793089147092,
+      "tag": "0011_whatsapp_cloud_connection",
+      "breakpoints": true
     }
   ]
 }
