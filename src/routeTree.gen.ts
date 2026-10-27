@@ -27,8 +27,10 @@ import { Route as AuthenticatedListingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedMarketDataRouteImport } from './routes/_authenticated/market-data'
 import { Route as AuthenticatedMarketInsightsRouteImport } from './routes/_authenticated/market-insights'
 import { Route as AuthenticatedOwnersRouteImport } from './routes/_authenticated/owners'
+import { Route as AuthenticatedQueueRouteImport } from './routes/_authenticated/queue'
 import { Route as AuthenticatedStatsRouteImport } from './routes/_authenticated/stats'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
+import { Route as AuthenticatedTemplatesRouteImport } from './routes/_authenticated/templates'
 import { Route as AuthenticatedTestChatRouteImport } from './routes/_authenticated/test-chat'
 import { Route as AuthenticatedUaeKnowledgeRouteImport } from './routes/_authenticated/uae-knowledge'
 import { Route as AuthenticatedViewingsRouteImport } from './routes/_authenticated/viewings'
@@ -130,6 +132,11 @@ const AuthenticatedOwnersRoute = AuthenticatedOwnersRouteImport.update({
   path: '/owners',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedQueueRoute = AuthenticatedQueueRouteImport.update({
+  id: '/queue',
+  path: '/queue',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedStatsRoute = AuthenticatedStatsRouteImport.update({
   id: '/stats',
   path: '/stats',
@@ -138,6 +145,11 @@ const AuthenticatedStatsRoute = AuthenticatedStatsRouteImport.update({
 const AuthenticatedTeamRoute = AuthenticatedTeamRouteImport.update({
   id: '/team',
   path: '/team',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTemplatesRoute = AuthenticatedTemplatesRouteImport.update({
+  id: '/templates',
+  path: '/templates',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedTestChatRoute = AuthenticatedTestChatRouteImport.update({
@@ -209,8 +221,10 @@ export interface FileRoutesByFullPath {
   '/market-data': typeof AuthenticatedMarketDataRoute
   '/market-insights': typeof AuthenticatedMarketInsightsRoute
   '/owners': typeof AuthenticatedOwnersRoute
+  '/queue': typeof AuthenticatedQueueRoute
   '/stats': typeof AuthenticatedStatsRoute
   '/team': typeof AuthenticatedTeamRoute
+  '/templates': typeof AuthenticatedTemplatesRoute
   '/test-chat': typeof AuthenticatedTestChatRoute
   '/uae-knowledge': typeof AuthenticatedUaeKnowledgeRoute
   '/viewings': typeof AuthenticatedViewingsRoute
@@ -239,8 +253,10 @@ export interface FileRoutesByTo {
   '/market-data': typeof AuthenticatedMarketDataRoute
   '/market-insights': typeof AuthenticatedMarketInsightsRoute
   '/owners': typeof AuthenticatedOwnersRoute
+  '/queue': typeof AuthenticatedQueueRoute
   '/stats': typeof AuthenticatedStatsRoute
   '/team': typeof AuthenticatedTeamRoute
+  '/templates': typeof AuthenticatedTemplatesRoute
   '/test-chat': typeof AuthenticatedTestChatRoute
   '/uae-knowledge': typeof AuthenticatedUaeKnowledgeRoute
   '/viewings': typeof AuthenticatedViewingsRoute
@@ -271,8 +287,10 @@ export interface FileRoutesById {
   '/_authenticated/market-data': typeof AuthenticatedMarketDataRoute
   '/_authenticated/market-insights': typeof AuthenticatedMarketInsightsRoute
   '/_authenticated/owners': typeof AuthenticatedOwnersRoute
+  '/_authenticated/queue': typeof AuthenticatedQueueRoute
   '/_authenticated/stats': typeof AuthenticatedStatsRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
+  '/_authenticated/templates': typeof AuthenticatedTemplatesRoute
   '/_authenticated/test-chat': typeof AuthenticatedTestChatRoute
   '/_authenticated/uae-knowledge': typeof AuthenticatedUaeKnowledgeRoute
   '/_authenticated/viewings': typeof AuthenticatedViewingsRoute
@@ -303,8 +321,10 @@ export interface FileRouteTypes {
     | '/market-data'
     | '/market-insights'
     | '/owners'
+    | '/queue'
     | '/stats'
     | '/team'
+    | '/templates'
     | '/test-chat'
     | '/uae-knowledge'
     | '/viewings'
@@ -333,8 +353,10 @@ export interface FileRouteTypes {
     | '/market-data'
     | '/market-insights'
     | '/owners'
+    | '/queue'
     | '/stats'
     | '/team'
+    | '/templates'
     | '/test-chat'
     | '/uae-knowledge'
     | '/viewings'
@@ -364,8 +386,10 @@ export interface FileRouteTypes {
     | '/_authenticated/market-data'
     | '/_authenticated/market-insights'
     | '/_authenticated/owners'
+    | '/_authenticated/queue'
     | '/_authenticated/stats'
     | '/_authenticated/team'
+    | '/_authenticated/templates'
     | '/_authenticated/test-chat'
     | '/_authenticated/uae-knowledge'
     | '/_authenticated/viewings'
@@ -518,6 +542,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOwnersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/queue': {
+      id: '/_authenticated/queue'
+      path: '/queue'
+      fullPath: '/queue'
+      preLoaderRoute: typeof AuthenticatedQueueRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/stats': {
       id: '/_authenticated/stats'
       path: '/stats'
@@ -530,6 +561,13 @@ declare module '@tanstack/react-router' {
       path: '/team'
       fullPath: '/team'
       preLoaderRoute: typeof AuthenticatedTeamRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/templates': {
+      id: '/_authenticated/templates'
+      path: '/templates'
+      fullPath: '/templates'
+      preLoaderRoute: typeof AuthenticatedTemplatesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/test-chat': {
@@ -609,8 +647,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMarketDataRoute: typeof AuthenticatedMarketDataRoute
   AuthenticatedMarketInsightsRoute: typeof AuthenticatedMarketInsightsRoute
   AuthenticatedOwnersRoute: typeof AuthenticatedOwnersRoute
+  AuthenticatedQueueRoute: typeof AuthenticatedQueueRoute
   AuthenticatedStatsRoute: typeof AuthenticatedStatsRoute
   AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
+  AuthenticatedTemplatesRoute: typeof AuthenticatedTemplatesRoute
   AuthenticatedTestChatRoute: typeof AuthenticatedTestChatRoute
   AuthenticatedUaeKnowledgeRoute: typeof AuthenticatedUaeKnowledgeRoute
   AuthenticatedViewingsRoute: typeof AuthenticatedViewingsRoute
@@ -631,8 +671,10 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMarketDataRoute: AuthenticatedMarketDataRoute,
   AuthenticatedMarketInsightsRoute: AuthenticatedMarketInsightsRoute,
   AuthenticatedOwnersRoute: AuthenticatedOwnersRoute,
+  AuthenticatedQueueRoute: AuthenticatedQueueRoute,
   AuthenticatedStatsRoute: AuthenticatedStatsRoute,
   AuthenticatedTeamRoute: AuthenticatedTeamRoute,
+  AuthenticatedTemplatesRoute: AuthenticatedTemplatesRoute,
   AuthenticatedTestChatRoute: AuthenticatedTestChatRoute,
   AuthenticatedUaeKnowledgeRoute: AuthenticatedUaeKnowledgeRoute,
   AuthenticatedViewingsRoute: AuthenticatedViewingsRoute,
