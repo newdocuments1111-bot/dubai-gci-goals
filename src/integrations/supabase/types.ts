@@ -457,6 +457,7 @@ export type Database = {
           client_name: string
           created_at: string
           id: string
+          lead_id: string | null
           path: string
         }
         Insert: {
@@ -465,6 +466,7 @@ export type Database = {
           client_name: string
           created_at?: string
           id?: string
+          lead_id?: string | null
           path: string
         }
         Update: {
@@ -473,6 +475,7 @@ export type Database = {
           client_name?: string
           created_at?: string
           id?: string
+          lead_id?: string | null
           path?: string
         }
         Relationships: [
@@ -481,6 +484,13 @@ export type Database = {
             columns: ["agency_id"]
             isOneToOne: false
             referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_log_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
             referencedColumns: ["id"]
           },
         ]
@@ -1179,6 +1189,7 @@ export type Database = {
         Returns: undefined
       }
       can_access_lead: { Args: { _lead: string }; Returns: boolean }
+      can_access_lead_documents: { Args: { _lead: string }; Returns: boolean }
       check_missed_leads: { Args: never; Returns: number }
       claim_whatsapp_events: {
         Args: { p_extra: number; p_ids: string[] }
