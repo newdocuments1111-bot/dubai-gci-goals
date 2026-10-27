@@ -55,7 +55,7 @@ export function SendTemplatePanel({ lead }: { lead: Lead }) {
     <p className="mt-1 text-xs text-muted-foreground">Use this to start a conversation or write after 24 hours of silence. Needs the client's recorded consent.</p>
     {open && <div className="mt-3 space-y-3">
       {lead.stopped && <p role="status" className="rounded-md bg-destructive/10 p-2 text-sm text-destructive">This client asked to stop. Messages will be blocked.</p>}
-      {!lead.stopped && !lead.opted_in && <p role="status" className="rounded-md bg-muted p-2 text-sm">No consent recorded yet — tick “Client agreed to future property check-ins” below first, or the message will be blocked.</p>}
+      {!lead.stopped && !lead.opted_in && <p role="status" className="rounded-md bg-muted p-2 text-sm">No consent recorded yet — tick “Client agreed to future property check-ins” on this page first, or the message will be blocked.</p>}
       {!data ? <p className="text-sm text-muted-foreground">Loading templates…</p> : data.templates.length === 0 ? <p className="text-sm text-muted-foreground">No approved templates yet. The owner can write one on the <Link to="/templates" className="underline">Templates</Link> page.</p> : <>
         <label className="block text-sm">Template<select aria-label="Template" className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={templateId} onChange={e => choose(e.target.value)}>
           <option value="">Choose an approved template…</option>
