@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as AuthenticatedAiReplyRulesRouteImport } from './routes/_authenticated/ai-reply-rules'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -64,6 +65,11 @@ const OnboardingRoute = OnboardingRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WelcomeRoute = WelcomeRouteImport.update({
@@ -185,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/demo': typeof DemoRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/welcome': typeof WelcomeRoute
   '/ai-reply-rules': typeof AuthenticatedAiReplyRulesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -213,6 +220,7 @@ export interface FileRoutesByTo {
   '/demo': typeof DemoRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/welcome': typeof WelcomeRoute
   '/ai-reply-rules': typeof AuthenticatedAiReplyRulesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -243,6 +251,7 @@ export interface FileRoutesById {
   '/demo': typeof DemoRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/welcome': typeof WelcomeRoute
   '/_authenticated/ai-reply-rules': typeof AuthenticatedAiReplyRulesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -273,6 +282,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/onboarding'
     | '/privacy'
+    | '/reset-password'
     | '/welcome'
     | '/ai-reply-rules'
     | '/dashboard'
@@ -301,6 +311,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/onboarding'
     | '/privacy'
+    | '/reset-password'
     | '/welcome'
     | '/ai-reply-rules'
     | '/dashboard'
@@ -330,6 +341,7 @@ export interface FileRouteTypes {
     | '/demo'
     | '/onboarding'
     | '/privacy'
+    | '/reset-password'
     | '/welcome'
     | '/_authenticated/ai-reply-rules'
     | '/_authenticated/dashboard'
@@ -360,6 +372,7 @@ export interface RootRouteChildren {
   DemoRoute: typeof DemoRoute
   OnboardingRoute: typeof OnboardingRoute
   PrivacyRoute: typeof PrivacyRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   WelcomeRoute: typeof WelcomeRoute
   ApiPublicWhatsappWebhookRoute: typeof ApiPublicWhatsappWebhookRoute
 }
@@ -406,6 +419,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/welcome': {
@@ -612,6 +632,7 @@ const rootRouteChildren: RootRouteChildren = {
   DemoRoute: DemoRoute,
   OnboardingRoute: OnboardingRoute,
   PrivacyRoute: PrivacyRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   WelcomeRoute: WelcomeRoute,
   ApiPublicWhatsappWebhookRoute: ApiPublicWhatsappWebhookRoute,
 }
