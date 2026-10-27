@@ -65,7 +65,7 @@ function WhatsAppPage() {
       <div className="flex flex-wrap items-center gap-3">
         <span className={`rounded-full px-3 py-1 text-sm font-medium ${s?.status === 'connected' ? 'bg-primary text-primary-foreground' : s?.status === 'error' ? 'bg-destructive text-destructive-foreground' : 'bg-muted'}`}>{status}</span>
         {s?.test_mode && <span className="rounded-full bg-secondary px-3 py-1 text-sm text-secondary-foreground">Test mode on — safety list only</span>}
-        {data.canTest && s?.phone_number_id && <Button variant="outline" size="sm" className="ml-auto" disabled={!!busy} onClick={() => run('check', async () => { const r = await check(); return { ok: r.ok, text: r.ok ? `Connected: ${r.detail}` : r.detail }; })}>
+        {data.canTest && s?.phone_number_id && <Button variant="outline" size="sm" className="ml-auto" disabled={!!busy} onClick={() => run('check', async () => { const r = await check(); return { ok: r.ok, text: r.ok ? `All checks passed: ${r.detail}` : r.detail }; })}>
           <PlugZap className="size-4" />{busy === 'check' ? 'Checking…' : 'Check connection'}
         </Button>}
       </div>

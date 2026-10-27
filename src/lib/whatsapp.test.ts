@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { describeIncoming, isStopMessage, normalizeRecipients, sendBlockReason, splitWebhookPayload, withinServiceWindow } from './whatsapp';
+import { appIsSubscribed, connectionSummary, describeIncoming, META_APP_ID, missingScopes, isStopMessage, normalizeRecipients, sendBlockReason, splitWebhookPayload, withinServiceWindow } from './whatsapp';
 
 const settings = { phone_number_id: '1429713293548712', test_mode: true, test_recipients: ['919989649633', '918328448065'] };
 const now = new Date('2026-10-27T10:00:00Z');
@@ -61,8 +61,6 @@ describe('webhook payload', () => {
     expect(describeIncoming({ type: 'location', location: { latitude: 25.08, longitude: 55.14, name: 'Marina Walk' } }).content).toContain('https://www.google.com/maps?q=25.08,55.14');
   });
 });
-
-import { appIsSubscribed, connectionSummary, META_APP_ID, missingScopes } from './whatsapp';
 
 describe('connection check', () => {
   const okFindings = {
