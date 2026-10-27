@@ -22,7 +22,7 @@ const field = "mt-1 w-full rounded-lg border border-input bg-background px-3 py-
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [agencyName, setAgencyName] = useState("");
@@ -34,6 +34,12 @@ function AuthPage() {
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null); setNotice(null); setBusy(true);
+    if (mode === "forgot") {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/reset-password` });
+      setBusy(false);
+      if (error) return setError(/rate|too many/i.test(error.message) ? "Too many attempts — please wait a few minutes and try again." : "Could not send the reset email. Please try again.");
+      return setNotice("If an account exists for that email, a password reset link is on its way. Check your inbox.");
+    }
     if (mode === "signin") {
       const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       setBusy(false);
@@ -55,8 +61,8 @@ function AuthPage() {
     <main className="flex min-h-screen items-center justify-center bg-background px-4">
       <form onSubmit={submit} className="w-full max-w-sm space-y-4 rounded-lg border border-border bg-card p-6">
         <div>
-          <h1 className="text-2xl font-bold">{mode === "signin" ? "Sign in" : "Create your agency"}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{mode === "signin" ? "Owners and agents sign in here." : "You become the owner and can invite your agents."}</p>
+          <h1 className="text-2xl font-bold">{mode === "signin" ? "Sign in" : mode === "forgot" ? "Reset your password" : "Create your agency"}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{mode === "signin" ? "Owners and agents sign in here." : mode === "forgot" ? "Enter your email and we'll send you a link to set a new password." : "You become the owner and can invite your agents."}</p>
         </div>
         {mode === "signup" && <>
           <label className="block"><span className="text-xs font-medium text-muted-foreground">Agency name</span>
@@ -66,13 +72,14 @@ function AuthPage() {
         </>}
         <label className="block"><span className="text-xs font-medium text-muted-foreground">Email</span>
           <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={field} /></label>
-        <label className="block"><span className="text-xs font-medium text-muted-foreground">Password</span>
-          <input type="password" required minLength={mode === "signup" ? 8 : undefined} autoComplete={mode === "signin" ? "current-password" : "new-password"} value={password} onChange={(e) => setPassword(e.target.value)} className={field} /></label>
+        {mode !== "forgot" && <label className="block"><span className="text-xs font-medium text-muted-foreground">Password</span>
+          <input type="password" required minLength={mode === "signup" ? 8 : undefined} autoComplete={mode === "signin" ? "current-password" : "new-password"} value={password} onChange={(e) => setPassword(e.target.value)} className={field} /></label>}
+        {mode === "signin" && <button type="button" className="-mt-2 block text-sm text-primary underline" onClick={() => { setMode("forgot"); setError(null); setNotice(null); }}>Forgot password?</button>}
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
         {notice && <p role="status" className="text-sm text-primary">{notice}</p>}
-        <Button type="submit" className="w-full" disabled={busy}>{busy ? "Please wait…" : mode === "signin" ? "Sign in" : "Create agency account"}</Button>
+        <Button type="submit" className="w-full" disabled={busy}>{busy ? "Please wait…" : mode === "signin" ? "Sign in" : mode === "forgot" ? "Send reset link" : "Create agency account"}</Button>
         <button type="button" className="block w-full text-center text-sm text-primary underline" onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(null); setNotice(null); }}>
-          {mode === "signin" ? "New agency? Create an account" : "Already have a login? Sign in"}
+          {mode === "signin" ? "New agency? Create an account" : mode === "forgot" ? "Back to sign in" : "Already have a login? Sign in"}
         </button>
         <Link to="/" className="block text-center text-sm text-muted-foreground underline">Back to calculator</Link>
       </form>
