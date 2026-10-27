@@ -2,7 +2,7 @@ import { createServerFn } from '@tanstack/react-start';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 import { getAccess } from './agency-access';
 import { dealMath, DEFAULT_SPLIT_PERCENT } from './agency';
-import { clientFolder } from './documents';
+import { leadFolder } from './documents';
 import { z } from 'zod';
 
 const dealStatus = z.enum(['under offer', 'closed', 'fell through']);
@@ -69,14 +69,19 @@ export const getPaperwork = createServerFn({ method: 'POST' }).middleware([requi
     }
     const leadId = deal?.lead_id ?? data.leadId ?? null;
     const [{ data: lead }, { data: listing }, { data: settings }] = await Promise.all([
-      leadId ? context.supabase.from('leads').select('id,name,phone,type').eq('id', leadId).maybeSingle() : Promise.resolve({ data: null }),
+      leadId ? context.supabase.from('leads').select('id,name,phone,type,agency_id').eq('id', leadId).maybeSingle() : Promise.resolve({ data: null }),
       deal?.listing_id ? context.supabase.from('listings').select('title,community,project,property_type,bedrooms,size_sqft,permit_number').eq('id', deal.listing_id).maybeSingle() : Promise.resolve({ data: null }),
       context.supabase.from('app_settings').select('agency_name,agent_name,rera_brn').eq('agency_id', access.agencyId).maybeSingle(),
     ]);
     let vaultFiles: string[] = [];
     if (lead) {
-      const { data: files } = await context.supabase.storage.from('documents').list(clientFolder(access.agencyId, lead.name || lead.id), { limit: 200 });
-      vaultFiles = (files ?? []).map(f => f.name).filter(n => n !== '.emptyFolderPlaceholder');
+      // Vault file names only, and only for people allowed to see this lead's documents.
+      const { data: allowed } = await context.supabase.rpc('can_access_lead_documents', { _lead: lead.id });
+      if (allowed === true) {
+        const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+        const { data: files } = await supabaseAdmin.storage.from('documents').list(leadFolder(lead.agency_id, lead.id), { limit: 200 });
+        vaultFiles = (files ?? []).map(f => f.name).filter(n => n !== '.emptyFolderPlaceholder');
+      }
     }
     const dealType: 'sale' | 'rent' = deal ? (deal.deal_type as 'sale' | 'rent') : lead && ['tenant', 'landlord'].includes(lead.type) ? 'rent' : 'sale';
     return {
