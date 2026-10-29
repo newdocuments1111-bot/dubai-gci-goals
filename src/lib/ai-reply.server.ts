@@ -183,7 +183,10 @@ export async function generateLeadReply(
     return `${fmtTime(slot, "Asia/Dubai")} (Dubai time${own})`;
   };
   const { loadSchedule } = await import("./viewings.server");
-  const { isTimeFree, nearestSlots, meetingLinks, calculateFreeSlots } = await import("./viewing-slots");
+  const { isTimeFree, nearestFreeTimes, meetingLinks } = await import("./viewing-slots");
+  // Online meeting (client abroad): any hour that suits the client. In person (client in Dubai): Dubai working hours.
+  if (ai.meetingMode) learned["_meetingMode"] = ai.meetingMode;
+  const online = (learned["_meetingMode"] ?? (clientZone ? "online" : "in_person")) === "online";
   let schedule: Awaited<ReturnType<typeof loadSchedule>> | undefined;
   const getSchedule = async () => (schedule ??= await loadSchedule(supabase, lead.agency_id, opts.privileged));
   // Books the client's chosen time, then sends an online meeting link and an add-to-calendar link.
@@ -206,9 +209,12 @@ export async function generateLeadReply(
       crypto.randomUUID(),
       chosen,
       settings.viewing_minutes,
-      `Appointment with ${ctx.agency || "our property team"}`,
+      `${online ? "Online meeting" : "Appointment"} with ${ctx.agency || "our property team"}`,
+      online,
     );
-    reply = `You’re booked for ${timeLabel(chosen)}. We can go through your needs together then.\n\nJoin online: ${links.meet}\n\nAdd it to your calendar: ${links.calendar}`;
+    reply = online
+      ? `You’re booked for ${timeLabel(chosen)}. We can go through your needs together then.\n\nJoin online: ${links.meet}\n\nAdd it to your calendar: ${links.calendar}`
+      : `You’re booked for ${timeLabel(chosen)}. We’ll meet you in Dubai and go through your needs together then.\n\nAdd it to your calendar: ${links.calendar}`;
   };
   let phase = state?.phase;
   // The client agreed (or asked to meet): record consent, then the CLIENT chooses the day and time.
@@ -232,21 +238,22 @@ export async function generateLeadReply(
   if (!ai.stopped && phase === "offered" && Number.isFinite(requested)) {
     // The client's own time: book it when the calendar is free, otherwise suggest the closest free times.
     const { settings, booked } = await getSchedule();
-    if (isTimeFree(settings, booked, requested)) await book(new Date(requested).toISOString());
+    if (isTimeFree(settings, booked, requested, undefined, online)) await book(new Date(requested).toISOString());
     else {
-      const near = nearestSlots(calculateFreeSlots(settings, booked), requested);
+      const near = nearestFreeTimes(settings, booked, requested, online);
       nextState = { phase: "offered", slots: near };
       reply = near.length
         ? `That time isn’t free in our calendar. The closest free times are ${near.map(timeLabel).join(" or ")}. Would one of these work, or is there another time you prefer?`
         : "Sorry, there are no free appointment times in the next two weeks. Which other day would suit you?";
     }
   } else if (!ai.stopped && ai.appointment === "choose" && state?.phase === "offered") {
-    const chosen = nextState?.phase === "booked" ? nextState.slots[0] : undefined;
+    const chosen = ai.slotIndex !== undefined ? state.slots[ai.slotIndex] : undefined;
     if (chosen) {
       // Re-read real availability immediately before inserting; never trust generated times.
-      const freshSlots = await availableViewingSlots(supabase, lead.agency_id, opts.privileged);
-      if (!freshSlots.includes(chosen)) {
-        const near = nearestSlots(freshSlots, Date.parse(chosen));
+      const fresh = await loadSchedule(supabase, lead.agency_id, opts.privileged);
+      schedule = fresh;
+      if (!isTimeFree(fresh.settings, fresh.booked, Date.parse(chosen), undefined, online)) {
+        const near = nearestFreeTimes(fresh.settings, fresh.booked, Date.parse(chosen), online);
         nextState = { phase: "offered", slots: near };
         reply = near.length
           ? `Sorry, that time is no longer free. ${near.map(timeLabel).join(" or ")} ${near.length === 1 ? "is" : "are"} available. Which works for you, or is there another time you prefer?`
