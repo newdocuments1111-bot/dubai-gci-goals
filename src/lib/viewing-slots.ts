@@ -30,21 +30,48 @@ export function calculateFreeSlots(settings: SlotSettings, booked: string[], now
 }
 
 /**
- * The client chooses the time. True when an appointment starting at `startMs` is on a working day, inside working
- * hours, at least 1 hour from now, within 60 days, and does not overlap another booked appointment.
+ * The client chooses the time. True when an appointment starting at `startMs` is at least 1 hour from now, within
+ * 60 days and does not overlap another booked appointment. In-person meetings must also fall on a working day inside
+ * working hours; online meetings (`anyHour`) may be at any hour that suits the client.
  */
-export function isTimeFree(settings: SlotSettings, booked: string[], startMs: number, now = Date.now()) {
+export function isTimeFree(
+  settings: SlotSettings,
+  booked: string[],
+  startMs: number,
+  now = Date.now(),
+  anyHour = false,
+) {
   const duration = settings.viewing_minutes * 60000;
   if (!Number.isFinite(startMs) || !Number.isFinite(duration) || duration <= 0) return false;
   if (startMs <= now + 3600000 || startMs > now + 60 * 86400000) return false;
-  const date = new Date(startMs).toLocaleDateString("en-CA", { timeZone: "Asia/Dubai" });
-  if (!isWorkingDay(date, settings)) return false;
-  const at = (hm: string) => {
-    const [h = 0, m = 0] = hm.split(":").map(Number);
-    return Date.parse(`${date}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00+04:00`);
-  };
-  if (startMs < at(settings.work_start) || startMs + duration > at(settings.work_end)) return false;
+  if (!anyHour) {
+    const date = new Date(startMs).toLocaleDateString("en-CA", { timeZone: "Asia/Dubai" });
+    if (!isWorkingDay(date, settings)) return false;
+    const at = (hm: string) => {
+      const [h = 0, m = 0] = hm.split(":").map(Number);
+      return Date.parse(`${date}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00+04:00`);
+    };
+    if (startMs < at(settings.work_start) || startMs + duration > at(settings.work_end)) return false;
+  }
   return !booked.map(Date.parse).some((t) => startMs < t + duration && startMs + duration > t);
+}
+
+/** Free times closest to the time the client asked for. Online meetings may be at any hour; in-person ones only in working hours. */
+export function nearestFreeTimes(
+  settings: SlotSettings,
+  booked: string[],
+  targetMs: number,
+  anyHour: boolean,
+  count = 2,
+  now = Date.now(),
+) {
+  if (!anyHour) return nearestSlots(calculateFreeSlots(settings, booked, now), targetMs, count);
+  const step = 30 * 60000;
+  const found: string[] = [];
+  for (let k = 1; k <= 96 && found.length < count; k++)
+    for (const t of [targetMs - k * step, targetMs + k * step])
+      if (found.length < count && isTimeFree(settings, booked, t, now, true)) found.push(new Date(t).toISOString());
+  return found.sort();
 }
 
 /** The free slots closest to the time the client asked for, in time order. */
@@ -55,9 +82,9 @@ export function nearestSlots(slots: string[], targetMs: number, count = 2) {
     .sort();
 }
 
-/** Online meeting link and an "add to Google Calendar" link for a booked appointment (no calendar account needed). */
-export function meetingLinks(appointmentId: string, startIso: string, minutes: number, title: string) {
-  const meet = `https://meet.jit.si/EliteVisions-${appointmentId}`;
+/** Add-to-Google-Calendar link for a booked appointment, plus an online meeting link for online meetings (no calendar account needed). */
+export function meetingLinks(appointmentId: string, startIso: string, minutes: number, title: string, online = true) {
+  const meet = online ? `https://meet.jit.si/EliteVisions-${appointmentId}` : "";
   const fmt = (ms: number) =>
     new Date(ms)
       .toISOString()
@@ -68,8 +95,8 @@ export function meetingLinks(appointmentId: string, startIso: string, minutes: n
     action: "TEMPLATE",
     text: title,
     dates: `${fmt(start)}/${fmt(start + minutes * 60000)}`,
-    details: `Join online: ${meet}`,
-    location: meet,
+    details: online ? `Join online: ${meet}` : "Appointment in Dubai",
+    ...(online ? { location: meet } : {}),
   });
   return { meet, calendar: `https://calendar.google.com/calendar/render?${params.toString()}` };
 }
