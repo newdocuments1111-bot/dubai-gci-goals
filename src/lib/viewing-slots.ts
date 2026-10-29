@@ -28,3 +28,48 @@ export function calculateFreeSlots(settings: SlotSettings, booked: string[], now
   }
   return slots;
 }
+
+/**
+ * The client chooses the time. True when an appointment starting at `startMs` is on a working day, inside working
+ * hours, at least 1 hour from now, within 60 days, and does not overlap another booked appointment.
+ */
+export function isTimeFree(settings: SlotSettings, booked: string[], startMs: number, now = Date.now()) {
+  const duration = settings.viewing_minutes * 60000;
+  if (!Number.isFinite(startMs) || !Number.isFinite(duration) || duration <= 0) return false;
+  if (startMs <= now + 3600000 || startMs > now + 60 * 86400000) return false;
+  const date = new Date(startMs).toLocaleDateString("en-CA", { timeZone: "Asia/Dubai" });
+  if (!isWorkingDay(date, settings)) return false;
+  const at = (hm: string) => {
+    const [h = 0, m = 0] = hm.split(":").map(Number);
+    return Date.parse(`${date}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00+04:00`);
+  };
+  if (startMs < at(settings.work_start) || startMs + duration > at(settings.work_end)) return false;
+  return !booked.map(Date.parse).some((t) => startMs < t + duration && startMs + duration > t);
+}
+
+/** The free slots closest to the time the client asked for, in time order. */
+export function nearestSlots(slots: string[], targetMs: number, count = 2) {
+  return [...slots]
+    .sort((a, b) => Math.abs(Date.parse(a) - targetMs) - Math.abs(Date.parse(b) - targetMs))
+    .slice(0, count)
+    .sort();
+}
+
+/** Online meeting link and an "add to Google Calendar" link for a booked appointment (no calendar account needed). */
+export function meetingLinks(appointmentId: string, startIso: string, minutes: number, title: string) {
+  const meet = `https://meet.jit.si/EliteVisions-${appointmentId}`;
+  const fmt = (ms: number) =>
+    new Date(ms)
+      .toISOString()
+      .replace(/[-:]/g, "")
+      .replace(/\.\d{3}/, "");
+  const start = Date.parse(startIso);
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: title,
+    dates: `${fmt(start)}/${fmt(start + minutes * 60000)}`,
+    details: `Join online: ${meet}`,
+    location: meet,
+  });
+  return { meet, calendar: `https://calendar.google.com/calendar/render?${params.toString()}` };
+}
