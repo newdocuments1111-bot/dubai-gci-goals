@@ -139,6 +139,7 @@ export async function generateLeadReply(
           freeTimes: slots.slice(0, 2),
           today: new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Dubai", dateStyle: "full" }).format(new Date()),
           timeZone: "Asia/Dubai",
+          clientTimeZone: lead.timezone,
           history,
         }),
       }),
@@ -159,59 +160,103 @@ export async function generateLeadReply(
   const score = chatLeadScore(learned, ai.intent);
   let reply = ai.reply;
   let nextState = ai.stopped ? state : appointmentTransition(state, ai.appointment, offerSlots, ai.slotIndex);
-  const timeLabel = (slot: string) =>
+  const fmtTime = (slot: string, timeZone: string) =>
     new Intl.DateTimeFormat("en-GB", {
-      timeZone: "Asia/Dubai",
+      timeZone,
       weekday: "long",
       day: "numeric",
       month: "short",
       hour: "numeric",
       minute: "2-digit",
     }).format(new Date(slot));
-  if (!ai.stopped && ai.appointment === "accept" && state?.phase === "invited") {
-    const offered = nextState?.slots ?? [];
-    reply = offered.length
-      ? `Lovely — ${offered.map(timeLabel).join(" or ")} (Dubai time) ${offered.length === 1 ? "is" : "are"} free. Which works for you?`
-      : "There are no free appointment times in the next two weeks in our current schedule.";
-    if (!offered.length) nextState = state;
-    else {
-      const { error } = await supabase.from("consent_log").insert({
-        lead_id: lead.id,
-        agreed_to: "Appointment agreed; choosing a time",
-        how: `Client explicitly agreed in ${opts.where}`,
-      });
-      if (error) throw new Error("Could not record appointment agreement.");
+  const clientZone = lead.timezone && lead.timezone !== "Asia/Dubai" ? lead.timezone : null;
+  // Times are shown in Dubai time, plus the client's own time when they are abroad.
+  const timeLabel = (slot: string) => {
+    let own = "";
+    if (clientZone) {
+      try {
+        own = `, ${fmtTime(slot, clientZone)} your time`;
+      } catch {
+        own = "";
+      }
     }
+    return `${fmtTime(slot, "Asia/Dubai")} (Dubai time${own})`;
+  };
+  const { loadSchedule } = await import("./viewings.server");
+  const { isTimeFree, nearestSlots, meetingLinks, calculateFreeSlots } = await import("./viewing-slots");
+  let schedule: Awaited<ReturnType<typeof loadSchedule>> | undefined;
+  const getSchedule = async () => (schedule ??= await loadSchedule(supabase, lead.agency_id, opts.privileged));
+  // Books the client's chosen time, then sends an online meeting link and an add-to-calendar link.
+  const book = async (chosen: string) => {
+    const { settings } = await getSchedule();
+    const { error } = await supabase.from("viewings").insert({
+      lead_id: lead.id,
+      listing_id: null,
+      kind: ["seller", "landlord"].includes(ai.type ?? lead.type) ? "valuation" : "viewing",
+      starts_at: chosen,
+    });
+    if (error) {
+      if (error.code !== "23505") throw new Error("Could not book the appointment. No booking was confirmed.");
+      nextState = { phase: "offered", slots: [] };
+      reply = "Sorry, that time has just been booked. Which other day and time would suit you?";
+      return;
+    }
+    nextState = { phase: "booked", slots: [chosen] };
+    const links = meetingLinks(
+      crypto.randomUUID(),
+      chosen,
+      settings.viewing_minutes,
+      `Appointment with ${ctx.agency || "our property team"}`,
+    );
+    reply = `You’re booked for ${timeLabel(chosen)}. We can go through your needs together then.\n\nJoin online: ${links.meet}\n\nAdd it to your calendar: ${links.calendar}`;
+  };
+  let phase = state?.phase;
+  // The client agreed (or asked to meet): record consent, then the CLIENT chooses the day and time.
+  if (!ai.stopped && ai.appointment === "accept" && (!state || state.phase === "invited")) {
+    const { error } = await supabase.from("consent_log").insert({
+      lead_id: lead.id,
+      agreed_to: "Appointment agreed; client choosing a time",
+      how: `Client explicitly agreed in ${opts.where}`,
+    });
+    if (error) throw new Error("Could not record appointment agreement.");
+    nextState = { phase: "offered", slots: [] };
+    phase = "offered";
+    reply = clientZone
+      ? "Great! Which day and time suits you best? You can tell me in your own local time and I’ll book it."
+      : "Great! Which day and time suits you best? Tell me and I’ll book it.";
   }
-  if (!ai.stopped && ai.appointment === "choose" && state?.phase === "offered") {
+  const requested =
+    ai.requestedTime && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(ai.requestedTime)
+      ? Date.parse(`${ai.requestedTime}:00+04:00`)
+      : NaN;
+  if (!ai.stopped && phase === "offered" && Number.isFinite(requested)) {
+    // The client's own time: book it when the calendar is free, otherwise suggest the closest free times.
+    const { settings, booked } = await getSchedule();
+    if (isTimeFree(settings, booked, requested)) await book(new Date(requested).toISOString());
+    else {
+      const near = nearestSlots(calculateFreeSlots(settings, booked), requested);
+      nextState = { phase: "offered", slots: near };
+      reply = near.length
+        ? `That time isn’t free in our calendar. The closest free times are ${near.map(timeLabel).join(" or ")}. Would one of these work, or is there another time you prefer?`
+        : "Sorry, there are no free appointment times in the next two weeks. Which other day would suit you?";
+    }
+  } else if (!ai.stopped && ai.appointment === "choose" && state?.phase === "offered") {
     const chosen = nextState?.phase === "booked" ? nextState.slots[0] : undefined;
     if (chosen) {
       // Re-read real availability immediately before inserting; never trust generated times.
       const freshSlots = await availableViewingSlots(supabase, lead.agency_id, opts.privileged);
       if (!freshSlots.includes(chosen)) {
-        nextState = { phase: "offered", slots: freshSlots.slice(0, 2) };
-        reply = freshSlots.length
-          ? `Sorry, that time is no longer free. ${nextState.slots.map(timeLabel).join(" or ")} (Dubai time) ${nextState.slots.length === 1 ? "is" : "are"} available. Which works for you?`
+        const near = nearestSlots(freshSlots, Date.parse(chosen));
+        nextState = { phase: "offered", slots: near };
+        reply = near.length
+          ? `Sorry, that time is no longer free. ${near.map(timeLabel).join(" or ")} ${near.length === 1 ? "is" : "are"} available. Which works for you, or is there another time you prefer?`
           : "Sorry, that time is no longer free, and there are no other free times in the next two weeks.";
-      } else {
-        const { error } = await supabase.from("viewings").insert({
-          lead_id: lead.id,
-          listing_id: null,
-          kind: ["seller", "landlord"].includes(ai.type ?? lead.type) ? "valuation" : "viewing",
-          starts_at: chosen,
-        });
-        if (error) {
-          if (error.code !== "23505") throw new Error("Could not book the appointment. No booking was confirmed.");
-          nextState = { phase: "invited", slots: [] };
-          reply = "Sorry, that time has just been booked. Would you like to choose another time?";
-        } else
-          reply = `You’re booked for ${timeLabel(chosen)} (Dubai time). We can go through your needs together then.`;
-      }
+      } else await book(chosen);
     } else if (ai.slotIndex !== undefined) {
       const offered = offerSlots.slice(0, 2);
       nextState = { phase: "offered", slots: offered };
       reply = offered.length
-        ? `Sorry, that time is no longer free. ${offered.map(timeLabel).join(" or ")} (Dubai time) ${offered.length === 1 ? "is" : "are"} available. Which works for you?`
+        ? `Sorry, that time is no longer free. ${offered.map(timeLabel).join(" or ")} ${offered.length === 1 ? "is" : "are"} available. Which works for you?`
         : "Sorry, there are no free appointment times in the next two weeks.";
     }
   }
