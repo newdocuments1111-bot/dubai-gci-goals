@@ -99,6 +99,48 @@
       "when": 1793109427266,
       "tag": "0013_whatsapp_templates_and_outbox",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1794375708447,
+      "tag": "0014_multilingual_leads_weekly_reports_followup_identity",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1794375888445,
+      "tag": "0015_weekly_report_source_and_owner_access",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1794376002636,
+      "tag": "0016_hourly_monday_snapshots_and_two_day_viewing_drafts",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1794376068628,
+      "tag": "0017_atomic_post_viewing_draft_approval",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1794376365684,
+      "tag": "0018_exact_budget_ceiling_for_viewing_matches",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1794376425342,
+      "tag": "0019_allow_scheduled_and_post_viewing_followup_kinds",
+      "breakpoints": true
     }
   ]
 }

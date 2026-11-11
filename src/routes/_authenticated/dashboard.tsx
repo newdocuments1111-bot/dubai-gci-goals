@@ -11,6 +11,7 @@ import { useMembership } from '@/hooks/use-membership';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
+import { getWeeklyReport } from '@/lib/weekly-report.functions';
 
 const agentQuery = queryOptions({ queryKey: ['home', 'agent'], queryFn: () => getAgentHome() });
 const ownerQuery = queryOptions({ queryKey: ['home', 'owner'], queryFn: () => getOwnerHome() });
@@ -115,9 +116,15 @@ function AgentHome() {
 
 function OwnerHome() {
   const { data, error } = useQuery(ownerQuery);
+  const { data: weekly, error: weeklyError } = useQuery({ queryKey: ['weekly-report','current'], queryFn: () => getWeeklyReport({data:{current:true}}) });
   if (error) return <p role="alert" className="text-sm text-destructive">{error.message}</p>;
   if (!data) return <p className="text-sm text-muted-foreground">Loading agency numbers…</p>;
   return <div className="space-y-6">
+    <section aria-label="This week" className="border-b border-border pb-4">
+      <div className="flex items-center justify-between gap-3"><h2 className="font-semibold">This week</h2><Button asChild variant="outline" size="sm"><Link to="/owner/weekly-report">Monday report</Link></Button></div>
+      {weekly&&<p className="mt-2 text-sm">{weekly.report.enquiries} enquiries · {weekly.report.hotLeads} Hot leads · {weekly.report.viewings.booked} viewings booked · {weekly.report.weekGci.deals} deals closed · {aed(weekly.report.weekGci.gci)} GCI · {weekly.report.missed} missed alerts</p>}
+      {weeklyError&&<p role="alert" className="text-sm text-destructive">{weeklyError.message}</p>}
+    </section>
     <section className="grid gap-4 sm:grid-cols-4">
       <Stat label="Total GCI this month" value={aed(data.gci.month)} />
       <Stat label="Total GCI this year" value={aed(data.gci.year)} />

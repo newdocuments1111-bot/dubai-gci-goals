@@ -173,6 +173,7 @@ export type Database = {
           agency_id: string
           agency_name: string
           agent_name: string
+          annual_gci_goal_aed: number
           compliance_email: string
           holidays: string[]
           id: string
@@ -191,6 +192,7 @@ export type Database = {
           agency_id?: string
           agency_name?: string
           agent_name?: string
+          annual_gci_goal_aed?: number
           compliance_email?: string
           holidays?: string[]
           id?: string
@@ -209,6 +211,7 @@ export type Database = {
           agency_id?: string
           agency_name?: string
           agent_name?: string
+          annual_gci_goal_aed?: number
           compliance_email?: string
           holidays?: string[]
           id?: string
@@ -249,6 +252,7 @@ export type Database = {
           original_content: string | null
           role: string
           sent: boolean
+          translation_en: string | null
           wa_delivered_at: string | null
           wa_error: string | null
           wa_failed_at: string | null
@@ -272,6 +276,7 @@ export type Database = {
           original_content?: string | null
           role: string
           sent?: boolean
+          translation_en?: string | null
           wa_delivered_at?: string | null
           wa_error?: string | null
           wa_failed_at?: string | null
@@ -295,6 +300,7 @@ export type Database = {
           original_content?: string | null
           role?: string
           sent?: boolean
+          translation_en?: string | null
           wa_delivered_at?: string | null
           wa_error?: string | null
           wa_failed_at?: string | null
@@ -498,6 +504,7 @@ export type Database = {
       follow_ups: {
         Row: {
           agency_id: string
+          chat_message_id: string | null
           created_at: string
           draft: string
           id: string
@@ -505,10 +512,13 @@ export type Database = {
           lead_id: string | null
           owner_id: string | null
           send_after: string | null
+          sent_at: string | null
           status: string
+          viewing_id: string | null
         }
         Insert: {
           agency_id?: string
+          chat_message_id?: string | null
           created_at?: string
           draft: string
           id?: string
@@ -516,10 +526,13 @@ export type Database = {
           lead_id?: string | null
           owner_id?: string | null
           send_after?: string | null
+          sent_at?: string | null
           status?: string
+          viewing_id?: string | null
         }
         Update: {
           agency_id?: string
+          chat_message_id?: string | null
           created_at?: string
           draft?: string
           id?: string
@@ -527,7 +540,9 @@ export type Database = {
           lead_id?: string | null
           owner_id?: string | null
           send_after?: string | null
+          sent_at?: string | null
           status?: string
+          viewing_id?: string | null
         }
         Relationships: [
           {
@@ -538,10 +553,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "follow_ups_chat_message_id_fkey"
+            columns: ["chat_message_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "follow_ups_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follow_ups_viewing_id_fkey"
+            columns: ["viewing_id"]
+            isOneToOne: false
+            referencedRelation: "viewings"
             referencedColumns: ["id"]
           },
         ]
@@ -557,6 +586,7 @@ export type Database = {
           flagged: boolean
           hubspot_id: string | null
           id: string
+          language: string
           last_message_at: string | null
           learned: Json
           name: string
@@ -581,6 +611,7 @@ export type Database = {
           flagged?: boolean
           hubspot_id?: string | null
           id?: string
+          language?: string
           last_message_at?: string | null
           learned?: Json
           name?: string
@@ -605,6 +636,7 @@ export type Database = {
           flagged?: boolean
           hubspot_id?: string | null
           id?: string
+          language?: string
           last_message_at?: string | null
           learned?: Json
           name?: string
@@ -1071,6 +1103,7 @@ export type Database = {
         Row: {
           agency_id: string
           created_at: string
+          done_at: string | null
           followup_sent: boolean
           id: string
           kind: string
@@ -1083,6 +1116,7 @@ export type Database = {
         Insert: {
           agency_id?: string
           created_at?: string
+          done_at?: string | null
           followup_sent?: boolean
           id?: string
           kind?: string
@@ -1095,6 +1129,7 @@ export type Database = {
         Update: {
           agency_id?: string
           created_at?: string
+          done_at?: string | null
           followup_sent?: boolean
           id?: string
           kind?: string
@@ -1124,6 +1159,38 @@ export type Database = {
             columns: ["listing_id"]
             isOneToOne: false
             referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weekly_reports: {
+        Row: {
+          agency_id: string
+          generated_at: string
+          id: string
+          report: Json
+          week_start: string
+        }
+        Insert: {
+          agency_id: string
+          generated_at?: string
+          id?: string
+          report: Json
+          week_start: string
+        }
+        Update: {
+          agency_id?: string
+          generated_at?: string
+          id?: string
+          report?: Json
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_reports_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
             referencedColumns: ["id"]
           },
         ]
@@ -1375,6 +1442,10 @@ export type Database = {
       can_access_lead: { Args: { _lead: string }; Returns: boolean }
       can_access_lead_documents: { Args: { _lead: string }; Returns: boolean }
       check_missed_leads: { Args: never; Returns: number }
+      claim_viewing_followup: {
+        Args: { p_draft: string; p_id: string }
+        Returns: string
+      }
       claim_whatsapp_events: {
         Args: { p_extra: number; p_ids: string[] }
         Returns: {
@@ -1434,12 +1505,17 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      client_reply_text: {
+        Args: { p_key: string; p_lang: string; p_latin?: boolean }
+        Returns: string
+      }
       create_my_agency: {
         Args: { _display_name: string; _name: string }
         Returns: string
       }
       draft_old_lead_revivals: { Args: never; Returns: number }
       draft_scheduled_reminders: { Args: never; Returns: undefined }
+      draft_second_viewing_followups: { Args: never; Returns: number }
       hq_agency_overview: {
         Args: never
         Returns: {
@@ -1471,6 +1547,10 @@ export type Database = {
       storage_path_access: {
         Args: { _bucket: string; _name: string }
         Returns: boolean
+      }
+      weekly_report_source: {
+        Args: { p_agency: string; p_as_of?: string }
+        Returns: Json
       }
     }
     Enums: {

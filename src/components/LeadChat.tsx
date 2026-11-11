@@ -7,10 +7,12 @@ import type { ChatMessage, Lead } from '@/lib/leads-app';
 import { dubaiDate } from '@/lib/listings';
 import { serviceWindowEndsAt, waStatusLabel, withinServiceWindow } from '@/lib/whatsapp';
 import { ChatMediaInput } from './ChatMediaInput';
+import { SAMPLE_BUYERS, type Language } from '@/lib/reply-i18n';
 
 /** WhatsApp-style conversation. The owner plays the client in Test Chat, or replies themselves after Take over. Real WhatsApp chats go to the buyer's phone. */
 export function LeadChat({ lead, messages, onChanged, playAsClient }: { lead: Lead; messages: (ChatMessage & { media_url?: string | null })[]; onChanged: () => void; playAsClient: boolean }) {
   const [text, setText] = useState('');
+  const [languageHint, setLanguageHint] = useState<Language | 'auto'>('auto');
   const [busy, setBusy] = useState(false), [error, setError] = useState('');
   // A real WhatsApp buyer writes from their phone, so "write as the client" is only for practice chats.
   const onWhatsApp = Boolean(lead.whatsapp_last_inbound_at);
@@ -24,12 +26,12 @@ export function LeadChat({ lead, messages, onChanged, playAsClient }: { lead: Le
   useEffect(() => { boxRef.current?.focus(); }, [lead.id]);
   useEffect(() => { endRef.current?.scrollIntoView({ block: 'end' }); }, [messages.length]);
 
-  const send = async () => {
-    const content = text.trim();
+  const send = async (sample?: string) => {
+    const content = (sample ?? text).trim();
     if (!content || busy) return;
     setBusy(true); setError('');
     try {
-      if (asClient) await sendClient({ data: { leadId: lead.id, content } });
+      if (asClient) await sendClient({ data: { leadId: lead.id, content, languageHint: languageHint === 'auto' ? undefined : languageHint } });
       else await sendOwner({ data: { leadId: lead.id, content } });
       setText(''); onChanged();
     } catch (e) { setError(e instanceof Error ? e.message : 'Could not send.'); onChanged(); }
@@ -62,8 +64,8 @@ export function LeadChat({ lead, messages, onChanged, playAsClient }: { lead: Le
             {m.media_url && m.media_kind === 'audio' && <audio controls src={m.media_url} className="mb-2 max-w-full" aria-label="Client voice note" />}
             {m.media_url && m.media_kind === 'image' && <img src={m.media_url} alt="Client photo or screenshot" width={320} height={240} loading="lazy" className="mb-2 max-h-64 max-w-full rounded object-contain" />}
             {m.media_kind === 'audio' && <p className="mb-1 text-xs opacity-70">Transcription</p>}
-            <p className="whitespace-pre-wrap break-words">{m.media_kind === 'image' ? m.content.split('\nTreat screenshot claims')[0] : m.content}</p>
-            {m.original_content && <p className="mt-1 border-t border-current/20 pt-1 text-xs opacity-80">{m.original_content}</p>}
+            <p dir="auto" className="whitespace-pre-wrap break-words">{m.translation_en || (m.media_kind === 'image' ? m.content.split('\nTreat screenshot claims')[0] : m.content)}</p>
+            {(m.translation_en || m.original_content) && <p dir="auto" className="mt-1 whitespace-pre-wrap border-t border-border bg-muted p-1 pt-1 text-xs text-muted-foreground">{m.original_content || m.content}</p>}
             <p className="mt-1 text-[10px] opacity-70">{footer(m)}</p>
           </div>
         </div>
@@ -75,7 +77,13 @@ export function LeadChat({ lead, messages, onChanged, playAsClient }: { lead: Le
       {([[true, 'Client (test)'], [false, 'Me (agent)']] as const).map(([value, label]) => <button key={label} type="button" role="radio" aria-checked={asClient === value} onClick={() => setAsClient(value)}
         className={`rounded-md px-2 py-1 ${asClient === value ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>{label}</button>)}
     </div>}
-    {asClient && <ChatMediaInput key={lead.id} leadId={lead.id} onChanged={onChanged} disabled={busy} />}
+    {asClient && <div className="flex flex-wrap items-center gap-2 px-3 py-2">
+      <select aria-label="Test conversation language" className="rounded-md border border-input bg-background p-1 text-xs" value={languageHint} onChange={e => setLanguageHint(e.target.value as Language | 'auto')}>
+        <option value="auto">Auto</option><option value="en">English</option><option value="ar">العربية</option><option value="hi">हिन्दी</option><option value="ru">Русский</option>
+      </select>
+      {SAMPLE_BUYERS.map(sample => <Button key={sample.lang} size="sm" variant="outline" disabled={busy || lead.stopped} onClick={() => void send(sample.text)}>{sample.label}</Button>)}
+    </div>}
+    {asClient && <ChatMediaInput key={lead.id} leadId={lead.id} onChanged={onChanged} disabled={busy} languageHint={languageHint==='auto'?undefined:languageHint} />}
     <div className="flex items-end gap-2 border-t border-border p-3">
       <textarea ref={boxRef} aria-label={asClient ? 'Write as the client' : 'Write as yourself'} rows={1} maxLength={10000}
         placeholder={asClient ? 'Write as the client…' : onWhatsApp ? 'Write your reply (sent on WhatsApp)…' : 'Write your reply…'}

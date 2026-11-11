@@ -44,6 +44,7 @@ function SettingsPage() {
       <section className="grid gap-3 sm:grid-cols-2">
         <label className="text-sm">Agent name<Input className="mt-1" maxLength={200} value={form.agent_name} onChange={e => set('agent_name', e.target.value)} /></label>
         <label className="text-sm">Agency name<Input className="mt-1" maxLength={200} value={form.agency_name} onChange={e => set('agency_name', e.target.value)} /></label>
+        <label className="text-sm">Agency yearly GCI goal (AED, total commission)<Input className="mt-1" type="number" min={0} value={form.annual_gci_goal_aed} onChange={e => set('annual_gci_goal_aed', Math.max(0, Number(e.target.value) || 0))} /></label>
         <label className="text-sm">RERA / BRN number<Input className="mt-1" maxLength={100} value={form.rera_brn} onChange={e => set('rera_brn', e.target.value)} /></label>
         <label className="text-sm">Mortgage adviser partner<Input className="mt-1" maxLength={200} value={form.mortgage_partner} onChange={e => set('mortgage_partner', e.target.value)} /></label>
         <label className="text-sm">Compliance officer email<Input className="mt-1" type="email" maxLength={200} value={form.compliance_email} onChange={e => set('compliance_email', e.target.value)} /></label>

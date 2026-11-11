@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import type { Tables } from "@/integrations/supabase/types";
 import { amlRedFlags, timezoneFromPhone } from "./leads-app";
 import { mapMetaStatus } from "./whatsapp-templates";
+import { clientScript, detectLanguage, normaliseLanguage, t } from './reply-i18n';
 import {
   appIsSubscribed,
   connectionSummary,
@@ -303,7 +304,7 @@ async function downloadMedia(mediaId: string) {
     }
     chunks.push(value);
   }
-  return { bytes: Buffer.concat(chunks), mime: mime.split(";")[0]!.trim() || mime };
+  return { bytes: Buffer.concat(chunks), mime: mime.split(";")[0]?.trim() || mime };
 }
 
 /** X-Hub-Signature-256 = "sha256=" + HMAC-SHA256(raw body, app secret). */
@@ -534,6 +535,7 @@ async function processMessage(admin: Admin, ev: Event, payload: Obj): Promise<st
       lead_id: lead.id,
       role: "client",
       content,
+      language: detectLanguage(content, normaliseLanguage(lead.language)),
       sent: true,
       channel: "whatsapp",
       wa_message_id: ev.wa_id,
@@ -557,11 +559,13 @@ async function processMessage(admin: Admin, ev: Event, payload: Obj): Promise<st
   } else if (content === "[Private document image removed]") privacyRejected = true;
   const last =
     lead.whatsapp_last_inbound_at && lead.whatsapp_last_inbound_at > sentAt ? lead.whatsapp_last_inbound_at : sentAt;
+  const learned=lead.learned&&typeof lead.learned==='object'&&!Array.isArray(lead.learned)?lead.learned:{};
+  const script=clientScript(content,learned['_script']==='latin'?'latin':'native');
   await admin
     .from("leads")
-    .update({ last_message_at: new Date().toISOString(), whatsapp_last_inbound_at: last })
+    .update({ last_message_at: new Date().toISOString(), whatsapp_last_inbound_at: last, language: detectLanguage(content, normaliseLanguage(lead.language)),learned:{...learned,_script:script} })
     .eq("id", lead.id);
-  lead = { ...lead, whatsapp_last_inbound_at: last };
+  lead = { ...lead, whatsapp_last_inbound_at: last, language: detectLanguage(content, normaliseLanguage(lead.language)),learned:{...learned,_script:script} };
 
   // 2. Already answered? Finish sending if needed, never generate twice.
   const { data: answered } = await admin
@@ -586,7 +590,9 @@ async function processMessage(admin: Admin, ev: Event, payload: Obj): Promise<st
       .insert({
         lead_id: lead.id,
         role: "system",
-        content: stopConfirmation(content),
+        content: stopConfirmation(content, normaliseLanguage(lead.language)),
+        language: lead.language,
+        translation_en: lead.language !== 'en' ? t('en', 'stopped') : null,
         sent: false,
         channel: "whatsapp",
         in_reply_to: ev.wa_id,
@@ -604,8 +610,9 @@ async function processMessage(admin: Admin, ev: Event, payload: Obj): Promise<st
       .insert({
         lead_id: lead.id,
         role: "ai",
-        content:
-          "For your privacy, this document has not been kept in the chat. A secure upload link will be shared. Please do not send identity documents here.",
+        content: t(normaliseLanguage(lead.language), 'privacy', {}, script),
+        language: lead.language,
+        translation_en: lead.language !== 'en' ? t('en', 'privacy') : null,
         sent: false,
         channel: "whatsapp",
         in_reply_to: ev.wa_id,

@@ -1,4 +1,5 @@
 /** Browser-safe WhatsApp rules shared by the webhook, agent replies and the settings page. */
+import { clientScript, detectLanguage, t, type Language } from './reply-i18n';
 
 export const PUBLIC_APP_URL = 'https://dubai-gci-goals.lovable.app';
 export const WEBHOOK_PATH = '/api/public/whatsapp/webhook';
@@ -36,7 +37,7 @@ export function serviceWindowEndsAt(lastInboundAt: string | null | undefined) {
   return new Date(new Date(lastInboundAt).getTime() + SERVICE_WINDOW_HOURS * 3600_000);
 }
 
-const STOP_EXACT = ['stop', 'unsubscribe', 'stop all', 'stop please', 'please stop', 'توقف', 'إلغاء', 'الغاء', 'أوقف', 'اوقف'];
+const STOP_EXACT = ['stop', 'unsubscribe', 'stop all', 'stop please', 'please stop', 'توقف', 'إلغاء', 'الغاء', 'أوقف', 'اوقف', 'बंद करो', 'रुको', 'band karo', 'stop karo', 'message mat bhejo', 'стоп', 'отписаться', 'остановить', 'не пишите'];
 /** STOP words: stop, unsubscribe, توقف, إلغاء — as the whole message, or "unsubscribe"/"stop messaging" anywhere. */
 export function isStopMessage(text: string) {
   const t = text.toLowerCase().replace(/[\p{P}\p{S}]/gu, ' ').replace(/\s+/g, ' ').trim();
@@ -45,13 +46,13 @@ export function isStopMessage(text: string) {
   if (/\bunsubscribe\b/.test(t)) return true;
   if (/\bstop (messaging|messages|texting|contacting|sending)\b/.test(t)) return true;
   if (/إلغاء الاشتراك|الغاء الاشتراك/.test(t)) return true;
+  if (/(?:^|\s)(?:बंद करो|रुको|band karo|stop karo|message mat bhejo|стоп|отписаться|остановить|не пишите)(?:\s|$)/u.test(t)) return true;
   return false;
 }
 
-export function stopConfirmation(text: string) {
-  return /[\u0600-\u06FF]/.test(text)
-    ? 'تم إيقاف الرسائل. لن نرسل لك أي رسائل أخرى.'
-    : "You're unsubscribed. We won't message you again.";
+export function stopConfirmation(text: string, remembered: Language = 'en') {
+  const lang = detectLanguage(text, remembered);
+  return t(lang, 'stopped', {}, clientScript(text));
 }
 
 export type WhatsAppSettingsLike = { phone_number_id: string; test_mode: boolean; test_recipients: string[] };
