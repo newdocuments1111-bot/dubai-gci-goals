@@ -14,7 +14,7 @@ export function detectLanguage(text: string, fallback: Language = 'en'): Languag
   if (/[\u0900-\u097f]/.test(text)) return 'hi';
   if (/[\u0600-\u06ff]/.test(text)) return 'ar';
   if (/[\u0400-\u04ff]/.test(text)) return 'ru';
-  if (/\b(mujhe|chahiye|chaiye|aap|namaste|nahi|band karo|stop karo|message mat bhejo|bhk|ruk[o]|mein|hai)\b/i.test(text)) return 'hi';
+  if (/\b(mujhe|chahiye|chaiye|aap|namaste|nahi|band karo|stop karo|message mat bhejo|ruk[o]|mein|hai)\b/i.test(text)) return 'hi';
   if (/\b(i want|i need|looking for|please|hello|can you|what|where|english)\b/i.test(text)) return 'en';
   return fallback;
 }

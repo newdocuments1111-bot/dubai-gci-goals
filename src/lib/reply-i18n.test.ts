@@ -9,6 +9,7 @@ describe('client language', () => {
     expect(detectLanguage('Я ищу квартиру','hi')).toBe('ru');
     expect(detectLanguage('I need an apartment','ar')).toBe('en');
     expect(detectLanguage('2', 'ru')).toBe('ru');
+    expect(detectLanguage('I want a 2 BHK apartment','en')).toBe('en');
   });
   it.each([...LANGUAGES, 'hiLatin'] as const)('fills every key in %s', lang => {
     const vars = { time:'TIME',local:'LOCAL',meet:'MEET',calendar:'CALENDAR',times:'TIMES',agency:'AGENCY',listings:'LISTINGS' };
