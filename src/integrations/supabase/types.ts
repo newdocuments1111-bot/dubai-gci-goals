@@ -1539,6 +1539,10 @@ export type Database = {
         Args: { _bucket: string; _name: string }
         Returns: boolean
       }
+      weekly_report_source: {
+        Args: { p_agency: string; p_as_of?: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
