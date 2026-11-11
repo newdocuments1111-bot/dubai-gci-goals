@@ -99,6 +99,13 @@
       "when": 1793109427266,
       "tag": "0013_whatsapp_templates_and_outbox",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1794375708447,
+      "tag": "0014_multilingual_leads_weekly_reports_followup_identity",
+      "breakpoints": true
     }
   ]
 }
