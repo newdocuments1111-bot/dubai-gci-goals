@@ -47,7 +47,7 @@ export const setViewingStatus = createServerFn({ method: 'POST' }).middleware([r
         if(!lead) throw new Error('Could not read the viewing client.');
         const day=new Date(v.starts_at).toLocaleDateString('en-CA',{timeZone:lead.timezone});
         const nextDay=new Date(Date.parse(`${day}T00:00:00Z`)+86400000).toISOString().slice(0,10);
-        const { zonedLocalToUtc } = await import('./viewing-slots');
+        const { zonedLocalToUtc } = await import('./post-viewing');
         const script=lead.learned&&typeof lead.learned==='object'&&!Array.isArray(lead.learned)&&lead.learned['_script']==='latin'?'latin':'native';
         const {error:followError}=await context.supabase.from('follow_ups').upsert({
           lead_id: v.lead_id, viewing_id:data.id, kind: 'viewing_followup',
