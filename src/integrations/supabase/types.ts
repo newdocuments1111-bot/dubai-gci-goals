@@ -1442,6 +1442,10 @@ export type Database = {
       can_access_lead: { Args: { _lead: string }; Returns: boolean }
       can_access_lead_documents: { Args: { _lead: string }; Returns: boolean }
       check_missed_leads: { Args: never; Returns: number }
+      claim_viewing_followup: {
+        Args: { p_draft: string; p_id: string }
+        Returns: string
+      }
       claim_whatsapp_events: {
         Args: { p_extra: number; p_ids: string[] }
         Returns: {
