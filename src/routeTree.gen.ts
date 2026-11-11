@@ -36,6 +36,7 @@ import { Route as AuthenticatedUaeKnowledgeRouteImport } from './routes/_authent
 import { Route as AuthenticatedViewingsRouteImport } from './routes/_authenticated/viewings'
 import { Route as AuthenticatedLeadLeadIdRouteImport } from './routes/_authenticated/lead.$leadId'
 import { Route as AuthenticatedListingListingIdRouteImport } from './routes/_authenticated/listing.$listingId'
+import { Route as AuthenticatedOwnerWeeklyReportRouteImport } from './routes/_authenticated/owner.weekly-report'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
 import { Route as AuthenticatedSettingsWhatsappRouteImport } from './routes/_authenticated/settings.whatsapp'
 import { Route as ApiPublicWhatsappOutboxRouteImport } from './routes/api/public/whatsapp/outbox'
@@ -179,6 +180,12 @@ const AuthenticatedListingListingIdRoute =
     path: '/listing/$listingId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOwnerWeeklyReportRoute =
+  AuthenticatedOwnerWeeklyReportRouteImport.update({
+    id: '/owner/weekly-report',
+    path: '/owner/weekly-report',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSettingsIndexRoute =
   AuthenticatedSettingsIndexRouteImport.update({
     id: '/settings/',
@@ -230,6 +237,7 @@ export interface FileRoutesByFullPath {
   '/viewings': typeof AuthenticatedViewingsRoute
   '/lead/$leadId': typeof AuthenticatedLeadLeadIdRoute
   '/listing/$listingId': typeof AuthenticatedListingListingIdRoute
+  '/owner/weekly-report': typeof AuthenticatedOwnerWeeklyReportRoute
   '/settings/whatsapp': typeof AuthenticatedSettingsWhatsappRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/api/public/whatsapp/outbox': typeof ApiPublicWhatsappOutboxRoute
@@ -262,6 +270,7 @@ export interface FileRoutesByTo {
   '/viewings': typeof AuthenticatedViewingsRoute
   '/lead/$leadId': typeof AuthenticatedLeadLeadIdRoute
   '/listing/$listingId': typeof AuthenticatedListingListingIdRoute
+  '/owner/weekly-report': typeof AuthenticatedOwnerWeeklyReportRoute
   '/settings/whatsapp': typeof AuthenticatedSettingsWhatsappRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/api/public/whatsapp/outbox': typeof ApiPublicWhatsappOutboxRoute
@@ -296,6 +305,7 @@ export interface FileRoutesById {
   '/_authenticated/viewings': typeof AuthenticatedViewingsRoute
   '/_authenticated/lead/$leadId': typeof AuthenticatedLeadLeadIdRoute
   '/_authenticated/listing/$listingId': typeof AuthenticatedListingListingIdRoute
+  '/_authenticated/owner/weekly-report': typeof AuthenticatedOwnerWeeklyReportRoute
   '/_authenticated/settings/whatsapp': typeof AuthenticatedSettingsWhatsappRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/api/public/whatsapp/outbox': typeof ApiPublicWhatsappOutboxRoute
@@ -330,6 +340,7 @@ export interface FileRouteTypes {
     | '/viewings'
     | '/lead/$leadId'
     | '/listing/$listingId'
+    | '/owner/weekly-report'
     | '/settings/whatsapp'
     | '/settings/'
     | '/api/public/whatsapp/outbox'
@@ -362,6 +373,7 @@ export interface FileRouteTypes {
     | '/viewings'
     | '/lead/$leadId'
     | '/listing/$listingId'
+    | '/owner/weekly-report'
     | '/settings/whatsapp'
     | '/settings'
     | '/api/public/whatsapp/outbox'
@@ -395,6 +407,7 @@ export interface FileRouteTypes {
     | '/_authenticated/viewings'
     | '/_authenticated/lead/$leadId'
     | '/_authenticated/listing/$listingId'
+    | '/_authenticated/owner/weekly-report'
     | '/_authenticated/settings/whatsapp'
     | '/_authenticated/settings/'
     | '/api/public/whatsapp/outbox'
@@ -605,6 +618,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedListingListingIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/owner/weekly-report': {
+      id: '/_authenticated/owner/weekly-report'
+      path: '/owner/weekly-report'
+      fullPath: '/owner/weekly-report'
+      preLoaderRoute: typeof AuthenticatedOwnerWeeklyReportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/settings/': {
       id: '/_authenticated/settings/'
       path: '/settings'
@@ -656,6 +676,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedViewingsRoute: typeof AuthenticatedViewingsRoute
   AuthenticatedLeadLeadIdRoute: typeof AuthenticatedLeadLeadIdRoute
   AuthenticatedListingListingIdRoute: typeof AuthenticatedListingListingIdRoute
+  AuthenticatedOwnerWeeklyReportRoute: typeof AuthenticatedOwnerWeeklyReportRoute
   AuthenticatedSettingsWhatsappRoute: typeof AuthenticatedSettingsWhatsappRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
 }
@@ -680,6 +701,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedViewingsRoute: AuthenticatedViewingsRoute,
   AuthenticatedLeadLeadIdRoute: AuthenticatedLeadLeadIdRoute,
   AuthenticatedListingListingIdRoute: AuthenticatedListingListingIdRoute,
+  AuthenticatedOwnerWeeklyReportRoute: AuthenticatedOwnerWeeklyReportRoute,
   AuthenticatedSettingsWhatsappRoute: AuthenticatedSettingsWhatsappRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
 }
