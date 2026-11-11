@@ -1,10 +1,11 @@
 # Roadmap — full app build (uploaded spec)
 
 ## Current request: multilingual replies + Monday reports + post-viewing follow-up
-- [ ] A. Language memory, translated booking/STOP strings, original + English conversation display, Test Chat controls, tests
-- [ ] B. Owner/HQ weekly report, real-row metrics, goal gaps, Monday snapshots through hourly job, home summary, tests
-- [ ] C. One consent-safe, agent-approved 48-hour post-viewing draft per viewing, multilingual matching options, tests
-- [ ] Run existing tests and verify authenticated flows; report migrations and any blockers
+- [x] A. Language memory/script, translated booking/STOP strings, original + English conversation display, Test Chat controls; four languages and Hinglish verified in signed-in Test Chat
+- [x] B. Owner/HQ weekly report, real-row metrics, goal gaps, Monday snapshots through hourly job, home summary; recorded week, copy and print verified
+- [x] C. One consent-safe, agent-approved 48-hour post-viewing draft per viewing, multilingual matching options; creation/dedupe/approval verified with rolled-back database checks
+- [x] All 165 tests pass; compilation clean; migrations 0014–0019 applied
+- [ ] Live Monday 09:00 execution and real multilingual WhatsApp/template delivery — not exercised; next scheduled Monday and real client messages required
 
 ## Current request: vault storage fix + WhatsApp part 2 (templates + send queue)
 - [x] Vault: private, lead folders, owner/assigned agent/HQ only, server-only signed links, every view logged; security scan clean
@@ -74,7 +75,7 @@ Keep calculator, Lead Finder, My Listings, AI Reply Rules working as-is. Owner-o
 ## B. AI reply brain
 - [x] Test Chat (WhatsApp-style, play buyer/seller/tenant, follows Reply Rules + UAE Knowledge + eligible listings, sends photo/video/map links, New conversation)
 - [x] Voice note transcription + image/screenshot understanding — package installed with the 24h guard intact
-- [ ] Reply in client's language; owner-facing summaries in English with original underneath — AI prompt supports it; original-underneath stored on messages
+- [x] Reply in client's language and script; owner-facing English translations with original underneath
 - [x] Time zone from phone country code, editable per lead; no non-urgent messages 9pm–8am client time
 - [x] Conversation types: buyer / seller-landlord (book valuation) / tenant
 - [x] Mortgage: offer adviser connection (partner name in Settings); never give mortgage advice
@@ -90,7 +91,7 @@ Keep calculator, Lead Finder, My Listings, AI Reply Rules working as-is. Owner-o
 
 ## D. Viewings and follow-ups
 - [x] Viewings page: book free slots (Settings hours, holidays, existing bookings), Mark as done / No-show — [ ] day-before 6pm reminder pending (needs a scheduled job)
-- [x] Post-viewing follow-up: next morning 10am draft queued on Mark as done; approve on Follow-ups page — [ ] 2-day no-reply draft pending (needs a scheduled job)
+- [x] Post-viewing follow-up: next morning 10am draft queued on Mark as done; one 48-hour no-reply draft through the hourly job; atomic approval rechecks consent and sending rules
 - [x] Until WhatsApp connected, "sent" = appears in lead's chat marked Sent
 
 ## E. Documents (UAE)
