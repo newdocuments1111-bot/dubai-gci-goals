@@ -20,6 +20,7 @@ export const settingsSchema = z.object({
   mortgage_partner: z.string().trim().max(200),
   missed_lead_minutes: z.number().int().min(1).max(1440),
   minutes_per_ai_reply: z.number().min(0).max(120),
+  annual_gci_goal_aed: z.number().min(0).max(100_000_000_000).default(0),
 });
 export type AppSettings = z.infer<typeof settingsSchema>;
 
@@ -38,6 +39,7 @@ export const defaultSettings: AppSettings = {
   mortgage_partner: "",
   missed_lead_minutes: 15,
   minutes_per_ai_reply: 2,
+  annual_gci_goal_aed: 0,
 };
 
 /** True when the date (YYYY-MM-DD) is a working day and not a holiday. */
