@@ -83,7 +83,7 @@ export function buildWeeklyReport(raw:ReportSource,week:string,agentId?:string) 
     week,generatedAt:raw.generated_at,enquiries:enquiries.length,sources,languages,
     firstReply:{ averageSeconds:delays.length?delays.reduce((a,b)=>a+b,0)/delays.length:0,within60Percent:firstEnquiries?repliedWithin60/firstEnquiries*100:0,replied:delays.length,enquiries:firstEnquiries },
     aiHandled:aiHandled.size,takenOver:takenOver.size,
-    viewings:{booked:viewings.filter(v=>inWeek(v.created_at)).length,done:viewings.filter(v=>v.status==='done'&&inWeek(v.done_at??v.starts_at)).length,noShow:viewings.filter(v=>v.status==='no-show'&&inWeek(v.starts_at)).length},
+    viewings:{booked:viewings.filter(v=>inWeek(v.created_at)).length,done:viewings.filter(v=>v.status==='done'&&inWeek(v.done_at)).length,noShow:viewings.filter(v=>v.status==='no-show'&&inWeek(v.starts_at)).length},
     followupsSent,hotLeads:enquiries.filter(l=>l.score==='Hot').length,
     offers:raw.deals.filter(d=>(!agentId||d.agent_id===agentId)&&inWeek(d.created_at)).length,
     weekGci,monthGci,yearGci,goal:goalGap(goal,yearGci.gci,yearGci.deals),

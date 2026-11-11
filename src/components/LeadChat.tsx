@@ -83,7 +83,7 @@ export function LeadChat({ lead, messages, onChanged, playAsClient }: { lead: Le
       </select>
       {SAMPLE_BUYERS.map(sample => <Button key={sample.lang} size="sm" variant="outline" disabled={busy || lead.stopped} onClick={() => void send(sample.text)}>{sample.label}</Button>)}
     </div>}
-    {asClient && <ChatMediaInput key={lead.id} leadId={lead.id} onChanged={onChanged} disabled={busy} />}
+    {asClient && <ChatMediaInput key={lead.id} leadId={lead.id} onChanged={onChanged} disabled={busy} languageHint={languageHint==='auto'?undefined:languageHint} />}
     <div className="flex items-end gap-2 border-t border-border p-3">
       <textarea ref={boxRef} aria-label={asClient ? 'Write as the client' : 'Write as yourself'} rows={1} maxLength={10000}
         placeholder={asClient ? 'Write as the client…' : onWhatsApp ? 'Write your reply (sent on WhatsApp)…' : 'Write your reply…'}

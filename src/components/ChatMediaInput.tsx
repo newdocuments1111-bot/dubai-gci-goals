@@ -4,8 +4,9 @@ import { Mic, Square, ImagePlus, AudioLines, X, Send } from 'lucide-react';
 import { Button } from './ui/button';
 import { prepareChatMedia } from '@/lib/chat-media.functions';
 import { sendClientMessage } from '@/lib/leads-app.functions';
+import type { Language } from '@/lib/reply-i18n';
 
-export function ChatMediaInput({ leadId, onChanged, disabled }: { leadId: string; onChanged: () => void; disabled: boolean }) {
+export function ChatMediaInput({ leadId, onChanged, disabled, languageHint }: { leadId: string; onChanged: () => void; disabled: boolean; languageHint?:Language|undefined }) {
   const prepare = useServerFn(prepareChatMedia), send = useServerFn(sendClientMessage);
   const [file, setFile] = useState<File>(), [recording, setRecording] = useState(false), [busy, setBusy] = useState(false), [error, setError] = useState('');
   const input = useRef<HTMLInputElement>(null), recorder = useRef<MediaRecorder | undefined>(undefined), stream = useRef<MediaStream | undefined>(undefined), timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -37,7 +38,7 @@ export function ChatMediaInput({ leadId, onChanged, disabled }: { leadId: string
     try {
       const form = new FormData(); form.set('file', file); form.set('leadId', leadId);
       const prepared = await prepare({ data: form });
-      if (!prepared.rejected) await send({ data: { leadId, content: prepared.content, media: { path: prepared.path, kind: prepared.kind } } });
+      if (!prepared.rejected) await send({ data: { leadId, content: prepared.content, languageHint, media: { path: prepared.path, kind: prepared.kind } } });
       setFile(undefined); onChanged();
     } catch (e) { setError(e instanceof Error ? e.message : 'Could not process this file.'); onChanged(); }
     finally { setBusy(false); }
