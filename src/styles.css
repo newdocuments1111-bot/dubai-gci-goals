@@ -148,3 +148,11 @@
     color: var(--color-foreground);
   }
 }
+
+@media print {
+  body:has(.weekly-report) header, body:has(.weekly-report) nav, body:has(.weekly-report) footer,
+  .weekly-report .report-controls { display: none !important; }
+  .weekly-report { max-width: none; padding: 0; }
+  .weekly-report section { break-inside: avoid; }
+  .weekly-report table { font-size: 10pt; }
+}
