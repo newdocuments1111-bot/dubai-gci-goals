@@ -50,8 +50,8 @@ export function buildWeeklyReport(raw:ReportSource,week:string,agentId?:string) 
     const first=thread.find(m=>m.role==='client');
     if(!first || !inWeek(first.created_at)) continue;
     firstEnquiries++;
-    const response=thread.find(m=>m.role==='ai'&&Date.parse(m.created_at)>=Date.parse(first.created_at)&&Date.parse(m.created_at)<=asOf);
-    if(response) { const seconds=(Date.parse(response.created_at)-Date.parse(first.created_at))/1000; delays.push(seconds); if(seconds<=60) repliedWithin60++; }
+    const response=thread.find(m=>m.role==='ai'&&m.sent&&Date.parse(m.wa_sent_at??m.created_at)>=Date.parse(first.created_at)&&Date.parse(m.wa_sent_at??m.created_at)<=asOf);
+    if(response) { const seconds=(Date.parse(response.wa_sent_at??response.created_at)-Date.parse(first.created_at))/1000; delays.push(seconds); if(seconds<=60) repliedWithin60++; }
   }
   const messages=raw.messages.filter(m=>own(m.lead_id)&&inWeek(m.created_at));
   const takenOver=new Set(messages.filter(m=>m.role==='owner').map(m=>m.lead_id));
