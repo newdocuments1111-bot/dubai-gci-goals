@@ -5,6 +5,7 @@ import { leadSchema, amlRedFlags } from './leads-app';
 import { requireHq, requireOwner } from './agency-access';
 import { sendBlockReason } from './whatsapp';
 import { z } from 'zod';
+import { clientScript, detectLanguage, normaliseLanguage } from './reply-i18n';
 
 const guard = (context: { supabase: Parameters<typeof getAccess>[0]; userId: string }) => getAccess(context.supabase, context.userId);
 
@@ -66,7 +67,7 @@ export const setAiPaused = createServerFn({ method: 'POST' }).middleware([requir
 
 /** Owner plays the client in Test Chat: stores the message, then the AI replies unless paused or stopped. */
 export const sendClientMessage = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ leadId: z.string().uuid(), content: z.string().trim().min(1).max(10000), media: z.object({ path: z.string().max(200), kind: z.enum(['audio','image']) }).optional() }))
+  .inputValidator(z.object({ leadId: z.string().uuid(), content: z.string().trim().min(1).max(10000), languageHint: z.enum(['en','ar','hi','ru']).optional(), media: z.object({ path: z.string().max(200), kind: z.enum(['audio','image']) }).optional() }))
   .handler(async ({ data, context }) => {
     await guard(context);
     const { data: lead, error: leadError } = await context.supabase.from('leads').select('*').eq('id', data.leadId).single();
@@ -74,9 +75,10 @@ export const sendClientMessage = createServerFn({ method: 'POST' }).middleware([
     if (lead.whatsapp_last_inbound_at) throw new Error('This is a real WhatsApp conversation, so you can only reply as yourself.');
 
     if (data.media && !data.media.path.startsWith(`${lead.id}/`)) throw new Error('Invalid attachment.');
-    const { error: messageError } = await context.supabase.from('chat_messages').insert({ lead_id: data.leadId, role: 'client', content: data.content, sent: true, media_path: data.media?.path ?? null, media_kind: data.media?.kind ?? null });
+    const language = detectLanguage(data.content, data.languageHint ?? normaliseLanguage(lead.language));
+    const { error: messageError } = await context.supabase.from('chat_messages').insert({ lead_id: data.leadId, role: 'client', content: data.content, language, sent: true, media_path: data.media?.path ?? null, media_kind: data.media?.kind ?? null });
     if (messageError) throw new Error('Could not save the message.');
-    await context.supabase.from('leads').update({ last_message_at: new Date().toISOString() }).eq('id', data.leadId);
+    await context.supabase.from('leads').update({ last_message_at: new Date().toISOString(), language }).eq('id', data.leadId);
 
     // AML red flags — private, never shown to the client. The AI never accepts payments.
     const flags = amlRedFlags(data.content);
@@ -85,7 +87,7 @@ export const sendClientMessage = createServerFn({ method: 'POST' }).middleware([
     }
     if (lead.ai_paused || lead.stopped) return { replied: false };
     const { generateLeadReply } = await import('./ai-reply.server');
-    const result = await generateLeadReply(context.supabase, lead, { channel: 'app', where: 'Test Chat' });
+    const result = await generateLeadReply(context.supabase, { ...lead, language }, { channel: 'app', where: 'Test Chat', languageHint: data.languageHint });
     return { replied: Boolean(result.reply) };
   });
 
@@ -102,7 +104,7 @@ export const sendOwnerMessage = createServerFn({ method: 'POST' }).middleware([r
       const block = sendBlockReason({ settings, to: lead.phone, stopped: lead.stopped, lastInboundAt: lead.whatsapp_last_inbound_at });
       if (block) throw new Error(`Not sent: ${block}`);
     }
-    const { data: saved, error } = await context.supabase.from('chat_messages').insert({ lead_id: data.leadId, role: 'owner', content: data.content, sent: !onWhatsApp, channel: onWhatsApp ? 'whatsapp' : 'app' }).select('id').single();
+    const { data: saved, error } = await context.supabase.from('chat_messages').insert({ lead_id: data.leadId, role: 'owner', author_id: context.userId, content: data.content, sent: !onWhatsApp, channel: onWhatsApp ? 'whatsapp' : 'app' }).select('id').single();
     if (error || !saved) throw new Error('Could not send the message.');
     await context.supabase.from('leads').update({ last_message_at: new Date().toISOString() }).eq('id', data.leadId);
     if (onWhatsApp) {
