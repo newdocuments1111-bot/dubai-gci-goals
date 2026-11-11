@@ -134,6 +134,13 @@
       "when": 1794376365684,
       "tag": "0018_exact_budget_ceiling_for_viewing_matches",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1794376425342,
+      "tag": "0019_allow_scheduled_and_post_viewing_followup_kinds",
+      "breakpoints": true
     }
   ]
 }
