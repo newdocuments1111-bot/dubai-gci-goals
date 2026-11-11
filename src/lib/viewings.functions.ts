@@ -2,6 +2,7 @@ import { createServerFn } from '@tanstack/react-start';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 import { getAccess } from './agency-access';
 import { z } from 'zod';
+import { normaliseLanguage, t } from './reply-i18n';
 
 const guard = (context: { supabase: Parameters<typeof getAccess>[0]; userId: string }) => getAccess(context.supabase, context.userId);
 
@@ -40,13 +41,20 @@ export const setViewingStatus = createServerFn({ method: 'POST' }).middleware([r
     if (data.status === 'done') {
       // Next-morning follow-up at 10am in the client's time zone is scheduled by the nightly job;
       // queue the draft now so it is waiting on the Follow-ups page.
-      const { data: v } = await context.supabase.from('viewings').select('lead_id').eq('id', data.id).single();
+      const { data: v } = await context.supabase.from('viewings').select('lead_id,starts_at').eq('id', data.id).single();
       if (v?.lead_id) {
-        await context.supabase.from('follow_ups').insert({
-          lead_id: v.lead_id, kind: 'follow-up',
-          draft: 'Good morning! How was the viewing yesterday? Did you get a feel for the neighbourhood?',
-          send_after: new Date(Date.now() + 86400000).toISOString(),
-        });
+        const {data:lead}=await context.supabase.from('leads').select('language,learned,timezone').eq('id',v.lead_id).single();
+        if(!lead) throw new Error('Could not read the viewing client.');
+        const day=new Date(v.starts_at).toLocaleDateString('en-CA',{timeZone:lead.timezone});
+        const nextDay=new Date(Date.parse(`${day}T00:00:00Z`)+86400000).toISOString().slice(0,10);
+        const { zonedLocalToUtc } = await import('./viewing-slots');
+        const script=lead.learned&&typeof lead.learned==='object'&&!Array.isArray(lead.learned)&&lead.learned['_script']==='latin'?'latin':'native';
+        const {error:followError}=await context.supabase.from('follow_ups').upsert({
+          lead_id: v.lead_id, viewing_id:data.id, kind: 'viewing_followup',
+          draft: t(normaliseLanguage(lead.language),'morningFollowUp',{},script),
+          send_after: new Date(zonedLocalToUtc(nextDay,'10:00',lead.timezone)).toISOString(),
+        },{onConflict:'viewing_id,kind',ignoreDuplicates:true});
+        if(followError) throw new Error('Viewing updated, but the follow-up draft could not be saved.');
       }
     }
     return { success: true };
