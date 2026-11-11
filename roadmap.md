@@ -1,5 +1,11 @@
 # Roadmap — full app build (uploaded spec)
 
+## Current request: multilingual replies + Monday reports + post-viewing follow-up
+- [ ] A. Language memory, translated booking/STOP strings, original + English conversation display, Test Chat controls, tests
+- [ ] B. Owner/HQ weekly report, real-row metrics, goal gaps, Monday snapshots through hourly job, home summary, tests
+- [ ] C. One consent-safe, agent-approved 48-hour post-viewing draft per viewing, multilingual matching options, tests
+- [ ] Run existing tests and verify authenticated flows; report migrations and any blockers
+
 ## Current request: vault storage fix + WhatsApp part 2 (templates + send queue)
 - [x] Vault: private, lead folders, owner/assigned agent/HQ only, server-only signed links, every view logged; security scan clean
 - [x] message_templates + Templates page (write, preview, submit to Meta, Sync status, webhook status updates, marketing STOP line)
