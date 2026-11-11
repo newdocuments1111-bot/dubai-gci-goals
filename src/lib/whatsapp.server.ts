@@ -559,11 +559,13 @@ async function processMessage(admin: Admin, ev: Event, payload: Obj): Promise<st
   } else if (content === "[Private document image removed]") privacyRejected = true;
   const last =
     lead.whatsapp_last_inbound_at && lead.whatsapp_last_inbound_at > sentAt ? lead.whatsapp_last_inbound_at : sentAt;
+  const learned=lead.learned&&typeof lead.learned==='object'&&!Array.isArray(lead.learned)?lead.learned:{};
+  const script=clientScript(content,learned['_script']==='latin'?'latin':'native');
   await admin
     .from("leads")
-    .update({ last_message_at: new Date().toISOString(), whatsapp_last_inbound_at: last, language: detectLanguage(content, normaliseLanguage(lead.language)) })
+    .update({ last_message_at: new Date().toISOString(), whatsapp_last_inbound_at: last, language: detectLanguage(content, normaliseLanguage(lead.language)),learned:{...learned,_script:script} })
     .eq("id", lead.id);
-  lead = { ...lead, whatsapp_last_inbound_at: last, language: detectLanguage(content, normaliseLanguage(lead.language)) };
+  lead = { ...lead, whatsapp_last_inbound_at: last, language: detectLanguage(content, normaliseLanguage(lead.language)),learned:{...learned,_script:script} };
 
   // 2. Already answered? Finish sending if needed, never generate twice.
   const { data: answered } = await admin
@@ -608,7 +610,7 @@ async function processMessage(admin: Admin, ev: Event, payload: Obj): Promise<st
       .insert({
         lead_id: lead.id,
         role: "ai",
-        content: t(normaliseLanguage(lead.language), 'privacy', {}, clientScript(content)),
+        content: t(normaliseLanguage(lead.language), 'privacy', {}, script),
         language: lead.language,
         translation_en: lead.language !== 'en' ? t('en', 'privacy') : null,
         sent: false,

@@ -41,11 +41,11 @@ export const setViewingStatus = createServerFn({ method: 'POST' }).middleware([r
     if (data.status === 'done') {
       // Next-morning follow-up at 10am in the client's time zone is scheduled by the nightly job;
       // queue the draft now so it is waiting on the Follow-ups page.
-      const { data: v } = await context.supabase.from('viewings').select('lead_id,starts_at').eq('id', data.id).single();
+      const { data: v } = await context.supabase.from('viewings').select('lead_id,done_at').eq('id', data.id).single();
       if (v?.lead_id) {
         const {data:lead}=await context.supabase.from('leads').select('language,learned,timezone').eq('id',v.lead_id).single();
         if(!lead) throw new Error('Could not read the viewing client.');
-        const day=new Date(v.starts_at).toLocaleDateString('en-CA',{timeZone:lead.timezone});
+        const day=new Date(v.done_at??Date.now()).toLocaleDateString('en-CA',{timeZone:lead.timezone});
         const nextDay=new Date(Date.parse(`${day}T00:00:00Z`)+86400000).toISOString().slice(0,10);
         const { zonedLocalToUtc } = await import('./post-viewing');
         const script=lead.learned&&typeof lead.learned==='object'&&!Array.isArray(lead.learned)&&lead.learned['_script']==='latin'?'latin':'native';

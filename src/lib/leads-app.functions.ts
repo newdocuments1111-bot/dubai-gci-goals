@@ -78,7 +78,10 @@ export const sendClientMessage = createServerFn({ method: 'POST' }).middleware([
     const language = detectLanguage(data.content, data.languageHint ?? normaliseLanguage(lead.language));
     const { error: messageError } = await context.supabase.from('chat_messages').insert({ lead_id: data.leadId, role: 'client', content: data.content, language, sent: true, media_path: data.media?.path ?? null, media_kind: data.media?.kind ?? null });
     if (messageError) throw new Error('Could not save the message.');
-    await context.supabase.from('leads').update({ last_message_at: new Date().toISOString(), language }).eq('id', data.leadId);
+    const learned=lead.learned&&typeof lead.learned==='object'&&!Array.isArray(lead.learned)?lead.learned:{};
+    const script=clientScript(data.content,learned['_script']==='latin'?'latin':'native');
+    const {error:memoryError}=await context.supabase.from('leads').update({ last_message_at: new Date().toISOString(), language, learned:{...learned,_script:script} }).eq('id', data.leadId);
+    if(memoryError) throw new Error('Message saved, but could not remember the client language.');
 
     // AML red flags — private, never shown to the client. The AI never accepts payments.
     const flags = amlRedFlags(data.content);
@@ -87,7 +90,7 @@ export const sendClientMessage = createServerFn({ method: 'POST' }).middleware([
     }
     if (lead.ai_paused || lead.stopped) return { replied: false };
     const { generateLeadReply } = await import('./ai-reply.server');
-    const result = await generateLeadReply(context.supabase, { ...lead, language }, { channel: 'app', where: 'Test Chat', languageHint: data.languageHint });
+    const result = await generateLeadReply(context.supabase, { ...lead, language,learned:{...learned,_script:script} }, { channel: 'app', where: 'Test Chat', languageHint: data.languageHint });
     return { replied: Boolean(result.reply) };
   });
 
