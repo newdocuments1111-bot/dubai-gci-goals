@@ -1501,12 +1501,17 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      client_reply_text: {
+        Args: { p_key: string; p_lang: string; p_latin?: boolean }
+        Returns: string
+      }
       create_my_agency: {
         Args: { _display_name: string; _name: string }
         Returns: string
       }
       draft_old_lead_revivals: { Args: never; Returns: number }
       draft_scheduled_reminders: { Args: never; Returns: undefined }
+      draft_second_viewing_followups: { Args: never; Returns: number }
       hq_agency_overview: {
         Args: never
         Returns: {
