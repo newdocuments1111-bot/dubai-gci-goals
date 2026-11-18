@@ -28,6 +28,7 @@ import {
   ownerUpdate,
   type SellerStage,
 } from "@/lib/sellers";
+import { draftSellerMessage, type ReasonPart } from "@/lib/seller-finder";
 
 const boardQuery = queryOptions({ queryKey: ["owners"], queryFn: () => getSellerBoard() });
 
@@ -154,6 +155,16 @@ function OwnersPage() {
         </p>
       )}
 
+      {tab === "pipeline" && (
+        <LikelyToSell
+          data={data}
+          openOwner={(id) => {
+            setOpen(id);
+            document.getElementById(`owner-${id}`)?.scrollIntoView({ block: "center" });
+          }}
+        />
+      )}
+
       {tab === "pipeline" ? (
         data.owners.length === 0 ? (
           <Empty text={t("No owners yet. Add the owners you want to win listings from.")} />
@@ -172,7 +183,7 @@ function OwnersPage() {
                   </h2>
                   <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-background">
                     {owners.map((o) => (
-                      <li key={o.id} className="px-4 py-3">
+                      <li key={o.id} id={`owner-${o.id}`} className="px-4 py-3">
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                           <button
                             type="button"
@@ -270,6 +281,143 @@ const toInput = (o: Owner): OwnerInput & { id: string } => ({
   tenant_name: o.tenant_name,
   annual_rent_aed: o.annual_rent_aed,
 });
+
+/** A reason in the app language, with its date written in that language too. */
+const reasonText = (p: ReasonPart, t: T, lang: string) =>
+  t(
+    p.text,
+    p.date
+      ? {
+          ...p.vars,
+          when: new Date(`${p.date}T00:00:00Z`).toLocaleDateString(
+            lang === "ar" ? "ar-AE" : "en-GB",
+            {
+              timeZone: "UTC",
+              year: "numeric",
+              month: "long",
+              ...(p.dateStyle === "day" ? { day: "numeric" as const } : {}),
+            },
+          ),
+        }
+      : p.vars,
+  );
+
+/** Seller Finder: owners and past buyers who may be ready to sell or list. The agent copies the message; nothing is sent. */
+function LikelyToSell({ data, openOwner }: { data: Board; openOwner: (id: string) => void }) {
+  const { t, lang } = useLang();
+  const [copied, setCopied] = useState<string | null>(null);
+  const [failed, setFailed] = useState<string | null>(null);
+  const [all, setAll] = useState(false);
+  const shown = all ? data.likely : data.likely.slice(0, 8);
+  return (
+    <section aria-labelledby="likely-to-sell" className="mb-6">
+      <h2 id="likely-to-sell" className="text-sm font-semibold">
+        {t("Likely to sell")}{" "}
+        <span className="font-normal text-muted-foreground">({data.likely.length})</span>
+      </h2>
+      <p className="mb-2 text-sm text-muted-foreground">
+        {t("From your own deals and owners. Nothing is sent for you.")}
+      </p>
+      {!data.likelyComplete && (
+        <p role="status" className="mb-2 text-sm text-warning-foreground">
+          {t("Some past deals could not be read, so people may be missing from this list.")}
+        </p>
+      )}
+      {data.likely.length === 0 ? (
+        <p className="rounded-xl border border-dashed border-border bg-background px-4 py-3 text-sm text-muted-foreground">
+          {t("No one to suggest right now.")}
+        </p>
+      ) : (
+        <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-background">
+          {shown.map((c) => {
+            const key = `${c.kind}-${c.id}`;
+            const text = draftSellerMessage(c, data.agentName);
+            return (
+              <li key={key} className="px-4 py-3">
+                <div className="flex flex-wrap items-start gap-x-4 gap-y-2">
+                  <div className="min-w-0 flex-1 basis-56">
+                    {c.kind === "owner" ? (
+                      <button
+                        type="button"
+                        className="font-medium underline-offset-2 hover:underline"
+                        onClick={() => openOwner(c.id)}
+                      >
+                        {c.name}
+                      </button>
+                    ) : (
+                      <Link
+                        to="/lead/$leadId"
+                        params={{ leadId: c.id }}
+                        className="font-medium underline-offset-2 hover:underline"
+                      >
+                        {c.name || t("No name")}
+                      </Link>
+                    )}
+                    <span className="ms-2 text-xs text-muted-foreground">{t(c.kind)}</span>
+                    {c.unitLabel && (
+                      <span className="block truncate text-sm text-muted-foreground">
+                        {c.unitLabel}
+                      </span>
+                    )}
+                    <ul className="mt-1 list-disc ps-5 text-sm">
+                      {c.reasonParts.map((p) => (
+                        <li key={p.kind}>{reasonText(p, t, lang)}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-xs ${c.score === "High" ? "bg-primary/10 font-medium text-primary" : TONE.ok}`}
+                  >
+                    {t(c.score)}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(text);
+                        setFailed(null);
+                        setCopied(key);
+                      } catch {
+                        setCopied(null);
+                        setFailed(key);
+                      }
+                    }}
+                  >
+                    <Copy className="size-4" />
+                    {copied === key ? t("Copied") : t("Copy message")}
+                  </Button>
+                </div>
+                {failed === key && (
+                  <p role="alert" className="mt-2 text-xs text-destructive">
+                    {t("Could not copy. Open the message below and copy it by hand.")}
+                  </p>
+                )}
+                <details className="mt-2" open={failed === key ? true : undefined}>
+                  <summary className="cursor-pointer text-xs font-medium">
+                    {t("See the message")}
+                  </summary>
+                  <pre
+                    dir="ltr"
+                    lang="en"
+                    className="mt-2 whitespace-pre-wrap rounded-md bg-muted p-3 text-start font-sans text-xs"
+                  >
+                    {text}
+                  </pre>
+                </details>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {!all && data.likely.length > shown.length && (
+        <Button variant="ghost" size="sm" className="mt-2" onClick={() => setAll(true)}>
+          {t("Show all ({n})", { n: data.likely.length })}
+        </Button>
+      )}
+    </section>
+  );
+}
 
 function Empty({ text }: { text: string }) {
   return (

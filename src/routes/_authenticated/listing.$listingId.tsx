@@ -1,9 +1,9 @@
 import { ListingBuyers } from "@/components/ListingBuyers";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useQuery, useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { ArrowLeft, Pencil, Trash2, MapPin, Copy, FileText } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2, MapPin, Copy, FileText, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ListingEditor } from "@/components/ListingEditor";
@@ -12,9 +12,16 @@ import { ListingAiDetails } from "@/components/ListingAiDetails";
 import { ListingShareButton } from "@/components/ListingShareButton";
 import { ListingSocialButton } from "@/components/ListingSocialButton";
 import { listingsQuery } from "@/lib/listings-query";
-import { deleteListing, duplicateListing } from "@/lib/listings.functions";
+import { deleteListing, duplicateListing, getBrochureContact } from "@/lib/listings.functions";
+import { advertCheck, advertDate, dubaiToday } from "@/lib/advert";
 import { dubaiDate, mapsLink, needsCheck } from "@/lib/listings";
 import { listingPhotos, mediaUrl } from "@/lib/listing-media";
+
+// Same key as the brochure and the social post, so the agency details are fetched once.
+const contactQuery = queryOptions({
+  queryKey: ["brochure-contact"],
+  queryFn: () => getBrochureContact(),
+});
 
 export const Route = createFileRoute("/_authenticated/listing/$listingId")({
   head: () => ({
@@ -41,6 +48,7 @@ export const Route = createFileRoute("/_authenticated/listing/$listingId")({
 function ListingDetails() {
   const { listingId } = Route.useParams();
   const { data } = useSuspenseQuery(listingsQuery);
+  const { data: contact, isError: contactFailed } = useQuery(contactQuery);
   const listing = data.listings.find((row) => row.id === listingId);
   const client = useQueryClient(),
     navigate = useNavigate();
@@ -66,6 +74,7 @@ function ListingDetails() {
       </main>
     );
   const photos = listingPhotos(listing, data.mediaUrls);
+  const advert = contact ? advertCheck(listing, contact, dubaiToday()) : null;
   const details = [
     ["Community / area", listing.community],
     ["Building / project", listing.project],
@@ -77,6 +86,7 @@ function ListingDetails() {
     ["Completion", listing.completion === "off-plan" ? "Off-plan" : "Ready"],
     ["Handover date", listing.handover_date],
     ["DLD / Trakheesi permit", listing.permit_number],
+    ["Permit ends on", listing.permit_expires_on ? advertDate(listing.permit_expires_on) : ""],
     ["Last checked (Dubai)", dubaiDate(listing.last_checked)],
   ];
   return (
@@ -143,6 +153,58 @@ function ListingDetails() {
                 </div>
               ))}
             </dl>
+            <section
+              aria-labelledby="advert-check"
+              className="mt-7 rounded-lg border border-border p-4 text-sm"
+            >
+              <h2 id="advert-check" className="font-semibold">
+                Advert check
+              </h2>
+              {!advert ? (
+                <p className="mt-2 text-muted-foreground">
+                  {contactFailed
+                    ? "Could not check this advert. Reload the page to try again."
+                    : "Checking…"}
+                </p>
+              ) : (
+                <>
+                  <p className="mt-1 text-muted-foreground">
+                    {advert.blockers.length > 0
+                      ? "Not ready. The brochure and social post are blocked until this is fixed."
+                      : "Ready for a brochure or a social post."}
+                  </p>
+                  <ul className="mt-3 space-y-2">
+                    {advert.items.map((item) => (
+                      <li key={item.key} className="flex items-start gap-2">
+                        {item.ok ? (
+                          <Check aria-hidden className="mt-0.5 size-4 shrink-0 text-primary" />
+                        ) : (
+                          <X aria-hidden className="mt-0.5 size-4 shrink-0 text-destructive" />
+                        )}
+                        <span>
+                          {item.label}
+                          <span className="sr-only">{item.ok ? ": done" : ": missing"}</span>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                  {advert.blockers.length > 0 && (
+                    <ul className="mt-3 list-disc space-y-1 ps-5 text-destructive">
+                      {advert.blockers.map((b) => (
+                        <li key={b}>{b}</li>
+                      ))}
+                    </ul>
+                  )}
+                  {advert.warnings.length > 0 && (
+                    <ul className="mt-3 list-disc space-y-1 ps-5 text-muted-foreground">
+                      {advert.warnings.map((w) => (
+                        <li key={w}>{w}</li>
+                      ))}
+                    </ul>
+                  )}
+                </>
+              )}
+            </section>
             <section className="mt-7 border-t border-border pt-5">
               <h2 className="font-semibold">Description</h2>
               <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed">

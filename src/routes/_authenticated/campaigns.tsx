@@ -13,7 +13,10 @@ import {
   MAX_CAMPAIGN_LEADS,
   MAX_STEPS,
   audienceOptions,
+  campaignCost,
   campaignProblems,
+  costLine,
+  formatAed,
   type CampaignStep,
 } from "@/lib/campaigns";
 import { templateTokens } from "@/lib/whatsapp-templates";
@@ -61,6 +64,8 @@ function CampaignsPage() {
 
   const audience = audiences.find((a) => a.key === audienceKey) ?? audiences[0]!;
   const problems = campaignProblems(steps, data.templates, data.gapDays);
+  // Meta's fee for the clients who will actually be queued (never the ones left out).
+  const cost = checked ? campaignCost(steps, data.templates, checked.willGet) : null;
   // Blanks the owner types once; the client's own name and area are filled in for each lead.
   const blanks = [
     ...new Set(
@@ -302,6 +307,25 @@ function CampaignsPage() {
               </ul>
               {checked.example && (
                 <p className="whitespace-pre-line rounded-md bg-secondary p-3">{checked.example}</p>
+              )}
+              {cost && checked.willGet > 0 && (
+                <div className="space-y-1 border-t border-border pt-3">
+                  <p className="font-medium">What Meta charges</p>
+                  <ul className="space-y-0.5 text-muted-foreground">
+                    {cost.steps.map((c) => (
+                      <li key={c.n}>{costLine(c)}</li>
+                    ))}
+                  </ul>
+                  <p className="font-semibold">
+                    Most you can pay: {formatAed(cost.mostAed)} before VAT
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    This is an estimate of Meta's fee per delivered message, not a bill. Meta
+                    charges you directly and its prices can change.
+                    {cost.steps.length > 1 &&
+                      " Follow-ups cost less when clients reply, because they are not sent."}
+                  </p>
+                </div>
               )}
             </div>
           )}
