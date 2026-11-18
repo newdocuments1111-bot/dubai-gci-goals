@@ -46,6 +46,10 @@ export type Database = {
       }
       agency_members: {
         Row: {
+          target_calls_month: number | null
+          target_gci_month_aed: number | null
+          target_viewings_month: number | null
+          team_leader_id: string | null
           alert_push: boolean
           alert_whatsapp: boolean
           mobile: string
@@ -62,6 +66,10 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          target_calls_month?: number | null
+          target_gci_month_aed?: number | null
+          target_viewings_month?: number | null
+          team_leader_id?: string | null
           alert_push?: boolean
           alert_whatsapp?: boolean
           mobile?: string
@@ -78,6 +86,10 @@ export type Database = {
           user_id: string
         }
         Update: {
+          target_calls_month?: number | null
+          target_gci_month_aed?: number | null
+          target_viewings_month?: number | null
+          team_leader_id?: string | null
           alert_push?: boolean
           alert_whatsapp?: boolean
           mobile?: string
@@ -218,6 +230,7 @@ export type Database = {
       }
       app_settings: {
         Row: {
+          nurture_days: number
           bank_details: string
           company_trn: string
           default_commission_percent: number
@@ -248,6 +261,7 @@ export type Database = {
           working_days: string[]
         }
         Insert: {
+          nurture_days?: number
           bank_details?: string
           company_trn?: string
           default_commission_percent?: number
@@ -278,6 +292,7 @@ export type Database = {
           working_days?: string[]
         }
         Update: {
+          nurture_days?: number
           bank_details?: string
           company_trn?: string
           default_commission_percent?: number
@@ -1149,6 +1164,7 @@ export type Database = {
       }
       listings: {
         Row: {
+          owner_id: string | null
           agency_id: string
           agent_highlights: string
           amenity_gym: boolean | null
@@ -1198,6 +1214,7 @@ export type Database = {
           view: string
         }
         Insert: {
+          owner_id?: string | null
           agency_id?: string
           agent_highlights?: string
           amenity_gym?: boolean | null
@@ -1247,6 +1264,7 @@ export type Database = {
           view?: string
         }
         Update: {
+          owner_id?: string | null
           agency_id?: string
           agent_highlights?: string
           amenity_gym?: boolean | null
@@ -1414,6 +1432,13 @@ export type Database = {
       }
       owners: {
         Row: {
+          annual_rent_aed: number | null
+          asking_price_aed: number | null
+          intent: string
+          next_action_on: string | null
+          notes: string
+          stage: string
+          tenant_name: string
           agency_id: string
           agreed_to_updates: boolean
           area: string
@@ -1428,6 +1453,13 @@ export type Database = {
           update_frequency: string
         }
         Insert: {
+          annual_rent_aed?: number | null
+          asking_price_aed?: number | null
+          intent?: string
+          next_action_on?: string | null
+          notes?: string
+          stage?: string
+          tenant_name?: string
           agency_id?: string
           agreed_to_updates?: boolean
           area?: string
@@ -1442,6 +1474,13 @@ export type Database = {
           update_frequency?: string
         }
         Update: {
+          annual_rent_aed?: number | null
+          asking_price_aed?: number | null
+          intent?: string
+          next_action_on?: string | null
+          notes?: string
+          stage?: string
+          tenant_name?: string
           agency_id?: string
           agreed_to_updates?: boolean
           area?: string
@@ -1577,6 +1616,45 @@ export type Database = {
           p256dh?: string
           user_agent?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      rent_cheques: {
+        Row: {
+          agency_id: string
+          amount_aed: number
+          cheque_no: string
+          created_at: string
+          due_date: string
+          id: string
+          note: string
+          owner_id: string
+          reminded_at: string | null
+          status: string
+        }
+        Insert: {
+          agency_id?: string
+          amount_aed: number
+          cheque_no?: string
+          created_at?: string
+          due_date: string
+          id?: string
+          note?: string
+          owner_id: string
+          reminded_at?: string | null
+          status?: string
+        }
+        Update: {
+          agency_id?: string
+          amount_aed?: number
+          cheque_no?: string
+          created_at?: string
+          due_date?: string
+          id?: string
+          note?: string
+          owner_id?: string
+          reminded_at?: string | null
+          status?: string
         }
         Relationships: []
       }
