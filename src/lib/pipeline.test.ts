@@ -134,3 +134,17 @@ describe("owner numbers", () => {
     expect(d.find((x) => x.name === "Ad D")?.action).toBe("wait");
   });
 });
+
+import { documentForItem } from "./pipeline";
+describe("documents in the vault", () => {
+  const files = ["1700-Form_F_signed.pdf", "1701-deposit-cheque.jpg", "1702-Developer_NOC.pdf"];
+  it("finds the document a checklist item asks for", () => {
+    expect(documentForItem("MOU (Form F) signed by both", files)).toBe(true);
+    expect(documentForItem("Deposit cheque received", files)).toBe(true);
+    expect(documentForItem("NOC issued", files)).toBe(true);
+    expect(documentForItem("New title deed issued", files)).toBe(false);
+  });
+  it("ignores items that are not documents", () => {
+    expect(documentForItem("Agent notes what they liked", files)).toBe(null);
+  });
+});

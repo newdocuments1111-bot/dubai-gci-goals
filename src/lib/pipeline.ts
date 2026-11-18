@@ -220,3 +220,30 @@ export function describeEvent(e: LeadEvent, name: (stage: number) => string) {
     return `Moved to ${e.to_stage}. ${name(e.to_stage)}`;
   return "Updated";
 }
+
+/** Words that mark a vault file as the document a step's checklist item asks for. */
+const DOCUMENT_KEYS: [RegExp, string[]][] = [
+  [/form f|mou/i, ["form f", "form_f", "formf", "mou"]],
+  [/deposit/i, ["deposit"]],
+  [/proof of funds/i, ["funds", "proof"]],
+  [/pre-approval/i, ["pre-approval", "preapproval", "pre_approval"]],
+  [/valuation/i, ["valuation"]],
+  [/offer letter/i, ["offer"]],
+  [/\bnoc\b/i, ["noc"]],
+  [/title deed/i, ["title", "deed"]],
+  [/trustee/i, ["trustee", "transfer"]],
+  [/reservation/i, ["reservation"]],
+  [/\bspa\b/i, ["spa", "sale and purchase"]],
+  [/oqood/i, ["oqood"]],
+  [/handover/i, ["handover"]],
+  [/snagging/i, ["snag"]],
+  [/payment plan/i, ["payment", "plan"]],
+];
+
+/** Does the client's Document Vault already hold the document a checklist item asks for? Null when the item is not a document. */
+export function documentForItem(item: string, vaultFiles: string[]): boolean | null {
+  const entry = DOCUMENT_KEYS.find(([re]) => re.test(item));
+  if (!entry) return null;
+  const names = vaultFiles.map((n) => n.toLowerCase());
+  return entry[1].some((k) => names.some((n) => n.includes(k)));
+}
