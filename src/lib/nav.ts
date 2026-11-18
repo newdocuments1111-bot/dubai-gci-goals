@@ -52,6 +52,7 @@ export const SETTINGS_SECTION: NavSection = {
   pages: [
     { to: "/settings", label: "General" },
     { to: "/team", label: "Team", show: "owner" },
+    { to: "/settings/alerts", label: "My alerts" },
     { to: "/settings/routing", label: "Lead routing", show: "owner" },
     { to: "/settings/whatsapp", label: "WhatsApp", show: "owner" },
     { to: "/templates", label: "Templates", show: "manager" },
