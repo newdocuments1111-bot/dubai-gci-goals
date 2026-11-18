@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { getWeeklyReport } from "@/lib/weekly-report.functions";
 import { greeting } from "@/lib/nav";
+import { AskCrm } from "@/components/AskCrm";
 import { isOverdue } from "@/lib/pipeline";
 import { getPipeline } from "@/lib/pipeline.functions";
 
@@ -86,6 +87,9 @@ function HomePage() {
             ))}
           </div>
         )}
+      </div>
+      <div className="mb-6">
+        <AskCrm isOwner={membership.isOwner} />
       </div>
       <Alerts />
       {view === "owner" ? <OwnerHome /> : <AgentHome />}
