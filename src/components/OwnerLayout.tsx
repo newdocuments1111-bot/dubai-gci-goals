@@ -30,6 +30,7 @@ import {
   type NavSectionId,
 } from "@/lib/nav";
 import { Button } from "@/components/ui/button";
+import { AlertsBell } from "@/components/AlertsBell";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -175,6 +176,7 @@ export function OwnerLayout() {
               {currentSection?.label ?? activePage(pathname)?.label ?? ""}
             </p>
             <div className="ml-auto flex items-center gap-2">
+              <AlertsBell />
               <button
                 type="button"
                 onClick={() => setSearchOpen(true)}
