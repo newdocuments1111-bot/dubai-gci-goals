@@ -59,7 +59,7 @@ function ViewingsPage() {
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
-      <h1 className="mb-2 text-3xl font-bold">{t("Viewings")}</h1>
+      <h1 className="mb-2 text-2xl font-bold md:text-3xl">{t("Viewings")}</h1>
       <p className="mb-6 text-sm text-muted-foreground">
         {t(
           "Slots come from your Settings working days and hours, skipping holidays and existing bookings. Clients get a reminder with the map link the day before at 6pm their time.",
@@ -70,7 +70,7 @@ function ViewingsPage() {
           {t("Lead")}
           <select
             aria-label={t("Lead")}
-            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="mt-1 min-h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm md:min-h-0"
             value={leadId}
             onChange={(e) => setLeadId(e.target.value)}
           >
@@ -86,7 +86,7 @@ function ViewingsPage() {
           {t("Listing (optional)")}
           <select
             aria-label={t("Listing")}
-            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="mt-1 min-h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm md:min-h-0"
             value={listingId}
             onChange={(e) => setListingId(e.target.value)}
           >
@@ -102,7 +102,7 @@ function ViewingsPage() {
           {t("Type")}
           <select
             aria-label={t("Type")}
-            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="mt-1 min-h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm md:min-h-0"
             value={kind}
             onChange={(e) => setKind(e.target.value as "viewing" | "valuation")}
           >
@@ -114,7 +114,7 @@ function ViewingsPage() {
           {t("Free slot (Dubai time)")}
           <select
             aria-label={t("Free slot")}
-            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="mt-1 min-h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm md:min-h-0"
             value={slot}
             onChange={(e) => setSlot(e.target.value)}
           >
@@ -126,8 +126,9 @@ function ViewingsPage() {
             ))}
           </select>
         </label>
-        <div className="flex items-end gap-2 sm:col-span-2">
+        <div className="flex flex-col gap-2 sm:col-span-2 md:flex-row md:items-end">
           <Button
+            className="h-11 w-full md:h-9 md:w-auto"
             disabled={busy || !slot}
             onClick={async () => {
               setBusy(true);
@@ -174,7 +175,7 @@ function ViewingsPage() {
             key={v.id}
             className="flex flex-wrap items-center gap-3 rounded-lg border border-border p-4"
           >
-            <div className="min-w-40 flex-1">
+            <div className="min-w-40 flex-1 break-words">
               <p className="font-semibold">
                 {dubaiDate(v.starts_at)}{" "}
                 <span className="text-xs font-normal text-muted-foreground">
@@ -194,10 +195,11 @@ function ViewingsPage() {
               {t(v.status === "booked" ? "Booked" : v.status === "done" ? "Done" : "No-show")}
             </span>
             {v.status === "booked" && (
-              <div className="flex gap-2">
+              <div className="flex w-full flex-wrap gap-2 md:w-auto md:flex-nowrap">
                 <Button
                   variant="outline"
                   size="sm"
+                  className="h-11 w-full md:h-8 md:w-auto"
                   onClick={() =>
                     downloadIcs(
                       `viewing-${dubaiDate(v.starts_at).replace(/[^\w]+/g, "-")}`,
@@ -217,6 +219,7 @@ function ViewingsPage() {
                 <Button
                   variant="outline"
                   size="sm"
+                  className="h-11 flex-1 md:h-8 md:flex-none"
                   onClick={async () => {
                     await setStatus({ data: { id: v.id, status: "done" } });
                     refresh();
@@ -227,6 +230,7 @@ function ViewingsPage() {
                 <Button
                   variant="ghost"
                   size="sm"
+                  className="h-11 flex-1 border border-input md:h-8 md:flex-none md:border-0"
                   onClick={async () => {
                     await setStatus({ data: { id: v.id, status: "no-show" } });
                     refresh();

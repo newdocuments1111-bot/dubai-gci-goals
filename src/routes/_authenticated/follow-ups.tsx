@@ -61,7 +61,7 @@ function FollowUpsPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
-      <h1 className="mb-2 text-3xl font-bold">{t("Follow-ups")}</h1>
+      <h1 className="mb-2 text-2xl font-bold md:text-3xl">{t("Follow-ups")}</h1>
       <p className="mb-6 text-sm text-muted-foreground">
         {t(
           "The AI drafts; you approve. Nothing is sent without your approval. Approved messages appear in the lead's conversation marked Sent.",
@@ -69,7 +69,7 @@ function FollowUpsPage() {
       </p>
       <Button
         variant="outline"
-        className="mb-4"
+        className="mb-4 h-11 w-full md:h-9 md:w-auto"
         disabled={Boolean(busy)}
         onClick={async () => {
           setBusy("revival");
@@ -109,12 +109,14 @@ function FollowUpsPage() {
               <span className="rounded bg-muted px-2 py-0.5">
                 {t(KIND_LABELS[item.kind] ?? item.kind)}
               </span>
-              <span>{(item.leads as { name?: string } | null)?.name ?? t("No lead")}</span>
+              <span className="min-w-0 break-words text-sm font-medium text-foreground md:text-xs md:font-normal md:text-muted-foreground">
+                {(item.leads as { name?: string } | null)?.name ?? t("No lead")}
+              </span>
               <span>{dubaiDate(item.created_at)}</span>
             </div>
             <textarea
               aria-label={t("Draft message")}
-              className="min-h-20 w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="min-h-28 w-full resize-y md:min-h-20 rounded-md border border-input bg-background px-3 py-2 text-sm"
               maxLength={10000}
               value={drafts[item.id] ?? item.draft}
               onChange={(e) => setDrafts((d) => ({ ...d, [item.id]: e.target.value }))}
@@ -122,6 +124,7 @@ function FollowUpsPage() {
             <div className="mt-2 flex gap-2">
               <Button
                 size="sm"
+                className="h-11 flex-1 md:h-8 md:flex-none"
                 disabled={busy === item.id}
                 onClick={async () => {
                   setBusy(item.id);
@@ -142,6 +145,7 @@ function FollowUpsPage() {
               <Button
                 size="sm"
                 variant="ghost"
+                className="h-11 border border-input md:h-8 md:border-0"
                 disabled={busy === item.id}
                 onClick={async () => {
                   setBusy(item.id);
@@ -167,8 +171,8 @@ function FollowUpsPage() {
           <h2 className="mb-2 mt-8 font-semibold">{t("History")}</h2>
           <ul className="space-y-2 text-sm text-muted-foreground">
             {done.map((item) => (
-              <li key={item.id} className="rounded border border-border p-3">
-                <span className="mr-2 rounded bg-muted px-2 py-0.5 text-xs">
+              <li key={item.id} className="break-words rounded border border-border p-3">
+                <span className="me-2 rounded bg-muted px-2 py-0.5 text-xs">
                   {t(
                     item.status === "sent"
                       ? "Sent"

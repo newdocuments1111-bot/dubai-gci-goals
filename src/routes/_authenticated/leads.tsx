@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
-import { Bookmark, Download, Search, Upload, X } from "lucide-react";
+import { Bookmark, Download, Search, SlidersHorizontal, Upload, X } from "lucide-react";
 import { leadsCsv, downloadCsv } from "@/lib/chat-extras";
 import { listLeads } from "@/lib/leads-app.functions";
 import { getDealOptions } from "@/lib/deals.functions";
@@ -46,7 +46,9 @@ const SCORE_STYLE = {
   Warm: "bg-warning/15 text-warning-foreground",
   Cold: "bg-muted text-muted-foreground",
 } as const;
-const selectCls = "h-9 rounded-md border border-input bg-background px-2 text-sm";
+// Phones: 44px tall, two to a row. From `md` up: the usual 36px, as wide as their text.
+const selectCls =
+  "h-11 min-w-0 grow basis-[calc(50%-0.25rem)] rounded-md border border-input bg-background px-2 text-sm md:h-9 md:grow-0 md:basis-auto";
 
 function LeadsPage() {
   const { data: leads } = useSuspenseQuery(leadsQuery);
@@ -65,6 +67,8 @@ function LeadsPage() {
   const [filter, setFilter] = useState<LeadFilter>(EMPTY_FILTER);
   const [activeList, setActiveList] = useState<string | null>(null);
   const [error, setError] = useState("");
+  // Phones only: the filter selects stay folded away until asked for.
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const set = (patch: Partial<LeadFilter>) => {
     setFilter({ ...filter, ...patch });
     setActiveList(null);
@@ -84,8 +88,8 @@ function LeadsPage() {
             {t("Hot first.")}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button asChild variant="outline" size="sm">
+        <div className="flex w-full gap-2 md:w-auto">
+          <Button asChild variant="outline" size="sm" className="h-11 flex-1 md:h-8 md:flex-none">
             <Link to="/leads/import">
               <Upload className="size-4" />
               {t("Import")}
@@ -95,6 +99,7 @@ function LeadsPage() {
             <Button
               variant="outline"
               size="sm"
+              className="h-11 flex-1 md:h-8 md:flex-none"
               onClick={async () => {
                 setError("");
                 try {
@@ -119,7 +124,7 @@ function LeadsPage() {
             setFilter(EMPTY_FILTER);
             setActiveList(null);
           }}
-          className={`rounded-full border px-3 py-1 text-sm ${!activeList && !isFiltered(filter) ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary"}`}
+          className={`rounded-full border px-3 py-3 text-sm md:py-1 ${!activeList && !isFiltered(filter) ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary"}`}
         >
           {t("All open ({n})", { n: applyFilter(leads, EMPTY_FILTER).length })}
         </button>
@@ -130,7 +135,7 @@ function LeadsPage() {
           >
             <button
               type="button"
-              className="py-1 pe-1 ps-3"
+              className="py-3 pe-1 ps-3 md:py-1"
               onClick={() => {
                 setFilter(l.filters);
                 setActiveList(l.id);
@@ -141,7 +146,7 @@ function LeadsPage() {
             <button
               type="button"
               aria-label={t("Remove list {name}", { name: l.name })}
-              className="py-1 pe-2 ps-1 opacity-60 hover:opacity-100"
+              className="flex min-h-11 items-center pe-3 ps-2 opacity-60 hover:opacity-100 md:min-h-0 md:py-1 md:pe-2 md:ps-1"
               onClick={async () => {
                 if (
                   !window.confirm(t('Remove the list "{name}"? The leads stay.', { name: l.name }))
@@ -159,95 +164,106 @@ function LeadsPage() {
       </div>
 
       <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-background p-3">
-        <div className="relative min-w-48 flex-1">
+        <div className="relative min-w-40 flex-1 md:min-w-48">
           <Search className="pointer-events-none absolute start-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             aria-label={t("Search leads")}
-            className="h-9 ps-8"
+            className="h-11 ps-8 md:h-9"
             placeholder={t("Name, phone, area or budget")}
             maxLength={100}
             value={filter.q}
             onChange={(e) => set({ q: e.target.value })}
           />
         </div>
-        <select
-          aria-label={t("Score")}
-          className={selectCls}
-          value={filter.score}
-          onChange={(e) => set({ score: e.target.value as LeadFilter["score"] })}
+        <button
+          type="button"
+          aria-expanded={filtersOpen}
+          onClick={() => setFiltersOpen((o) => !o)}
+          className={`flex h-11 shrink-0 items-center gap-2 rounded-md border px-3 text-sm md:hidden ${filtersOpen || isFiltered({ ...filter, q: "" }) ? "border-primary text-primary" : "border-input text-muted-foreground"}`}
         >
-          <option value="">{t("Any score")}</option>
-          <option value="Hot">{t("Hot")}</option>
-          <option value="Warm">{t("Warm")}</option>
-          <option value="Cold">{t("Cold")}</option>
-        </select>
-        <select
-          aria-label={t("Source")}
-          className={selectCls}
-          value={filter.source}
-          onChange={(e) => set({ source: e.target.value })}
-        >
-          <option value="">{t("Any source")}</option>
-          {LEAD_SOURCES.map((s) => (
-            <option key={s}>{s}</option>
-          ))}
-        </select>
-        <select
-          aria-label={t("Step")}
-          className={selectCls}
-          value={filter.step}
-          onChange={(e) => set({ step: e.target.value as LeadFilter["step"] })}
-        >
-          <option value="">{t("Any step")}</option>
-          {Object.entries(STEP_RANGES).map(([k, v]) => (
-            <option key={k} value={k}>
-              {t(v.label)}
-            </option>
-          ))}
-        </select>
-        <select
-          aria-label={t("Reply")}
-          className={selectCls}
-          value={filter.reply}
-          onChange={(e) => set({ reply: e.target.value as LeadFilter["reply"] })}
-        >
-          <option value="">{t("Replied or not")}</option>
-          <option value="waiting">{t("Not replied")}</option>
-          <option value="replied">{t("Replied")}</option>
-        </select>
-        {membership.isOwner && (
+          <SlidersHorizontal className="size-4" />
+          {t("Filters")}
+        </button>
+        <div className={`${filtersOpen ? "contents" : "hidden"} md:contents`}>
           <select
-            aria-label={t("Agent")}
+            aria-label={t("Score")}
             className={selectCls}
-            value={filter.agent}
-            onChange={(e) => set({ agent: e.target.value })}
+            value={filter.score}
+            onChange={(e) => set({ score: e.target.value as LeadFilter["score"] })}
           >
-            <option value="">{t("Any agent")}</option>
-            <option value="pool">{t("Pool (no agent)")}</option>
-            {(options?.members ?? []).map((m) => (
-              <option key={m.user_id} value={m.user_id}>
-                {memberName(m)}
+            <option value="">{t("Any score")}</option>
+            <option value="Hot">{t("Hot")}</option>
+            <option value="Warm">{t("Warm")}</option>
+            <option value="Cold">{t("Cold")}</option>
+          </select>
+          <select
+            aria-label={t("Source")}
+            className={selectCls}
+            value={filter.source}
+            onChange={(e) => set({ source: e.target.value })}
+          >
+            <option value="">{t("Any source")}</option>
+            {LEAD_SOURCES.map((s) => (
+              <option key={s}>{s}</option>
+            ))}
+          </select>
+          <select
+            aria-label={t("Step")}
+            className={selectCls}
+            value={filter.step}
+            onChange={(e) => set({ step: e.target.value as LeadFilter["step"] })}
+          >
+            <option value="">{t("Any step")}</option>
+            {Object.entries(STEP_RANGES).map(([k, v]) => (
+              <option key={k} value={k}>
+                {t(v.label)}
               </option>
             ))}
           </select>
-        )}
-        <select
-          aria-label={t("Outcome")}
-          className={selectCls}
-          value={filter.outcome}
-          onChange={(e) => set({ outcome: e.target.value as LeadFilter["outcome"] })}
-        >
-          <option value="open">{t("Open")}</option>
-          <option value="not_now">{t("Not now")}</option>
-          <option value="won">{t("Won")}</option>
-          <option value="lost">{t("Lost")}</option>
-          <option value="all">{t("All")}</option>
-        </select>
+          <select
+            aria-label={t("Reply")}
+            className={selectCls}
+            value={filter.reply}
+            onChange={(e) => set({ reply: e.target.value as LeadFilter["reply"] })}
+          >
+            <option value="">{t("Replied or not")}</option>
+            <option value="waiting">{t("Not replied")}</option>
+            <option value="replied">{t("Replied")}</option>
+          </select>
+          {membership.isOwner && (
+            <select
+              aria-label={t("Agent")}
+              className={selectCls}
+              value={filter.agent}
+              onChange={(e) => set({ agent: e.target.value })}
+            >
+              <option value="">{t("Any agent")}</option>
+              <option value="pool">{t("Pool (no agent)")}</option>
+              {(options?.members ?? []).map((m) => (
+                <option key={m.user_id} value={m.user_id}>
+                  {memberName(m)}
+                </option>
+              ))}
+            </select>
+          )}
+          <select
+            aria-label={t("Outcome")}
+            className={selectCls}
+            value={filter.outcome}
+            onChange={(e) => set({ outcome: e.target.value as LeadFilter["outcome"] })}
+          >
+            <option value="open">{t("Open")}</option>
+            <option value="not_now">{t("Not now")}</option>
+            <option value="won">{t("Won")}</option>
+            <option value="lost">{t("Lost")}</option>
+            <option value="all">{t("All")}</option>
+          </select>
+        </div>
         {isFiltered(filter) && !activeList && (
           <Button
             variant="outline"
             size="sm"
-            className="h-9"
+            className="h-11 w-full md:h-9 md:w-auto"
             onClick={async () => {
               const name = window.prompt(t("Name this list"), suggestName(filter));
               if (!name?.trim()) return;
@@ -295,7 +311,7 @@ function LeadsPage() {
                 params={{ leadId: lead.id }}
                 className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 hover:bg-muted/40"
               >
-                <div className="min-w-0 flex-1 basis-64">
+                <div className="min-w-0 flex-1 basis-full md:basis-64">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="truncate font-medium">{lead.name || t("Unnamed lead")}</span>
                     <span
@@ -319,14 +335,14 @@ function LeadsPage() {
                       t("Nothing learned yet")}
                   </p>
                 </div>
-                <span className="w-28 shrink-0 text-xs text-muted-foreground">
+                <span className="text-xs text-muted-foreground md:w-28 md:shrink-0">
                   {lead.source} · {lead.type}
                 </span>
-                <span className="w-36 shrink-0 truncate text-xs">
+                <span className="min-w-0 truncate text-xs md:w-36 md:shrink-0">
                   {lead.stage_name ?? t("Step {n}", { n: lead.stage })}
                 </span>
                 {membership.isOwner && (
-                  <span className="w-28 shrink-0 truncate text-xs text-muted-foreground">
+                  <span className="min-w-0 truncate text-xs text-muted-foreground md:w-28 md:shrink-0">
                     {agentName(lead.assigned_agent_id)}
                   </span>
                 )}

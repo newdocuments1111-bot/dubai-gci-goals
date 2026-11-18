@@ -27,7 +27,10 @@ export const Route = createFileRoute("/_authenticated/inbox")({
   component: InboxPage,
 });
 
-const selectCls = "h-9 rounded-md border border-input bg-background px-2 text-sm";
+// 44px tall on phones for thumbs, the usual 36px from `md` up.
+const selectCls = "h-11 rounded-md border border-input bg-background px-2 text-sm md:h-9";
+// Filters sit two to a row on phones.
+const filterCls = `${selectCls} min-w-0 grow basis-[calc(50%-0.25rem)] md:grow-0 md:basis-auto`;
 const memberName = (m: { display_name: string | null; email: string | null } | undefined) =>
   m ? m.display_name || m.email || "Agent" : "Unassigned";
 
@@ -121,7 +124,7 @@ function InboxPage() {
         <div
           role="tablist"
           aria-label={t("Inbox view")}
-          className="flex rounded-lg border border-border p-1 text-sm"
+          className="flex w-full rounded-lg border border-border p-1 text-sm md:w-auto"
         >
           {(
             [
@@ -134,7 +137,7 @@ function InboxPage() {
               role="tab"
               aria-selected={tab === v}
               onClick={() => setTab(v)}
-              className={`rounded-md px-3 py-1.5 ${tab === v ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              className={`flex-1 rounded-md px-3 py-3 md:flex-none md:py-1.5 ${tab === v ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
             >
               {label}
             </button>
@@ -144,7 +147,7 @@ function InboxPage() {
           <>
             <select
               aria-label={t("Source")}
-              className={selectCls}
+              className={filterCls}
               value={source}
               onChange={(e) => setSource(e.target.value)}
             >
@@ -156,7 +159,7 @@ function InboxPage() {
             {isOwner && (
               <select
                 aria-label={t("Agent")}
-                className={selectCls}
+                className={filterCls}
                 value={agent}
                 onChange={(e) => setAgent(e.target.value)}
               >
@@ -170,7 +173,7 @@ function InboxPage() {
             )}
             <select
               aria-label={t("Reply")}
-              className={selectCls}
+              className={filterCls}
               value={reply}
               onChange={(e) => setReply(e.target.value as typeof reply)}
             >
@@ -201,7 +204,7 @@ function InboxPage() {
               return (
                 <li key={l.id} className="px-4 py-3">
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                    <div className="min-w-0 flex-1 basis-64">
+                    <div className="min-w-0 flex-1 basis-full md:basis-64">
                       <div className="flex flex-wrap items-center gap-2">
                         <SourceBadge source={l.source} />
                         <Link
@@ -232,7 +235,7 @@ function InboxPage() {
                           })
                         : t("Waiting {time}", { time: elapsed(l.created_at, now) })}
                     </span>
-                    <div className="w-40 shrink-0 text-sm">
+                    <div className="min-w-0 flex-1 text-sm md:w-40 md:flex-none md:shrink-0">
                       {isOwner ? (
                         <select
                           aria-label={`Agent for ${l.name || "lead"}`}
@@ -258,7 +261,7 @@ function InboxPage() {
                         </span>
                       )}
                     </div>
-                    <div className="flex shrink-0 items-center gap-1">
+                    <div className="hidden shrink-0 items-center gap-1 md:flex">
                       <button
                         type="button"
                         onClick={() => setOpen(expanded ? null : l.id)}
@@ -293,6 +296,35 @@ function InboxPage() {
                           </a>
                         </Button>
                       )}
+                    </div>
+                    {/* Phones: big Call and WhatsApp buttons instead of the small icons above. */}
+                    <div className="flex w-full items-center gap-2 md:hidden">
+                      {l.phone && (
+                        <Button asChild className="h-11 min-w-0 flex-1">
+                          <a href={`tel:${l.phone.replace(/[^\d+]/g, "")}`}>
+                            <Phone className="size-4" />
+                            {t("Call")}
+                          </a>
+                        </Button>
+                      )}
+                      {wa && (
+                        <Button asChild variant="outline" className="h-11 min-w-0 flex-1">
+                          <a href={wa} target="_blank" rel="noreferrer">
+                            <MessageCircle className="size-4" />
+                            {t("WhatsApp")}
+                          </a>
+                        </Button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setOpen(expanded ? null : l.id)}
+                        className="min-h-11 shrink-0 rounded-md border border-input px-3 text-xs text-muted-foreground"
+                        aria-expanded={expanded}
+                      >
+                        {matches.length === 1
+                          ? t("1 match")
+                          : t("{n} matches", { n: matches.length })}
+                      </button>
                     </div>
                   </div>
                   {expanded && (
@@ -352,7 +384,7 @@ function InboxPage() {
           <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-background">
             {data.pool.map((p) => (
               <li key={p.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
-                <div className="min-w-0 flex-1 basis-64">
+                <div className="min-w-0 flex-1 basis-full md:basis-64">
                   <div className="flex items-center gap-2">
                     <SourceBadge source={p.source} />
                     <span className="truncate font-medium">{p.name || t("Unnamed lead")}</span>
@@ -368,7 +400,7 @@ function InboxPage() {
                 {isOwner && (
                   <select
                     aria-label={`Assign ${p.name || "lead"}`}
-                    className={`${selectCls} w-40`}
+                    className={`${selectCls} min-w-0 flex-1 md:w-40 md:flex-none`}
                     value=""
                     disabled={busy === p.id}
                     onChange={(e) =>
@@ -387,6 +419,7 @@ function InboxPage() {
                 )}
                 <Button
                   size="sm"
+                  className="h-11 flex-1 md:h-8 md:flex-none"
                   disabled={busy === p.id}
                   onClick={() => void run(p.id, () => claim({ data: p.id }))}
                 >

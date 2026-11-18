@@ -83,7 +83,7 @@ function HomePage() {
                 role="tab"
                 aria-selected={view === v}
                 onClick={() => setView(v)}
-                className={`rounded-md px-3 py-1.5 ${view === v ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                className={`rounded-md px-4 py-3 md:px-3 md:py-1.5 ${view === v ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
               >
                 {v === "owner" ? t("Agency") : t("My work")}
               </button>
@@ -114,7 +114,7 @@ function Alerts() {
           role="alert"
           className={`flex items-center gap-3 rounded-lg border p-3 text-sm ${a.kind === "assigned" ? "border-primary/30 bg-primary/5" : a.kind === "aml" || a.kind === "pool" ? "border-warning bg-warning/10" : "border-destructive bg-destructive/10"}`}
         >
-          <span className="flex-1">
+          <span className="min-w-0 flex-1 break-words">
             {a.kind === "hot"
               ? "🔥 "
               : a.kind === "assigned"
@@ -133,6 +133,7 @@ function Alerts() {
           <Button
             variant="ghost"
             size="sm"
+            className="h-11 shrink-0 md:h-8"
             onClick={async () => {
               await markRead({ data: a.id });
               client.invalidateQueries({ queryKey: alertsQuery.queryKey });
@@ -207,9 +208,9 @@ function AgentHome() {
                 placeholder="e.g. 1,000,000"
                 value={goal}
                 onChange={(e) => setGoal(e.target.value)}
-                className="h-8"
+                className="h-11 md:h-8"
               />
-              <Button size="sm" variant="outline" type="submit">
+              <Button size="sm" variant="outline" type="submit" className="h-11 md:h-8">
                 {t("Save")}
               </Button>
             </form>
@@ -372,7 +373,7 @@ function OwnerHome() {
           note={t("GCI: {amount}", { amount: aed(data.gci.aiHandledGciYear) })}
         />
       </section>
-      <section className="grid gap-4 sm:grid-cols-4">
+      <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <Stat label={t("Viewings kept (this month)")} value={data.viewingsMonth.kept} />
         <Stat
           label={t("No-shows (this month)")}
@@ -394,7 +395,23 @@ function OwnerHome() {
       <section className="grid gap-4 md:grid-cols-2">
         <div className="rounded-xl border border-border bg-background p-5 shadow-xs">
           <h2 className="mb-3 font-semibold">{t("GCI per agent")}</h2>
-          <table className="w-full text-sm">
+          {/* Phones: one stacked row per agent; the table stays from `md` up. */}
+          <ul className="divide-y divide-border text-sm md:hidden">
+            {data.perAgent.map((a) => (
+              <li key={a.userId} className="py-2">
+                <p className="truncate font-medium">{a.name}</p>
+                <p className="mt-0.5 flex justify-between gap-3 text-xs text-muted-foreground">
+                  <span>{t("This month")}</span>
+                  <span className="text-sm text-foreground">{aed(a.month)}</span>
+                </p>
+                <p className="flex justify-between gap-3 text-xs text-muted-foreground">
+                  <span>{t("This year")}</span>
+                  <span className="text-sm text-foreground">{aed(a.year)}</span>
+                </p>
+              </li>
+            ))}
+          </ul>
+          <table className="hidden w-full text-sm md:table">
             <thead>
               <tr className="text-left text-muted-foreground">
                 <th className="py-1">{t("Agent")}</th>
@@ -415,7 +432,23 @@ function OwnerHome() {
         </div>
         <div className="rounded-xl border border-border bg-background p-5 shadow-xs">
           <h2 className="mb-3 font-semibold">{t("Agent leaderboard")}</h2>
-          <table className="w-full text-sm">
+          <ol className="divide-y divide-border text-sm md:hidden">
+            {data.leaderboard.map((r, i) => (
+              <li key={r.userId} className="py-2">
+                <p className="flex items-baseline gap-2">
+                  <span className="w-5 shrink-0 text-muted-foreground">{i + 1}</span>
+                  <span className="min-w-0 flex-1 truncate font-medium">{r.name}</span>
+                  <span className="shrink-0">{aed(r.gciYear)}</span>
+                </p>
+                <p className="ps-7 text-xs text-muted-foreground">
+                  {t("Avg reply")}:{" "}
+                  {r.avgReplyMinutes === null ? "—" : t("{n} min", { n: r.avgReplyMinutes })} ·{" "}
+                  {t("Viewings (30 days)")}: {r.viewings}
+                </p>
+              </li>
+            ))}
+          </ol>
+          <table className="hidden w-full text-sm md:table">
             <thead>
               <tr className="text-left text-muted-foreground">
                 <th className="py-1">#</th>
@@ -484,7 +517,7 @@ function NeedsYouToday({
               <Link
                 to="/lead/$leadId"
                 params={{ leadId: l.id }}
-                className="flex items-center gap-3 px-5 py-2.5 hover:bg-muted/50"
+                className="flex items-center gap-3 px-4 py-3.5 hover:bg-muted/50 md:px-5 md:py-2.5"
               >
                 <span className="size-2 shrink-0 rounded-full bg-destructive" aria-hidden />
                 <span className="min-w-0 flex-1 truncate">
@@ -503,15 +536,15 @@ function NeedsYouToday({
                 <Link
                   to="/lead/$leadId"
                   params={{ leadId: p.leadId }}
-                  className="flex items-center gap-3 px-5 py-2.5 hover:bg-muted/50"
+                  className="flex items-center gap-3 px-4 py-3.5 hover:bg-muted/50 md:px-5 md:py-2.5"
                 >
                   <span className="size-2 shrink-0 rounded-full bg-warning" aria-hidden />
-                  <span className="flex-1">{p.text}</span>
+                  <span className="min-w-0 flex-1 break-words">{p.text}</span>
                 </Link>
               ) : (
-                <p className="flex items-center gap-3 px-5 py-2.5">
+                <p className="flex items-center gap-3 px-4 py-3.5 md:px-5 md:py-2.5">
                   <span className="size-2 shrink-0 rounded-full bg-warning" aria-hidden />
-                  <span className="flex-1">{p.text}</span>
+                  <span className="min-w-0 flex-1 break-words">{p.text}</span>
                 </p>
               )}
             </li>
