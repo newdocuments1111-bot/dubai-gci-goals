@@ -19,7 +19,7 @@ export type TemplateCategory = 'marketing' | 'utility';
 export type MetaStatus = 'draft' | 'pending' | 'approved' | 'rejected' | 'paused' | 'disabled';
 export type QueueStatus = 'pending_approval' | 'approved' | 'scheduled' | 'sent' | 'failed' | 'cancelled' | 'blocked';
 export const QUEUE_STATUSES: QueueStatus[] = ['pending_approval', 'approved', 'scheduled', 'sent', 'failed', 'cancelled', 'blocked'];
-export const QUEUE_PURPOSES = ['manual', 'listing_match', 'launch', 'renewal', 'referral'] as const;
+export const QUEUE_PURPOSES = ['manual', 'listing_match', 'launch', 'renewal', 'referral', 'campaign'] as const;
 
 const TOKEN_RE = /\{\{\s*([a-z][a-z0-9_]{0,29})\s*\}\}/g;
 

@@ -1,6 +1,7 @@
 import type { supabaseAdmin } from '@/integrations/supabase/client.server';
 import type { Tables } from '@/integrations/supabase/types';
 import { cleanParam, consentRecordOk, DEFAULT_MARKETING_GAP_DAYS, missingValues, outboxDecision, renderTemplate } from './whatsapp-templates';
+import { followUpStopped } from './campaigns';
 
 type Admin = typeof supabaseAdmin;
 type Item = Tables<'whatsapp_outbox'>;
@@ -42,11 +43,16 @@ async function processItem(admin: Admin, item: Item): Promise<keyof OutboxRunRes
   }
 
   const [{ data: lead }, { data: template }, { data: consent }] = await Promise.all([
-    admin.from('leads').select('id,agency_id,phone,stopped,opted_in').eq('id', item.lead_id).maybeSingle(),
+    admin.from('leads').select('id,agency_id,phone,stopped,opted_in,whatsapp_last_inbound_at').eq('id', item.lead_id).maybeSingle(),
     item.template_id ? admin.from('message_templates').select('*').eq('id', item.template_id).maybeSingle() : Promise.resolve({ data: null }),
     admin.from('consent_log').select('agreed_to').eq('lead_id', item.lead_id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
   ]);
   if (!lead) { await update(admin, item.id, { status: 'blocked', block_reason: 'The lead no longer exists.' }); return 'blocked'; }
+  // Campaign follow-ups stop as soon as the client has written back.
+  if (followUpStopped(item.campaign_step, item.created_at, lead.whatsapp_last_inbound_at)) {
+    await update(admin, item.id, { status: 'cancelled', block_reason: 'The client replied, so this follow-up was not sent.' });
+    return 'blocked';
+  }
   const { data: settings } = await admin.from('whatsapp_settings').select('*').eq('agency_id', lead.agency_id).maybeSingle();
   const { data: lastMarketing } = await admin.from('whatsapp_outbox').select('sent_at').eq('lead_id', lead.id).eq('status', 'sent').eq('category', 'marketing').neq('id', item.id)
     .order('sent_at', { ascending: false }).limit(1).maybeSingle();

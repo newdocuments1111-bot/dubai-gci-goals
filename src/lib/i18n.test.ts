@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { dirOf, hasArabic, isLang, tr, trTitle } from "./i18n";
+import { readFileSync } from "node:fs";
+import { dirOf, hasArabic, isLang, tr, trTitle, trf } from "./i18n";
 import { MAIN_SECTIONS, SETTINGS_SECTION, TOOLS_SECTION } from "./nav";
 
 describe("app language", () => {
@@ -9,6 +10,25 @@ describe("app language", () => {
       ...s.pages.map((p) => p.label),
     ]);
     expect(labels.filter((l) => !hasArabic(l))).toEqual([]);
+  });
+
+  it("has Arabic for every text on the Inbox and Leads pages", () => {
+    const missing: string[] = [];
+    for (const page of ["inbox.tsx", "leads.tsx"]) {
+      const source = readFileSync(`src/routes/_authenticated/${page}`, "utf8");
+      // t("…") and t('…') calls with a fixed text.
+      for (const m of source.matchAll(/\bt\(\s*(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)')/g)) {
+        const text = (m[1] ?? m[2] ?? "").replace(/\\(.)/g, "$1");
+        if (!hasArabic(text)) missing.push(`${page}: ${text}`);
+      }
+    }
+    expect(missing).toEqual([]);
+  });
+
+  it("fills blanks after translating", () => {
+    expect(trf("en", "Export {n}", { n: 12 })).toBe("Export 12");
+    expect(trf("ar", "Export {n}", { n: 12 })).toBe("تصدير 12");
+    expect(trf("ar", "Step {n}", {})).toBe("المرحلة {n}");
   });
 
   it("translates, falls back and sets direction", () => {

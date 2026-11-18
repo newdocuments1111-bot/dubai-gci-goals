@@ -23,6 +23,7 @@ export const MAIN_SECTIONS: readonly NavSection[] = [
       { to: "/viewings", label: "Viewings" },
       { to: "/follow-ups", label: "Follow-ups" },
       { to: "/leads/import", label: "Import" },
+      { to: "/campaigns", label: "Campaigns", show: "owner" },
     ],
   },
   { id: "deals", label: "Deals", pages: [{ to: "/deals", label: "Deals" }] },
@@ -59,6 +60,7 @@ export const SETTINGS_SECTION: NavSection = {
     { to: "/settings/whatsapp", label: "WhatsApp", show: "owner" },
     { to: "/templates", label: "Templates", show: "manager" },
     { to: "/queue", label: "Send queue" },
+    { to: "/settings/records", label: "Records", show: "owner" },
     { to: "/ai-reply-rules", label: "AI reply rules", show: "owner" },
     { to: "/test-chat", label: "Test chat" },
     { to: "/uae-knowledge", label: "UAE knowledge" },
@@ -80,6 +82,7 @@ const ALL_SECTIONS: readonly NavSection[] = [...MAIN_SECTIONS, SETTINGS_SECTION,
 const DETAIL_PREFIXES: readonly { prefix: string; section: NavSectionId }[] = [
   { prefix: "/lead/", section: "leads" },
   { prefix: "/listing/", section: "listings" },
+  { prefix: "/brochure/", section: "listings" },
   { prefix: "/deal/", section: "deals" },
   { prefix: "/invoice/", section: "deals" },
 ];
