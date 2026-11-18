@@ -8,6 +8,7 @@ import { getAgentHome, getOwnerHome } from "@/lib/home.functions";
 import { setMyGoal } from "@/lib/team.functions";
 import { dubaiDate } from "@/lib/listings";
 import { useMembership } from "@/hooks/use-membership";
+import { useLang } from "@/hooks/use-lang";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
@@ -51,13 +52,14 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 function HomePage() {
   const membership = useMembership();
+  const { lang, t } = useLang();
   const [view, setView] = useState<"owner" | "agent">(membership.isOwner ? "owner" : "agent");
   return (
     <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-sm text-muted-foreground">
-            {new Date().toLocaleDateString("en-GB", {
+            {new Date().toLocaleDateString(lang === "ar" ? "ar-AE" : "en-GB", {
               weekday: "long",
               day: "numeric",
               month: "long",
@@ -65,14 +67,14 @@ function HomePage() {
             })}
           </p>
           <h1 className="text-2xl font-semibold tracking-tight">
-            {greeting(new Date())}
+            {t(greeting(new Date()))}
             {membership.displayName ? `, ${membership.displayName.split(" ")[0]}` : ""}
           </h1>
         </div>
         {membership.isOwner && (
           <div
             role="tablist"
-            aria-label="Home view"
+            aria-label={t("Home view")}
             className="flex rounded-lg border border-border p-1 text-sm"
           >
             {(["owner", "agent"] as const).map((v) => (
@@ -83,7 +85,7 @@ function HomePage() {
                 onClick={() => setView(v)}
                 className={`rounded-md px-3 py-1.5 ${view === v ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
               >
-                {v === "owner" ? "Agency" : "My work"}
+                {v === "owner" ? t("Agency") : t("My work")}
               </button>
             ))}
           </div>
@@ -157,27 +159,31 @@ function Stat({ label, value, note }: { label: string; value: string | number; n
 function AgentHome() {
   const { data } = useSuspenseQuery(agentQuery);
   const client = useQueryClient();
+  const { t } = useLang();
   const saveGoal = useServerFn(setMyGoal);
   const [goal, setGoal] = useState(data.goal ? String(data.goal) : "");
   const [goalMsg, setGoalMsg] = useState("");
   return (
     <div className="space-y-6">
       <section className="grid gap-4 sm:grid-cols-3">
-        <Stat label="My GCI this month" value={aed(data.gci.month)} />
+        <Stat label={t("My GCI this month")} value={aed(data.gci.month)} />
         <Stat
-          label="My GCI this year"
+          label={t("My GCI this year")}
           value={aed(data.gci.year)}
-          note={`My share this year: ${aed(data.gci.myShareYear)} (${data.access.splitPercent}% split)`}
+          note={t("My share this year: {amount} ({percent}% split)", {
+            amount: aed(data.gci.myShareYear),
+            percent: data.access.splitPercent,
+          })}
         />
         <div className="rounded-lg border border-border p-4">
           <p className="flex items-center gap-1 text-sm font-medium">
             <Target className="size-4" />
-            My yearly goal
+            {t("My yearly goal")}
           </p>
-          <p className="mt-1 text-2xl font-bold">{data.goal ? aed(data.goal) : "Not set"}</p>
-          <Progress value={data.progress} className="mt-2" aria-label="Goal progress" />
+          <p className="mt-1 text-2xl font-bold">{data.goal ? aed(data.goal) : t("Not set")}</p>
+          <Progress value={data.progress} className="mt-2" aria-label={t("Goal progress")} />
           <p className="mt-1 text-xs text-muted-foreground">
-            {data.progress}% reached (closed deals this year)
+            {t("{n}% reached (closed deals this year)", { n: data.progress })}
           </p>
           {data.canSetGoal ? (
             <form
@@ -191,12 +197,12 @@ function AgentHome() {
                 if ("error" in r) setGoalMsg(r.error);
                 else {
                   await client.invalidateQueries({ queryKey: ["home"] });
-                  setGoalMsg("Goal saved.");
+                  setGoalMsg(t("Goal saved."));
                 }
               }}
             >
               <Input
-                aria-label="Yearly GCI goal in AED"
+                aria-label={t("Yearly GCI goal in AED")}
                 inputMode="numeric"
                 placeholder="e.g. 1,000,000"
                 value={goal}
@@ -204,12 +210,12 @@ function AgentHome() {
                 className="h-8"
               />
               <Button size="sm" variant="outline" type="submit">
-                Save
+                {t("Save")}
               </Button>
             </form>
           ) : (
             <p className="mt-2 text-xs text-muted-foreground">
-              Your owner sets goals in this agency.
+              {t("Your owner sets goals in this agency.")}
             </p>
           )}
           {goalMsg && (
@@ -223,24 +229,23 @@ function AgentHome() {
       <TargetsCard onlyMe />
 
       <section
-        aria-label="AI daily summary"
+        aria-label={t("AI daily summary")}
         className="rounded-lg border border-primary/40 bg-primary/5 p-5"
       >
         <h2 className="mb-2 flex items-center gap-2 font-semibold">
           <Sparkles className="size-4 text-primary" />
-          AI daily summary
+          {t("AI daily summary")}
         </h2>
         <p className="text-sm">
-          Today: <strong>{data.summary.newLeads}</strong> new lead
-          {data.summary.newLeads === 1 ? "" : "s"} · the AI handled{" "}
-          <strong>{data.summary.aiHandledChats}</strong> chat
-          {data.summary.aiHandledChats === 1 ? "" : "s"} ·{" "}
-          <strong>{data.viewingsToday.length}</strong> viewing
-          {data.viewingsToday.length === 1 ? "" : "s"}.
+          {t("Today: {leads} new leads · the AI handled {chats} chats · {viewings} viewings.", {
+            leads: data.summary.newLeads,
+            chats: data.summary.aiHandledChats,
+            viewings: data.viewingsToday.length,
+          })}
         </p>
-        <h3 className="mt-3 text-sm font-medium">What needs you today</h3>
+        <h3 className="mt-3 text-sm font-medium">{t("What needs you today")}</h3>
         {data.summary.needsMe.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nothing urgent. Nice work.</p>
+          <p className="text-sm text-muted-foreground">{t("Nothing urgent. Nice work.")}</p>
         ) : (
           <ul className="mt-1 space-y-1 text-sm">
             {data.summary.needsMe.map((n, i) => (
@@ -263,15 +268,17 @@ function AgentHome() {
 
       <section className="grid gap-4 sm:grid-cols-3">
         <div className="rounded-lg border border-border p-4">
-          <h2 className="mb-2 font-semibold">🔥 Hot leads ({data.hotLeads.length})</h2>
+          <h2 className="mb-2 font-semibold">
+            🔥 {t("Hot leads ({n})", { n: data.hotLeads.length })}
+          </h2>
           {data.hotLeads.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No hot leads yet.</p>
+            <p className="text-sm text-muted-foreground">{t("No hot leads yet.")}</p>
           ) : (
             <ul className="space-y-1 text-sm">
               {data.hotLeads.map((l) => (
                 <li key={l.id}>
                   <Link className="underline" to="/lead/$leadId" params={{ leadId: l.id }}>
-                    {l.name || "Unnamed"}
+                    {l.name || t("Unnamed")}
                   </Link>
                   {l.area && <span className="text-muted-foreground"> · {l.area}</span>}
                 </li>
@@ -280,14 +287,15 @@ function AgentHome() {
           )}
         </div>
         <div className="rounded-lg border border-border p-4">
-          <h2 className="mb-2 font-semibold">Today's viewings</h2>
+          <h2 className="mb-2 font-semibold">{t("Today's viewings")}</h2>
           {data.viewingsToday.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No viewings today.</p>
+            <p className="text-sm text-muted-foreground">{t("No viewings today.")}</p>
           ) : (
             <ul className="space-y-1 text-sm">
               {data.viewingsToday.map((v) => (
                 <li key={v.id}>
-                  {dubaiDate(v.starts_at)} · {v.leadName || "Client"} ({v.kind})
+                  {dubaiDate(v.starts_at)} · {v.leadName || t("Client")} (
+                  {t(v.kind === "valuation" ? "Valuation" : "Viewing")})
                 </li>
               ))}
             </ul>
@@ -295,7 +303,7 @@ function AgentHome() {
         </div>
         <Link to="/follow-ups" className="rounded-lg border border-border p-4 hover:border-primary">
           <p className="text-2xl font-bold">{data.followUpsDue}</p>
-          <p className="text-sm text-muted-foreground">Follow-ups due for approval</p>
+          <p className="text-sm text-muted-foreground">{t("Follow-ups due for approval")}</p>
         </Link>
       </section>
     </div>
@@ -303,6 +311,7 @@ function AgentHome() {
 }
 
 function OwnerHome() {
+  const { t } = useLang();
   const { data, error } = useQuery(ownerQuery);
   const { data: weekly, error: weeklyError } = useQuery({
     queryKey: ["weekly-report", "current"],
@@ -314,25 +323,33 @@ function OwnerHome() {
         {error.message}
       </p>
     );
-  if (!data) return <p className="text-sm text-muted-foreground">Loading agency numbers…</p>;
+  if (!data) return <p className="text-sm text-muted-foreground">{t("Loading agency numbers…")}</p>;
   return (
     <div className="space-y-6">
       <NeedsYouToday problems={data.problems} missedLeadMinutes={data.missedLeadMinutes} />
       <section
-        aria-label="This week"
+        aria-label={t("This week")}
         className="rounded-xl border border-border bg-background p-4 shadow-xs"
       >
         <div className="flex items-center justify-between gap-3">
-          <h2 className="font-semibold">This week</h2>
+          <h2 className="font-semibold">{t("This week")}</h2>
           <Button asChild variant="outline" size="sm">
-            <Link to="/owner/weekly-report">Monday report</Link>
+            <Link to="/owner/weekly-report">{t("Monday report")}</Link>
           </Button>
         </div>
         {weekly && (
           <p className="mt-2 text-sm">
-            {weekly.report.enquiries} enquiries · {weekly.report.hotLeads} Hot leads ·{" "}
-            {weekly.report.viewings.booked} viewings booked · {weekly.report.weekGci.deals} deals
-            closed · {aed(weekly.report.weekGci.gci)} GCI · {weekly.report.missed} missed alerts
+            {t(
+              "{enquiries} enquiries · {hot} Hot leads · {booked} viewings booked · {deals} deals closed · {gci} GCI · {missed} missed alerts",
+              {
+                enquiries: weekly.report.enquiries,
+                hot: weekly.report.hotLeads,
+                booked: weekly.report.viewings.booked,
+                deals: weekly.report.weekGci.deals,
+                gci: aed(weekly.report.weekGci.gci),
+                missed: weekly.report.missed,
+              },
+            )}
           </p>
         )}
         {weeklyError && (
@@ -342,47 +359,47 @@ function OwnerHome() {
         )}
       </section>
       <section className="grid gap-4 sm:grid-cols-4">
-        <Stat label="Total GCI this month" value={aed(data.gci.month)} />
-        <Stat label="Total GCI this year" value={aed(data.gci.year)} />
+        <Stat label={t("Total GCI this month")} value={aed(data.gci.month)} />
+        <Stat label={t("Total GCI this year")} value={aed(data.gci.year)} />
         <Stat
-          label="Agency share this year"
+          label={t("Agency share this year")}
           value={aed(data.gci.agencyYear)}
-          note={`This month: ${aed(data.gci.agencyMonth)}`}
+          note={t("This month: {amount}", { amount: aed(data.gci.agencyMonth) })}
         />
         <Stat
-          label="Deals from AI-handled leads (this year)"
+          label={t("Deals from AI-handled leads (this year)")}
           value={data.gci.aiHandledDeals}
-          note={`GCI: ${aed(data.gci.aiHandledGciYear)}`}
+          note={t("GCI: {amount}", { amount: aed(data.gci.aiHandledGciYear) })}
         />
       </section>
       <section className="grid gap-4 sm:grid-cols-4">
-        <Stat label="Viewings kept (this month)" value={data.viewingsMonth.kept} />
+        <Stat label={t("Viewings kept (this month)")} value={data.viewingsMonth.kept} />
         <Stat
-          label="No-shows (this month)"
+          label={t("No-shows (this month)")}
           value={data.viewingsMonth.noShows}
-          note={`${data.viewingsMonth.booked} still booked`}
+          note={t("{n} still booked", { n: data.viewingsMonth.booked })}
         />
         <Stat
-          label="AI replies (this month)"
+          label={t("AI replies (this month)")}
           value={data.usageMonth.aiReplies}
-          note={`WhatsApp messages: ${data.usageMonth.whatsappMessages} (not connected yet)`}
+          note={t("WhatsApp messages: {n}", { n: data.usageMonth.whatsappMessages })}
         />
         <Stat
-          label="Hours saved (estimate)"
-          value={`~${data.hoursSavedEstimate} h`}
-          note={`Estimate: AI replies × ${data.minutesPerReply} min each`}
+          label={t("Hours saved (estimate)")}
+          value={t("~{n} h", { n: data.hoursSavedEstimate })}
+          note={t("Estimate: AI replies × {n} min each", { n: data.minutesPerReply })}
         />
       </section>
 
       <section className="grid gap-4 md:grid-cols-2">
         <div className="rounded-xl border border-border bg-background p-5 shadow-xs">
-          <h2 className="mb-3 font-semibold">GCI per agent</h2>
+          <h2 className="mb-3 font-semibold">{t("GCI per agent")}</h2>
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-muted-foreground">
-                <th className="py-1">Agent</th>
-                <th>This month</th>
-                <th>This year</th>
+                <th className="py-1">{t("Agent")}</th>
+                <th>{t("This month")}</th>
+                <th>{t("This year")}</th>
               </tr>
             </thead>
             <tbody>
@@ -397,15 +414,15 @@ function OwnerHome() {
           </table>
         </div>
         <div className="rounded-xl border border-border bg-background p-5 shadow-xs">
-          <h2 className="mb-3 font-semibold">Agent leaderboard</h2>
+          <h2 className="mb-3 font-semibold">{t("Agent leaderboard")}</h2>
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-muted-foreground">
                 <th className="py-1">#</th>
-                <th>Agent</th>
-                <th>GCI (year)</th>
-                <th>Avg reply</th>
-                <th>Viewings (30 days)</th>
+                <th>{t("Agent")}</th>
+                <th>{t("GCI (year)")}</th>
+                <th>{t("Avg reply")}</th>
+                <th>{t("Viewings (30 days)")}</th>
               </tr>
             </thead>
             <tbody>
@@ -414,14 +431,16 @@ function OwnerHome() {
                   <td className="py-1.5">{i + 1}</td>
                   <td>{r.name}</td>
                   <td>{aed(r.gciYear)}</td>
-                  <td>{r.avgReplyMinutes === null ? "—" : `${r.avgReplyMinutes} min`}</td>
+                  <td>
+                    {r.avgReplyMinutes === null ? "—" : t("{n} min", { n: r.avgReplyMinutes })}
+                  </td>
                   <td>{r.viewings}</td>
                 </tr>
               ))}
             </tbody>
           </table>
           <p className="mt-2 text-xs text-muted-foreground">
-            Ranked by GCI, then faster replies, then viewings.
+            {t("Ranked by GCI, then faster replies, then viewings.")}
           </p>
         </div>
       </section>
@@ -437,25 +456,26 @@ function NeedsYouToday({
   problems: { text: string; leadId?: string | undefined }[];
   missedLeadMinutes: number;
 }) {
+  const { t } = useLang();
   const { data: pipeline } = useQuery({ queryKey: ["pipeline"], queryFn: () => getPipeline() });
   const overdue = (pipeline?.leads ?? []).filter((l) => isOverdue(l)).slice(0, 8);
   const total = overdue.length + problems.length;
   return (
     <section
-      aria-label="Needs you today"
+      aria-label={t("Needs you today")}
       className="rounded-xl border border-border bg-background shadow-xs"
     >
       <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
-        <h2 className="font-semibold">Needs you today</h2>
+        <h2 className="font-semibold">{t("Needs you today")}</h2>
         <span
           className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${total ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}
         >
-          {total} open
+          {t("{n} open", { n: total })}
         </span>
       </div>
       {total === 0 ? (
         <p className="px-5 py-4 text-sm text-muted-foreground">
-          Nothing waiting on you. Every lead has a next step on time.
+          {t("Nothing waiting on you. Every lead has a next step on time.")}
         </p>
       ) : (
         <ul className="divide-y divide-border text-sm">
@@ -468,11 +488,11 @@ function NeedsYouToday({
               >
                 <span className="size-2 shrink-0 rounded-full bg-destructive" aria-hidden />
                 <span className="min-w-0 flex-1 truncate">
-                  <strong className="font-medium">{l.name || "Unnamed lead"}</strong> ·{" "}
-                  {l.next_action || l.stage_name || `Step ${l.stage}`}
+                  <strong className="font-medium">{l.name || t("Unnamed lead")}</strong> ·{" "}
+                  {l.next_action || l.stage_name || t("Step {n}", { n: l.stage })}
                 </span>
                 <span className="shrink-0 text-xs text-muted-foreground">
-                  Overdue · {l.who || "Agent"}
+                  {t("Overdue")} · {l.who || t("Agent")}
                 </span>
               </Link>
             </li>
@@ -499,10 +519,12 @@ function NeedsYouToday({
         </ul>
       )}
       <p className="border-t border-border px-5 py-2 text-xs text-muted-foreground">
-        Red = pipeline step past its due time. Amber = client waiting more than {missedLeadMinutes}{" "}
-        min, or another problem.{" "}
+        {t(
+          "Red = pipeline step past its due time. Amber = client waiting more than {n} min, or another problem.",
+          { n: missedLeadMinutes },
+        )}{" "}
         <Link to="/pipeline" className="underline">
-          Open the board
+          {t("Open the board")}
         </Link>
       </p>
     </section>

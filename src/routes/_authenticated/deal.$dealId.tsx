@@ -18,6 +18,7 @@ import {
   deleteDealPayment,
   getDealRoom,
   issueInvoice,
+  saveCompliance,
   updateDealTerms,
   updateStep,
 } from "@/lib/dealroom.functions";
@@ -31,6 +32,16 @@ import {
   stepState,
   type FormKind,
 } from "@/lib/dealroom";
+import {
+  CASH_REPORT_AED,
+  KEEP_YEARS,
+  STATE_LABEL,
+  complianceState,
+  missingPapers,
+  reportDue,
+  worthChecking,
+  type Compliance,
+} from "@/lib/aml";
 import { DRAFT_LABEL } from "@/lib/paperwork";
 import { PaperworkDialog } from "@/components/PaperworkDialog";
 import { Button } from "@/components/ui/button";
@@ -412,6 +423,10 @@ function DealRoomPage() {
         </div>
       </div>
 
+      <div className="mt-4">
+        <MoneyAndId data={data} dealId={dealId} run={run} busy={busy} />
+      </div>
+
       {form && (
         <FormDialog
           kind={form}
@@ -728,5 +743,241 @@ function TermsDialog({
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/**
+ * The agency's own money-and-ID record for this deal. It reminds you when a Real Estate Activity
+ * Report is due in goAML; it never files anything and never checks any name against a list.
+ */
+function MoneyAndId({
+  data,
+  dealId,
+  run,
+  busy,
+}: {
+  data: Room;
+  dealId: string;
+  run: (fn: () => Promise<unknown>) => Promise<void>;
+  busy: boolean;
+}) {
+  const save = useServerFn(saveCompliance);
+  const saved = data.compliance as Compliance & { updated_at: string | null };
+  const [c, setC] = useState<Compliance>(saved);
+  const [cash, setCash] = useState(saved.cash_aed ? String(saved.cash_aed) : "");
+  const [done, setDone] = useState(false);
+  const dealType = data.deal.deal_type === "rent" ? "rent" : "sale";
+  const set = (patch: Partial<Compliance>) => {
+    setC({ ...c, ...patch });
+    setDone(false);
+  };
+  const current: Compliance = { ...c, cash_aed: Number(cash.replace(/[^\d.]/g, "")) || 0 };
+  const due = reportDue(current);
+  const missing = missingPapers(current, dealType);
+  const flags = worthChecking(current);
+  const state = complianceState(current, dealType);
+  const buyerWord = dealType === "rent" ? "tenant" : "buyer";
+  const sellerWord = dealType === "rent" ? "landlord" : "seller";
+  const check = (label: string, key: keyof Compliance, hint?: string) => (
+    <label className="flex items-start gap-2 text-sm">
+      <input
+        type="checkbox"
+        className="mt-0.5 size-4"
+        disabled={!data.canEdit}
+        checked={Boolean(current[key])}
+        onChange={(e) => set({ [key]: e.target.checked } as Partial<Compliance>)}
+      />
+      <span>
+        {label}
+        {hint && <span className="block text-xs text-muted-foreground">{hint}</span>}
+      </span>
+    </label>
+  );
+
+  return (
+    <section aria-label="Money and ID" className={card}>
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <h2 className="font-semibold">Money and ID</h2>
+        <span
+          className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+            state === "reporting_due"
+              ? "bg-destructive/10 text-destructive"
+              : state === "complete"
+                ? "bg-primary/10 text-primary"
+                : "bg-muted text-muted-foreground"
+          }`}
+        >
+          {STATE_LABEL[state]}
+        </span>
+      </div>
+      <p className="mb-3 text-sm text-muted-foreground">
+        What you must keep on file for this deal. This is your own record and a reminder — it does
+        not check any name against a sanctions list and it files nothing for you.
+      </p>
+
+      <div className="space-y-2">
+        {check(
+          `${buyerWord[0]!.toUpperCase()}${buyerWord.slice(1)}'s Emirates ID or passport on file`,
+          "buyer_id_collected",
+        )}
+        {check(
+          `${sellerWord[0]!.toUpperCase()}${sellerWord.slice(1)}'s Emirates ID or passport on file`,
+          "seller_id_collected",
+        )}
+        {check("A company is buying or selling", "is_company")}
+        {current.is_company &&
+          check(
+            "Trade licence, memorandum and list of real owners (UBO) on file",
+            "company_papers_collected",
+          )}
+      </div>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <label className="text-sm">
+          How much is paid in cash (AED)
+          <Input
+            className="mt-1 h-9"
+            inputMode="decimal"
+            disabled={!data.canEdit}
+            value={cash}
+            onChange={(e) => {
+              setCash(e.target.value);
+              setDone(false);
+            }}
+          />
+          <span className="text-xs text-muted-foreground">
+            Add up every cash payment. 0 if none.
+          </span>
+        </label>
+        <label className="text-sm sm:col-span-1 lg:col-span-2">
+          Where the money comes from
+          <Input
+            className="mt-1 h-9"
+            maxLength={500}
+            placeholder="e.g. sale of a flat in London"
+            disabled={!data.canEdit}
+            value={current.source_of_funds}
+            onChange={(e) => set({ source_of_funds: e.target.value })}
+          />
+        </label>
+      </div>
+
+      <div className="mt-3 space-y-2">
+        {check("Part of the money is crypto or another virtual asset", "virtual_asset")}
+        {check(
+          "A party holds, or held, a public position",
+          "politically_exposed",
+          "A politically exposed person, their family or a close associate.",
+        )}
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            className="mt-0.5 size-4"
+            disabled={!data.canEdit}
+            checked={!current.payer_is_the_buyer}
+            onChange={(e) => set({ payer_is_the_buyer: !e.target.checked })}
+          />
+          <span>Someone other than the {buyerWord} is paying</span>
+        </label>
+        {!current.payer_is_the_buyer && (
+          <Input
+            className="h-9 max-w-sm"
+            maxLength={200}
+            placeholder="Who is paying, and why"
+            disabled={!data.canEdit}
+            value={current.payer_name}
+            onChange={(e) => set({ payer_name: e.target.value })}
+          />
+        )}
+      </div>
+
+      {due.due && (
+        <div
+          role="alert"
+          className="mt-4 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm"
+        >
+          <p className="font-medium text-destructive">
+            A Real Estate Activity Report is due in goAML.
+          </p>
+          <ul className="mt-1 list-disc space-y-0.5 ps-5 text-muted-foreground">
+            {due.reasons.map((r) => (
+              <li key={r}>{r}</li>
+            ))}
+          </ul>
+          <div className="mt-2 space-y-2">
+            {check("Report filed in goAML", "rear_filed")}
+            {current.rear_filed && (
+              <div className="grid gap-2 sm:grid-cols-2">
+                <Input
+                  className="h-9"
+                  maxLength={100}
+                  placeholder="goAML reference"
+                  disabled={!data.canEdit}
+                  value={current.rear_reference}
+                  onChange={(e) => set({ rear_reference: e.target.value })}
+                />
+                <Input
+                  className="h-9"
+                  type="date"
+                  aria-label="Date filed"
+                  disabled={!data.canEdit}
+                  value={current.rear_filed_on ?? ""}
+                  onChange={(e) => set({ rear_filed_on: e.target.value || null })}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {missing.length > 0 && (
+        <div className="mt-3 text-sm">
+          <p className="font-medium">Still to collect</p>
+          <ul className="mt-1 list-disc space-y-0.5 ps-5 text-muted-foreground">
+            {missing.map((m) => (
+              <li key={m}>{m}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {flags.length > 0 && (
+        <div className="mt-3 text-sm">
+          <p className="font-medium">Worth a second look</p>
+          <ul className="mt-1 list-disc space-y-0.5 ps-5 text-muted-foreground">
+            {flags.map((f) => (
+              <li key={f}>{f}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {data.canEdit && (
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <Button
+            size="sm"
+            disabled={busy}
+            onClick={() =>
+              void run(async () => {
+                await save({ data: { dealId, ...current, cash_aed: current.cash_aed } });
+                setDone(true);
+              })
+            }
+          >
+            Save record
+          </Button>
+          {done && (
+            <span role="status" className="text-sm text-primary">
+              Saved.
+            </span>
+          )}
+        </div>
+      )}
+      <p className="mt-3 text-xs text-muted-foreground">
+        Cash of AED {CASH_REPORT_AED.toLocaleString("en-US")} or more, or any virtual asset, means a
+        report in goAML. Keep this record and the copies for {KEEP_YEARS} years. Your compliance
+        officer should check it — this screen is not legal advice.
+      </p>
+    </section>
   );
 }

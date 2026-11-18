@@ -17,6 +17,7 @@ import {
   type Lead,
 } from "@/lib/pipeline";
 import { memberName } from "@/lib/agency";
+import { useLang } from "@/hooks/use-lang";
 
 export const pipelineQuery = queryOptions({ queryKey: ["pipeline"], queryFn: () => getPipeline() });
 
@@ -59,6 +60,7 @@ function Stat({ label, value, warn }: { label: string; value: string | number; w
 }
 
 function PipelinePage() {
+  const { t } = useLang();
   const { data } = useSuspenseQuery(pipelineQuery);
   const move = useServerFn(moveLead);
   const client = useQueryClient();
@@ -80,7 +82,7 @@ function PipelinePage() {
   );
   const active = filtered.filter((l) => !isParked(l.outcome));
   const parked = filtered.filter((l) => isParked(l.outcome));
-  const t = totals(data.report);
+  const sum = totals(data.report);
   const sources = [...new Set(data.leads.map((l) => l.source))].sort();
 
   const drop = async (lead: Lead, stage: number) => {
@@ -91,7 +93,7 @@ function PipelinePage() {
       await client.invalidateQueries({ queryKey: ["pipeline"] });
       client.invalidateQueries({ queryKey: ["leads"] });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not move the lead.");
+      setError(e instanceof Error ? e.message : t("Could not move the lead."));
     }
   };
 
@@ -107,28 +109,28 @@ function PipelinePage() {
         className={`cursor-grab rounded-lg border bg-background p-2.5 text-sm shadow-sm hover:border-primary active:cursor-grabbing ${overdue ? "border-destructive/60" : "border-border"}`}
       >
         <div className="flex items-center justify-between gap-2">
-          <span className="truncate font-semibold">{l.name || "Unnamed lead"}</span>
+          <span className="truncate font-semibold">{l.name || t("Unnamed lead")}</span>
           <span
             className={`rounded px-1.5 text-[10px] font-medium ${SCORE[l.score as keyof typeof SCORE] ?? SCORE.Cold}`}
           >
-            {l.score}
+            {t(l.score)}
           </span>
         </div>
         <p className="truncate text-xs text-muted-foreground">
-          {[l.area, l.budget, l.timing].filter(Boolean).join(" · ") || "Nothing learned yet"}
+          {[l.area, l.budget, l.timing].filter(Boolean).join(" · ") || t("Nothing learned yet")}
         </p>
         <p className="truncate text-[11px] text-muted-foreground">
-          From: {ad?.name ?? l.source_detail ?? l.source}
+          {t("From:")} {ad?.name ?? l.source_detail ?? l.source}
           {data.access.isOwner && <> · {agentName(l.assigned_agent_id)}</>}
         </p>
         {l.next_action && (
           <p
             className={`mt-1 text-[11px] ${overdue ? "text-destructive" : "text-muted-foreground"}`}
           >
-            {overdue && <AlertTriangle className="mr-1 inline size-3" />}
+            {overdue && <AlertTriangle className="me-1 inline size-3" />}
             {l.next_action}
             {l.next_action_at && (
-              <span className="ml-1">
+              <span className="ms-1">
                 ·{" "}
                 {new Date(l.next_action_at).toLocaleString("en-GB", {
                   timeZone: "Asia/Dubai",
@@ -180,10 +182,14 @@ function PipelinePage() {
       >
         <div className="mb-2 flex items-start justify-between gap-1 px-1">
           <div className="min-w-0">
-            <p className="text-[10px] font-bold text-muted-foreground">STEP {stage}</p>
+            <p className="text-[10px] font-bold text-muted-foreground">
+              {t("STEP {n}", { n: stage })}
+            </p>
             <p className="text-sm font-semibold leading-tight">{rule.name}</p>
             {offplan.name !== rule.name && (
-              <p className="text-[10px] text-muted-foreground">off-plan: {offplan.name}</p>
+              <p className="text-[10px] text-muted-foreground">
+                {t("off-plan:")} {offplan.name}
+              </p>
             )}
             <p className="text-[10px] uppercase text-muted-foreground">{rule.who}</p>
           </div>
@@ -199,43 +205,43 @@ function PipelinePage() {
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-3xl font-bold">Pipeline</h1>
+        <h1 className="text-3xl font-bold">{t("Board")}</h1>
         <div className="flex gap-2">
           <Button variant="outline" asChild>
             <Link to="/ads">
               <Megaphone className="size-4" />
-              Ads
+              {t("Ads")}
             </Link>
           </Button>
           <Button variant="outline" asChild>
-            <Link to="/owner/weekly-report">Monday report</Link>
+            <Link to="/owner/weekly-report">{t("Monday report")}</Link>
           </Button>
         </div>
       </div>
       <p className="mb-4 text-sm text-muted-foreground">
-        Every lead in the 15 steps of the plan. Leads move forward by themselves when the AI
-        replies, a viewing is booked or done, a follow-up is sent or a deal is recorded. Drag a card
-        to move it by hand; click it to edit.
+        {t(
+          "Every lead in the 15 steps of the plan. Leads move forward by themselves when the AI replies, a viewing is booked or done, a follow-up is sent or a deal is recorded. Drag a card to move it by hand; click it to edit.",
+        )}
       </p>
 
       <section className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
-        <Stat label="Leads" value={t.leads} />
-        <Stat label="Replied" value={`${t.repliedPct}%`} />
-        <Stat label="Avg first reply" value={minutes(t.avgReplyMinutes)} />
-        <Stat label="Nights & weekends" value={t.outOfHours} />
-        <Stat label="Qualified" value={t.qualified} />
-        <Stat label="Viewings booked" value={t.booked} />
-        <Stat label="Attended" value={t.attended} />
-        <Stat label="Overdue" value={t.overdue} warn={t.overdue > 0} />
+        <Stat label={t("Leads")} value={sum.leads} />
+        <Stat label={t("Replied")} value={`${sum.repliedPct}%`} />
+        <Stat label={t("Avg first reply")} value={minutes(sum.avgReplyMinutes)} />
+        <Stat label={t("Nights & weekends")} value={sum.outOfHours} />
+        <Stat label={t("Qualified")} value={sum.qualified} />
+        <Stat label={t("Viewings booked")} value={sum.booked} />
+        <Stat label={t("Attended")} value={sum.attended} />
+        <Stat label={t("Overdue")} value={sum.overdue} warn={sum.overdue > 0} />
       </section>
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <div className="flex rounded-md border border-border p-0.5">
           {(
             [
-              ["board", `Board (${active.length})`],
-              ["parked", `Not now / Lost (${parked.length})`],
-              ["sources", `By source (${data.report.length})`],
+              ["board", t("Board ({n})", { n: active.length })],
+              ["parked", t("Not now / Lost ({n})", { n: parked.length })],
+              ["sources", t("By source ({n})", { n: data.report.length })],
             ] as const
           ).map(([k, label]) => (
             <button
@@ -249,25 +255,27 @@ function PipelinePage() {
           ))}
         </div>
         <select
-          aria-label="Source"
+          aria-label={t("Source")}
           className={selectCls}
           value={source}
           onChange={(e) => setSource(e.target.value)}
         >
-          <option value="all">All sources</option>
+          <option value="all">{t("All sources")}</option>
           {sources.map((s) => (
             <option key={s}>{s}</option>
           ))}
         </select>
         <select
-          aria-label="Score"
+          aria-label={t("Score")}
           className={selectCls}
           value={score}
           onChange={(e) => setScore(e.target.value)}
         >
-          <option value="all">Hot, Warm and Cold</option>
+          <option value="all">{t("Hot, Warm and Cold")}</option>
           {["Hot", "Warm", "Cold"].map((s) => (
-            <option key={s}>{s}</option>
+            <option key={s} value={s}>
+              {t(s)}
+            </option>
           ))}
         </select>
         {error && (
@@ -282,7 +290,7 @@ function PipelinePage() {
           {STAGE_GROUPS.map((g) => (
             <div key={g.title}>
               <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                {g.title}
+                {t(g.title)}
               </p>
               <div className="-mx-4 overflow-x-auto px-4">
                 <div className="flex min-w-[1000px] gap-2">{g.stages.map(column)}</div>
@@ -295,15 +303,18 @@ function PipelinePage() {
       {tab === "parked" &&
         (parked.length === 0 ? (
           <p className="rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-            No leads marked not now or lost.
+            {t("No leads marked not now or lost.")}
           </p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {parked.map((l) => (
               <div key={l.id}>
                 <p className="mb-1 text-xs text-muted-foreground">
-                  <span className="font-semibold uppercase">{l.outcome.replace("_", " ")}</span> ·
-                  was at {l.stage}. {ruleFor(data.rules, l.stage, l.track).name}
+                  <span className="font-semibold uppercase">
+                    {t(l.outcome === "not_now" ? "Not now" : "Lost")}
+                  </span>{" "}
+                  · {t("was at step {n}.", { n: l.stage })}{" "}
+                  {ruleFor(data.rules, l.stage, l.track).name}
                   {l.lost_reason ? ` · ${l.lost_reason}` : ""}
                 </p>
                 {card(l)}
@@ -317,18 +328,18 @@ function PipelinePage() {
           <table className="w-full min-w-[900px] text-sm">
             <thead className="bg-muted/50 text-left text-muted-foreground">
               <tr>
-                <th className="p-2">Source</th>
-                <th>Leads</th>
-                <th>Replied</th>
-                <th>Reply time</th>
-                <th>Nights/weekends</th>
-                <th>Qualified</th>
-                <th>Booked</th>
-                <th>Attended</th>
-                <th>Won</th>
-                <th>Spend</th>
-                <th>Cost / viewing</th>
-                <th>Overdue</th>
+                <th className="p-2">{t("Source")}</th>
+                <th>{t("Leads")}</th>
+                <th>{t("Replied")}</th>
+                <th>{t("Reply time")}</th>
+                <th>{t("Nights/weekends")}</th>
+                <th>{t("Qualified")}</th>
+                <th>{t("Booked")}</th>
+                <th>{t("Attended")}</th>
+                <th>{t("Won")}</th>
+                <th>{t("Spend")}</th>
+                <th>{t("Cost / viewing")}</th>
+                <th>{t("Overdue")}</th>
               </tr>
             </thead>
             <tbody>
@@ -355,9 +366,10 @@ function PipelinePage() {
             </tbody>
           </table>
           <p className="p-2 text-xs text-muted-foreground">
-            Reply time runs from the enquiry arriving to the first AI or agent message. Cost per
-            viewing = that ad's spend ÷ attended viewings from it. Across all ads: {aed(t.spend)}{" "}
-            spent, {aed(t.costPerViewing)} per attended viewing.
+            {t(
+              "Reply time runs from the enquiry arriving to the first AI or agent message. Cost per viewing = that ad's spend ÷ attended viewings from it. Across all ads: {spend} spent, {each} per attended viewing.",
+              { spend: aed(sum.spend), each: aed(sum.costPerViewing) },
+            )}
           </p>
         </div>
       )}
