@@ -17,6 +17,7 @@ export const MAIN_SECTIONS: readonly NavSection[] = [
     id: "leads",
     label: "Leads",
     pages: [
+      { to: "/inbox", label: "Inbox" },
       { to: "/leads", label: "List" },
       { to: "/pipeline", label: "Board" },
       { to: "/viewings", label: "Viewings" },
@@ -51,6 +52,7 @@ export const SETTINGS_SECTION: NavSection = {
   pages: [
     { to: "/settings", label: "General" },
     { to: "/team", label: "Team", show: "owner" },
+    { to: "/settings/routing", label: "Lead routing", show: "owner" },
     { to: "/settings/whatsapp", label: "WhatsApp", show: "owner" },
     { to: "/templates", label: "Templates", show: "manager" },
     { to: "/queue", label: "Send queue" },

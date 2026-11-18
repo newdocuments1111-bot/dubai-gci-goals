@@ -31,6 +31,8 @@ describe("nav", () => {
 
   it("finds the section for pages and detail pages", () => {
     expect(sectionFor("/pipeline")).toBe("leads");
+    expect(sectionFor("/inbox")).toBe("leads");
+    expect(sectionFor("/settings/routing")).toBe("settings");
     expect(sectionFor("/lead/abc")).toBe("leads");
     expect(sectionFor("/listing/abc")).toBe("listings");
     expect(sectionFor("/settings/whatsapp")).toBe("settings");

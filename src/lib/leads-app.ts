@@ -1,3 +1,4 @@
+import { LEAD_SOURCES } from './inbox';
 import { z } from 'zod';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -8,7 +9,7 @@ export const leadSchema = z.object({
   name: z.string().trim().max(200),
   phone: z.string().trim().max(50),
   type: z.enum(['buyer', 'seller', 'landlord', 'tenant', 'other']),
-  source: z.enum(['Bayut', 'Property Finder', 'Instagram', 'WhatsApp', 'Website', 'Referral', 'Other']),
+  source: z.enum(LEAD_SOURCES),
   timezone: z.string().trim().max(100),
 });
 export type LeadInput = z.infer<typeof leadSchema>;
