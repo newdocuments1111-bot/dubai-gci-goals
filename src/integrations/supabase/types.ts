@@ -46,6 +46,8 @@ export type Database = {
       }
       agency_members: {
         Row: {
+          in_rotation: boolean
+          last_routed_at: string | null
           agency_id: string
           annual_gci_goal_aed: number | null
           created_at: string
@@ -57,6 +59,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          in_rotation?: boolean
+          last_routed_at?: string | null
           agency_id: string
           annual_gci_goal_aed?: number | null
           created_at?: string
@@ -68,6 +72,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          in_rotation?: boolean
+          last_routed_at?: string | null
           agency_id?: string
           annual_gci_goal_aed?: number | null
           created_at?: string
@@ -170,6 +176,8 @@ export type Database = {
       }
       app_settings: {
         Row: {
+          pool_after_minutes: number
+          pool_daily_limit: number
           agency_id: string
           agency_name: string
           agent_name: string
@@ -189,6 +197,8 @@ export type Database = {
           working_days: string[]
         }
         Insert: {
+          pool_after_minutes?: number
+          pool_daily_limit?: number
           agency_id?: string
           agency_name?: string
           agent_name?: string
@@ -208,6 +218,8 @@ export type Database = {
           working_days?: string[]
         }
         Update: {
+          pool_after_minutes?: number
+          pool_daily_limit?: number
           agency_id?: string
           agency_name?: string
           agent_name?: string
@@ -668,6 +680,54 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_claims: {
+        Row: {
+          agency_id: string
+          agent_id: string
+          claimed_at: string
+          id: string
+          lead_id: string
+        }
+        Insert: {
+          agency_id: string
+          agent_id: string
+          claimed_at?: string
+          id?: string
+          lead_id: string
+        }
+        Update: {
+          agency_id?: string
+          agent_id?: string
+          claimed_at?: string
+          id?: string
+          lead_id?: string
+        }
+        Relationships: []
+      }
+      lead_intake: {
+        Row: {
+          agency_id: string
+          created_at: string
+          enabled: boolean
+          last_used_at: string | null
+          token: string
+        }
+        Insert: {
+          agency_id: string
+          created_at?: string
+          enabled?: boolean
+          last_used_at?: string | null
+          token?: string
+        }
+        Update: {
+          agency_id?: string
+          created_at?: string
+          enabled?: boolean
+          last_used_at?: string | null
+          token?: string
+        }
+        Relationships: []
+      }
       lead_stages: {
         Row: {
           checklist: Json
@@ -703,6 +763,13 @@ export type Database = {
       }
       leads: {
         Row: {
+          assigned_at: string | null
+          email: string
+          enquiry: string
+          intake: string
+          pooled_at: string | null
+          portal_ref: string | null
+          routed: boolean
           ad_campaign_id: string | null
           checklist_done: Json
           first_reply_at: string | null
@@ -742,6 +809,13 @@ export type Database = {
           whatsapp_last_inbound_at: string | null
         }
         Insert: {
+          assigned_at?: string | null
+          email?: string
+          enquiry?: string
+          intake?: string
+          pooled_at?: string | null
+          portal_ref?: string | null
+          routed?: boolean
           ad_campaign_id?: string | null
           checklist_done?: Json
           first_reply_at?: string | null
@@ -781,6 +855,13 @@ export type Database = {
           whatsapp_last_inbound_at?: string | null
         }
         Update: {
+          assigned_at?: string | null
+          email?: string
+          enquiry?: string
+          intake?: string
+          pooled_at?: string | null
+          portal_ref?: string | null
+          routed?: boolean
           ad_campaign_id?: string | null
           checklist_done?: Json
           first_reply_at?: string | null
@@ -1208,6 +1289,36 @@ export type Database = {
           },
         ]
       }
+      routing_rules: {
+        Row: {
+          agency_id: string
+          agent_id: string
+          created_at: string
+          id: string
+          kind: string
+          position: number
+          value: string
+        }
+        Insert: {
+          agency_id?: string
+          agent_id: string
+          created_at?: string
+          id?: string
+          kind: string
+          position?: number
+          value: string
+        }
+        Update: {
+          agency_id?: string
+          agent_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          position?: number
+          value?: string
+        }
+        Relationships: []
+      }
       uae_knowledge: {
         Row: {
           created_at: string
@@ -1612,6 +1723,26 @@ export type Database = {
       }
     }
     Functions: {
+      claim_pool_lead: { Args: { _lead: string }; Returns: string }
+      intake_lead: { Args: { _lead: Json; _token: string }; Returns: Json }
+      pool_leads: {
+        Args: never
+        Returns: {
+          area: string
+          budget: string
+          created_at: string
+          enquiry: string
+          id: string
+          language: string
+          name: string
+          pooled_at: string | null
+          portal_ref: string | null
+          source: string
+        }[]
+      }
+      return_untouched_leads: { Args: never; Returns: number }
+      rotate_intake_key: { Args: never; Returns: string }
+      set_rotation: { Args: { _on: boolean; _user: string }; Returns: undefined }
       lead_advance: { Args: { p_lead: string; p_stage: number }; Returns: undefined }
       agency_booked_times: { Args: never; Returns: string[] }
       apply_whatsapp_status: {
