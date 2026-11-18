@@ -37,11 +37,14 @@ import { Route as AuthenticatedTemplatesRouteImport } from './routes/_authentica
 import { Route as AuthenticatedTestChatRouteImport } from './routes/_authenticated/test-chat'
 import { Route as AuthenticatedUaeKnowledgeRouteImport } from './routes/_authenticated/uae-knowledge'
 import { Route as AuthenticatedViewingsRouteImport } from './routes/_authenticated/viewings'
+import { Route as AuthenticatedDealDealIdRouteImport } from './routes/_authenticated/deal.$dealId'
+import { Route as AuthenticatedInvoiceInvoiceIdRouteImport } from './routes/_authenticated/invoice.$invoiceId'
 import { Route as AuthenticatedLeadLeadIdRouteImport } from './routes/_authenticated/lead.$leadId'
 import { Route as AuthenticatedListingListingIdRouteImport } from './routes/_authenticated/listing.$listingId'
 import { Route as AuthenticatedOwnerWeeklyReportRouteImport } from './routes/_authenticated/owner.weekly-report'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
 import { Route as AuthenticatedSettingsAlertsRouteImport } from './routes/_authenticated/settings.alerts'
+import { Route as AuthenticatedSettingsDealsRouteImport } from './routes/_authenticated/settings.deals'
 import { Route as AuthenticatedSettingsRoutingRouteImport } from './routes/_authenticated/settings.routing'
 import { Route as AuthenticatedSettingsWhatsappRouteImport } from './routes/_authenticated/settings.whatsapp'
 import { Route as ApiPublicAlertsDispatchRouteImport } from './routes/api/public/alerts/dispatch'
@@ -191,6 +194,17 @@ const AuthenticatedViewingsRoute = AuthenticatedViewingsRouteImport.update({
   path: '/viewings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDealDealIdRoute = AuthenticatedDealDealIdRouteImport.update({
+  id: '/deal/$dealId',
+  path: '/deal/$dealId',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedInvoiceInvoiceIdRoute =
+  AuthenticatedInvoiceInvoiceIdRouteImport.update({
+    id: '/invoice/$invoiceId',
+    path: '/invoice/$invoiceId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedLeadLeadIdRoute = AuthenticatedLeadLeadIdRouteImport.update({
   id: '/lead/$leadId',
   path: '/lead/$leadId',
@@ -218,6 +232,12 @@ const AuthenticatedSettingsAlertsRoute =
   AuthenticatedSettingsAlertsRouteImport.update({
     id: '/settings/alerts',
     path: '/settings/alerts',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSettingsDealsRoute =
+  AuthenticatedSettingsDealsRouteImport.update({
+    id: '/settings/deals',
+    path: '/settings/deals',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedSettingsRoutingRoute =
@@ -282,10 +302,13 @@ export interface FileRoutesByFullPath {
   '/test-chat': typeof AuthenticatedTestChatRoute
   '/uae-knowledge': typeof AuthenticatedUaeKnowledgeRoute
   '/viewings': typeof AuthenticatedViewingsRoute
+  '/deal/$dealId': typeof AuthenticatedDealDealIdRoute
+  '/invoice/$invoiceId': typeof AuthenticatedInvoiceInvoiceIdRoute
   '/lead/$leadId': typeof AuthenticatedLeadLeadIdRoute
   '/listing/$listingId': typeof AuthenticatedListingListingIdRoute
   '/owner/weekly-report': typeof AuthenticatedOwnerWeeklyReportRoute
   '/settings/alerts': typeof AuthenticatedSettingsAlertsRoute
+  '/settings/deals': typeof AuthenticatedSettingsDealsRoute
   '/settings/routing': typeof AuthenticatedSettingsRoutingRoute
   '/settings/whatsapp': typeof AuthenticatedSettingsWhatsappRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
@@ -322,10 +345,13 @@ export interface FileRoutesByTo {
   '/test-chat': typeof AuthenticatedTestChatRoute
   '/uae-knowledge': typeof AuthenticatedUaeKnowledgeRoute
   '/viewings': typeof AuthenticatedViewingsRoute
+  '/deal/$dealId': typeof AuthenticatedDealDealIdRoute
+  '/invoice/$invoiceId': typeof AuthenticatedInvoiceInvoiceIdRoute
   '/lead/$leadId': typeof AuthenticatedLeadLeadIdRoute
   '/listing/$listingId': typeof AuthenticatedListingListingIdRoute
   '/owner/weekly-report': typeof AuthenticatedOwnerWeeklyReportRoute
   '/settings/alerts': typeof AuthenticatedSettingsAlertsRoute
+  '/settings/deals': typeof AuthenticatedSettingsDealsRoute
   '/settings/routing': typeof AuthenticatedSettingsRoutingRoute
   '/settings/whatsapp': typeof AuthenticatedSettingsWhatsappRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
@@ -364,10 +390,13 @@ export interface FileRoutesById {
   '/_authenticated/test-chat': typeof AuthenticatedTestChatRoute
   '/_authenticated/uae-knowledge': typeof AuthenticatedUaeKnowledgeRoute
   '/_authenticated/viewings': typeof AuthenticatedViewingsRoute
+  '/_authenticated/deal/$dealId': typeof AuthenticatedDealDealIdRoute
+  '/_authenticated/invoice/$invoiceId': typeof AuthenticatedInvoiceInvoiceIdRoute
   '/_authenticated/lead/$leadId': typeof AuthenticatedLeadLeadIdRoute
   '/_authenticated/listing/$listingId': typeof AuthenticatedListingListingIdRoute
   '/_authenticated/owner/weekly-report': typeof AuthenticatedOwnerWeeklyReportRoute
   '/_authenticated/settings/alerts': typeof AuthenticatedSettingsAlertsRoute
+  '/_authenticated/settings/deals': typeof AuthenticatedSettingsDealsRoute
   '/_authenticated/settings/routing': typeof AuthenticatedSettingsRoutingRoute
   '/_authenticated/settings/whatsapp': typeof AuthenticatedSettingsWhatsappRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
@@ -406,10 +435,13 @@ export interface FileRouteTypes {
     | '/test-chat'
     | '/uae-knowledge'
     | '/viewings'
+    | '/deal/$dealId'
+    | '/invoice/$invoiceId'
     | '/lead/$leadId'
     | '/listing/$listingId'
     | '/owner/weekly-report'
     | '/settings/alerts'
+    | '/settings/deals'
     | '/settings/routing'
     | '/settings/whatsapp'
     | '/settings/'
@@ -446,10 +478,13 @@ export interface FileRouteTypes {
     | '/test-chat'
     | '/uae-knowledge'
     | '/viewings'
+    | '/deal/$dealId'
+    | '/invoice/$invoiceId'
     | '/lead/$leadId'
     | '/listing/$listingId'
     | '/owner/weekly-report'
     | '/settings/alerts'
+    | '/settings/deals'
     | '/settings/routing'
     | '/settings/whatsapp'
     | '/settings'
@@ -487,10 +522,13 @@ export interface FileRouteTypes {
     | '/_authenticated/test-chat'
     | '/_authenticated/uae-knowledge'
     | '/_authenticated/viewings'
+    | '/_authenticated/deal/$dealId'
+    | '/_authenticated/invoice/$invoiceId'
     | '/_authenticated/lead/$leadId'
     | '/_authenticated/listing/$listingId'
     | '/_authenticated/owner/weekly-report'
     | '/_authenticated/settings/alerts'
+    | '/_authenticated/settings/deals'
     | '/_authenticated/settings/routing'
     | '/_authenticated/settings/whatsapp'
     | '/_authenticated/settings/'
@@ -713,6 +751,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedViewingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/deal/$dealId': {
+      id: '/_authenticated/deal/$dealId'
+      path: '/deal/$dealId'
+      fullPath: '/deal/$dealId'
+      preLoaderRoute: typeof AuthenticatedDealDealIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/invoice/$invoiceId': {
+      id: '/_authenticated/invoice/$invoiceId'
+      path: '/invoice/$invoiceId'
+      fullPath: '/invoice/$invoiceId'
+      preLoaderRoute: typeof AuthenticatedInvoiceInvoiceIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/lead/$leadId': {
       id: '/_authenticated/lead/$leadId'
       path: '/lead/$leadId'
@@ -746,6 +798,13 @@ declare module '@tanstack/react-router' {
       path: '/settings/alerts'
       fullPath: '/settings/alerts'
       preLoaderRoute: typeof AuthenticatedSettingsAlertsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings/deals': {
+      id: '/_authenticated/settings/deals'
+      path: '/settings/deals'
+      fullPath: '/settings/deals'
+      preLoaderRoute: typeof AuthenticatedSettingsDealsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/settings/routing': {
@@ -814,10 +873,13 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedTestChatRoute: typeof AuthenticatedTestChatRoute
   AuthenticatedUaeKnowledgeRoute: typeof AuthenticatedUaeKnowledgeRoute
   AuthenticatedViewingsRoute: typeof AuthenticatedViewingsRoute
+  AuthenticatedDealDealIdRoute: typeof AuthenticatedDealDealIdRoute
+  AuthenticatedInvoiceInvoiceIdRoute: typeof AuthenticatedInvoiceInvoiceIdRoute
   AuthenticatedLeadLeadIdRoute: typeof AuthenticatedLeadLeadIdRoute
   AuthenticatedListingListingIdRoute: typeof AuthenticatedListingListingIdRoute
   AuthenticatedOwnerWeeklyReportRoute: typeof AuthenticatedOwnerWeeklyReportRoute
   AuthenticatedSettingsAlertsRoute: typeof AuthenticatedSettingsAlertsRoute
+  AuthenticatedSettingsDealsRoute: typeof AuthenticatedSettingsDealsRoute
   AuthenticatedSettingsRoutingRoute: typeof AuthenticatedSettingsRoutingRoute
   AuthenticatedSettingsWhatsappRoute: typeof AuthenticatedSettingsWhatsappRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
@@ -844,10 +906,13 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedTestChatRoute: AuthenticatedTestChatRoute,
   AuthenticatedUaeKnowledgeRoute: AuthenticatedUaeKnowledgeRoute,
   AuthenticatedViewingsRoute: AuthenticatedViewingsRoute,
+  AuthenticatedDealDealIdRoute: AuthenticatedDealDealIdRoute,
+  AuthenticatedInvoiceInvoiceIdRoute: AuthenticatedInvoiceInvoiceIdRoute,
   AuthenticatedLeadLeadIdRoute: AuthenticatedLeadLeadIdRoute,
   AuthenticatedListingListingIdRoute: AuthenticatedListingListingIdRoute,
   AuthenticatedOwnerWeeklyReportRoute: AuthenticatedOwnerWeeklyReportRoute,
   AuthenticatedSettingsAlertsRoute: AuthenticatedSettingsAlertsRoute,
+  AuthenticatedSettingsDealsRoute: AuthenticatedSettingsDealsRoute,
   AuthenticatedSettingsRoutingRoute: AuthenticatedSettingsRoutingRoute,
   AuthenticatedSettingsWhatsappRoute: AuthenticatedSettingsWhatsappRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
