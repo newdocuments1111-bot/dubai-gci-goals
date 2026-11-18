@@ -464,6 +464,69 @@ export type Database = {
           },
         ]
       }
+      deal_compliance: {
+        Row: {
+          agency_id: string
+          buyer_id_collected: boolean
+          cash_aed: number
+          company_papers_collected: boolean
+          deal_id: string
+          is_company: boolean
+          notes: string
+          payer_is_the_buyer: boolean
+          payer_name: string
+          politically_exposed: boolean
+          rear_filed: boolean
+          rear_filed_on: string | null
+          rear_reference: string
+          seller_id_collected: boolean
+          source_of_funds: string
+          updated_at: string
+          updated_by: string | null
+          virtual_asset: boolean
+        }
+        Insert: {
+          agency_id: string
+          buyer_id_collected?: boolean
+          cash_aed?: number
+          company_papers_collected?: boolean
+          deal_id: string
+          is_company?: boolean
+          notes?: string
+          payer_is_the_buyer?: boolean
+          payer_name?: string
+          politically_exposed?: boolean
+          rear_filed?: boolean
+          rear_filed_on?: string | null
+          rear_reference?: string
+          seller_id_collected?: boolean
+          source_of_funds?: string
+          updated_at?: string
+          updated_by?: string | null
+          virtual_asset?: boolean
+        }
+        Update: {
+          agency_id?: string
+          buyer_id_collected?: boolean
+          cash_aed?: number
+          company_papers_collected?: boolean
+          deal_id?: string
+          is_company?: boolean
+          notes?: string
+          payer_is_the_buyer?: boolean
+          payer_name?: string
+          politically_exposed?: boolean
+          rear_filed?: boolean
+          rear_filed_on?: string | null
+          rear_reference?: string
+          seller_id_collected?: boolean
+          source_of_funds?: string
+          updated_at?: string
+          updated_by?: string | null
+          virtual_asset?: boolean
+        }
+        Relationships: []
+      }
       deal_invoices: {
         Row: {
           agency_id: string
