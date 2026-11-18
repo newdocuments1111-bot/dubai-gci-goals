@@ -575,8 +575,148 @@ export type Database = {
           },
         ]
       }
+      ad_campaigns: {
+        Row: {
+          agency_id: string
+          buyer_type: string | null
+          created_at: string
+          creative_type: string | null
+          daily_budget_aed: number | null
+          ended_at: string | null
+          id: string
+          is_sample: boolean
+          name: string
+          notes: string | null
+          offer: string | null
+          platform: string
+          spend_to_date_aed: number
+          started_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          agency_id?: string
+          buyer_type?: string | null
+          created_at?: string
+          creative_type?: string | null
+          daily_budget_aed?: number | null
+          ended_at?: string | null
+          id?: string
+          is_sample?: boolean
+          name: string
+          notes?: string | null
+          offer?: string | null
+          platform?: string
+          spend_to_date_aed?: number
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          agency_id?: string
+          buyer_type?: string | null
+          created_at?: string
+          creative_type?: string | null
+          daily_budget_aed?: number | null
+          ended_at?: string | null
+          id?: string
+          is_sample?: boolean
+          name?: string
+          notes?: string | null
+          offer?: string | null
+          platform?: string
+          spend_to_date_aed?: number
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      lead_events: {
+        Row: {
+          agency_id: string
+          at: string
+          from_outcome: string | null
+          from_stage: number | null
+          id: number
+          lead_id: string
+          note: string | null
+          to_outcome: string | null
+          to_stage: number | null
+        }
+        Insert: {
+          agency_id: string
+          at?: string
+          from_outcome?: string | null
+          from_stage?: number | null
+          id?: number
+          lead_id: string
+          note?: string | null
+          to_outcome?: string | null
+          to_stage?: number | null
+        }
+        Update: {
+          agency_id?: string
+          at?: string
+          from_outcome?: string | null
+          from_stage?: number | null
+          id?: number
+          lead_id?: string
+          note?: string | null
+          to_outcome?: string | null
+          to_stage?: number | null
+        }
+        Relationships: []
+      }
+      lead_stages: {
+        Row: {
+          checklist: Json
+          name: string
+          next_action: string | null
+          next_action_offset: string | null
+          stage: number
+          template: string | null
+          track: string
+          who: string
+        }
+        Insert: {
+          checklist?: Json
+          name: string
+          next_action?: string | null
+          next_action_offset?: string | null
+          stage: number
+          template?: string | null
+          track: string
+          who: string
+        }
+        Update: {
+          checklist?: Json
+          name?: string
+          next_action?: string | null
+          next_action_offset?: string | null
+          stage?: number
+          template?: string | null
+          track?: string
+          who?: string
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
+          ad_campaign_id: string | null
+          checklist_done: Json
+          first_reply_at: string | null
+          lost_reason: string | null
+          max_stage: number
+          next_action: string | null
+          next_action_at: string | null
+          outcome: string
+          source_detail: string | null
+          stage: number
+          stage_entered_at: string
+          stage_name: string | null
+          track: string
+          who: string | null
           agency_id: string
           ai_paused: boolean
           area: string
@@ -602,6 +742,20 @@ export type Database = {
           whatsapp_last_inbound_at: string | null
         }
         Insert: {
+          ad_campaign_id?: string | null
+          checklist_done?: Json
+          first_reply_at?: string | null
+          lost_reason?: string | null
+          max_stage?: number
+          next_action?: string | null
+          next_action_at?: string | null
+          outcome?: string
+          source_detail?: string | null
+          stage?: number
+          stage_entered_at?: string
+          stage_name?: string | null
+          track?: string
+          who?: string | null
           agency_id?: string
           ai_paused?: boolean
           area?: string
@@ -627,6 +781,20 @@ export type Database = {
           whatsapp_last_inbound_at?: string | null
         }
         Update: {
+          ad_campaign_id?: string | null
+          checklist_done?: Json
+          first_reply_at?: string | null
+          lost_reason?: string | null
+          max_stage?: number
+          next_action?: string | null
+          next_action_at?: string | null
+          outcome?: string
+          source_detail?: string | null
+          stage?: number
+          stage_entered_at?: string
+          stage_name?: string | null
+          track?: string
+          who?: string | null
           agency_id?: string
           ai_paused?: boolean
           area?: string
@@ -1422,9 +1590,29 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      lead_report: {
+        Row: {
+          agency_id: string | null
+          avg_first_reply_minutes: number | null
+          cost_per_attended_viewing: number | null
+          leads: number | null
+          leads_out_of_hours: number | null
+          overdue: number | null
+          qualified: number | null
+          replied: number | null
+          replied_pct: number | null
+          source: string | null
+          source_type: string | null
+          spend: number | null
+          viewings_attended: number | null
+          viewings_booked: number | null
+          won: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      lead_advance: { Args: { p_lead: string; p_stage: number }; Returns: undefined }
       agency_booked_times: { Args: never; Returns: string[] }
       apply_whatsapp_status: {
         Args: {
