@@ -22,6 +22,7 @@ export const MAIN_SECTIONS: readonly NavSection[] = [
       { to: "/pipeline", label: "Board" },
       { to: "/viewings", label: "Viewings" },
       { to: "/follow-ups", label: "Follow-ups" },
+      { to: "/leads/import", label: "Import" },
     ],
   },
   { id: "deals", label: "Deals", pages: [{ to: "/deals", label: "Deals" }] },

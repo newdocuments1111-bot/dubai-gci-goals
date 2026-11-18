@@ -28,6 +28,7 @@ export const getInbox = createServerFn({ method: "POST" })
         )
         .eq("agency_id", access.agencyId)
         .not("assigned_agent_id", "is", null)
+        .neq("intake", "import")
         .gte("created_at", since)
         .order("created_at", { ascending: false })
         .limit(200),

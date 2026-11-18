@@ -97,7 +97,7 @@ export const askCrm = createServerFn({ method: "POST" })
     const leadQuery = sb
       .from("leads")
       .select(
-        "id,name,phone,source,area,score,outcome,stage,stage_name,next_action,next_action_at,created_at,first_reply_at,assigned_agent_id,ad_campaign_id",
+        "id,name,phone,source,area,score,outcome,stage,stage_name,next_action,next_action_at,created_at,first_reply_at,assigned_agent_id,ad_campaign_id,intake",
       )
       .eq("agency_id", agency);
     const [leadsRes, membersRes] = await Promise.all([
@@ -111,7 +111,11 @@ export const askCrm = createServerFn({ method: "POST" })
         .in("role", ["owner", "agent"]),
     ]);
     if (leadsRes.error) throw new Error("Could not read your leads.");
-    const leads = (leadsRes.data ?? []) as LeadRow[];
+    // Imported leads were never new enquiries here, so they don't count as missed or slow replies.
+    const replyReport = parsed.report === "missed" || parsed.report === "agents";
+    const leads = (leadsRes.data ?? []).filter(
+      (l) => !(replyReport && l.intake === "import"),
+    ) as LeadRow[];
     const members = (membersRes.data ?? []).map((m) => ({
       ...m,
       split_percent: Number(m.split_percent),

@@ -32,6 +32,8 @@ describe("nav", () => {
   it("finds the section for pages and detail pages", () => {
     expect(sectionFor("/pipeline")).toBe("leads");
     expect(sectionFor("/inbox")).toBe("leads");
+    expect(sectionFor("/leads/import")).toBe("leads");
+    expect(activePage("/leads/import")?.label).toBe("Import");
     expect(sectionFor("/deal/abc")).toBe("deals");
     expect(sectionFor("/invoice/abc")).toBe("deals");
     expect(sectionFor("/settings/routing")).toBe("settings");
