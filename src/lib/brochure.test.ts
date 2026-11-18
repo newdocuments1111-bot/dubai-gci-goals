@@ -3,6 +3,7 @@ import {
   brochureAmenities,
   brochureFacts,
   brochureNearby,
+  brochureCheck,
   brochureReady,
   type BrochureListing,
 } from "./brochure";
@@ -67,8 +68,16 @@ describe("brochure", () => {
     expect(brochureNearby(base).map(([k]) => k)).toEqual(["Metro", "Malls"]);
   });
 
-  it("is ready to share only with a permit number", () => {
-    expect(brochureReady(base)).toBe(true);
-    expect(brochureReady({ permit_number: "  " })).toBe(false);
+  it("is ready to share only when the advert check passes", () => {
+    const agency = { reraBrn: "12345" };
+    const today = "2026-11-18";
+    expect(brochureReady(base, agency, today)).toBe(true);
+    expect(brochureReady({ ...base, permit_number: "  " }, agency, today)).toBe(false);
+    expect(brochureReady({ ...base, price_aed: 0 }, agency, today)).toBe(false);
+    expect(brochureReady(base, { reraBrn: "" }, today)).toBe(false);
+    expect(brochureReady({ ...base, is_sample: true }, agency, today)).toBe(false);
+    expect(brochureReady({ ...base, permit_expires_on: "2026-11-17" }, agency, today)).toBe(false);
+    expect(brochureReady({ ...base, permit_expires_on: today }, agency, today)).toBe(true);
+    expect(brochureCheck(base, agency, today).warnings[0]).toContain("No permit end date");
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hashtags, postProblems, socialCaption, type SocialListing } from "./social";
+import { hashtags, postCheck, postProblems, socialCaption, type SocialListing } from "./social";
 
 const listing: SocialListing = {
   title: "2-bed with full marina view",
@@ -20,6 +20,8 @@ const agency = {
   mobile: "+971 50 123 4567",
   reraBrn: "12345",
 };
+
+const today = "2026-11-18";
 
 describe("social caption", () => {
   it("includes the permit number, price and contact", () => {
@@ -62,8 +64,24 @@ describe("social caption", () => {
   });
 
   it("refuses to post without a permit number, and flags samples", () => {
-    expect(postProblems(listing)).toEqual([]);
-    expect(postProblems({ ...listing, permit_number: " " })[0]).toContain("permit number");
-    expect(postProblems({ ...listing, is_sample: true })[0]).toContain("sample listing");
+    expect(postProblems(listing, agency, today)).toEqual([]);
+    expect(postProblems({ ...listing, permit_number: " " }, agency, today)[0]).toContain(
+      "permit number",
+    );
+    expect(postProblems({ ...listing, is_sample: true }, agency, today)[0]).toContain(
+      "sample listing",
+    );
+  });
+
+  it("refuses to post without a price, an agency RERA number or a valid permit", () => {
+    expect(postProblems({ ...listing, price_aed: 0 }, agency, today)[0]).toContain("price");
+    expect(postProblems(listing, { reraBrn: "" }, today)[0]).toContain("RERA number");
+    expect(
+      postProblems({ ...listing, permit_expires_on: "2026-11-17" }, agency, today)[0],
+    ).toContain("permit ended on 17 Nov 2026");
+    expect(postCheck(listing, agency, today).warnings[0]).toContain("No permit end date");
+    expect(
+      postCheck({ ...listing, permit_expires_on: "2026-11-25" }, agency, today).takeDownOn,
+    ).toBe("2026-11-25");
   });
 });

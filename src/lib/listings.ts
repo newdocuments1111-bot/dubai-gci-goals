@@ -37,6 +37,16 @@ export const listingSchema = z
     videos: z.array(media).max(20),
     maps_url: safeUrl,
     permit_number: z.string().trim().max(100),
+    // Last day the advertising permit is valid. Optional; the advert check warns when it is missing.
+    permit_expires_on: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid permit end date")
+      .refine((v) => {
+        const d = new Date(v);
+        return Number.isFinite(d.getTime()) && d.toISOString().slice(0, 10) === v;
+      }, "Invalid permit end date")
+      .nullable()
+      .default(null),
     last_checked: z
       .string()
       .datetime({ offset: true })
@@ -69,6 +79,7 @@ export const emptyListing = (): ListingInput => ({
   videos: [],
   maps_url: "",
   permit_number: "",
+  permit_expires_on: null,
   last_checked: new Date().toISOString(),
 });
 export function needsCheck(lastChecked: string, now = Date.now()) {
@@ -157,6 +168,7 @@ export const csvColumns = [
   "description",
   "maps_url",
   "permit_number",
+  "permit_expires_on",
   "last_checked",
   "photos",
   "videos",
@@ -187,6 +199,7 @@ export function parseListingsCsv(text: string): ListingInput[] {
       completion: r["completion"]?.trim().toLowerCase() || "ready",
       status: r["status"]?.trim() || "Available",
       handover_date: r["handover_date"]?.trim() || null,
+      permit_expires_on: r["permit_expires_on"]?.trim() || null,
       last_checked: r["last_checked"] ? new Date(r["last_checked"]).toISOString() : new Date().toISOString(),
       photos: r["photos"]
         ? r["photos"]

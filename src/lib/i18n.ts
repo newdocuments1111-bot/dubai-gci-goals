@@ -22,6 +22,7 @@ const AR: Record<string, string> = {
   Import: "استيراد",
   Owners: "الملّاك",
   Statistics: "الإحصاءات",
+  "Reply speed": "سرعة الرد",
   "Weekly report": "التقرير الأسبوعي",
   Ads: "الإعلانات",
   "Market insights": "رؤى السوق",
@@ -544,6 +545,32 @@ const AR: Record<string, string> = {
   "this year": "هذا العام",
   "in the last 7 days": "في آخر 7 أيام",
   "in the last 30 days": "في آخر 30 يوماً",
+  // Owners page: Seller Finder ("Likely to sell")
+  "Likely to sell": "مرشّحون للبيع",
+  "From your own deals and owners. Nothing is sent for you.":
+    "من صفقاتك ومُلّاكك أنت. لا يُرسَل أي شيء بالنيابة عنك.",
+  "Some past deals could not be read, so people may be missing from this list.":
+    "تعذّرت قراءة بعض الصفقات السابقة، لذلك قد تنقص هذه القائمة بعض الأشخاص.",
+  "No one to suggest right now.": "لا يوجد من نقترحه الآن.",
+  "No name": "بدون اسم",
+  "past buyer": "مشترٍ سابق",
+  High: "عالٍ",
+  Medium: "متوسط",
+  "Copy message": "نسخ الرسالة",
+  "See the message": "عرض الرسالة",
+  "Could not copy. Open the message below and copy it by hand.":
+    "تعذّر النسخ. افتح الرسالة أدناه وانسخها يدويًا.",
+  "Show all ({n})": "عرض الكل ({n})",
+  "Bought in {area} in {when}": "اشترى في {area} في {when}",
+  "Bought in {when}": "اشترى في {when}",
+  "Lease ended on {when}, no new lease on record":
+    "انتهى عقد الإيجار في {when} ولا يوجد عقد جديد مسجّل",
+  "Lease ends today": "ينتهي عقد الإيجار اليوم",
+  "Lease ends in 1 day": "ينتهي عقد الإيجار خلال يوم واحد",
+  "Lease ends in {n} weeks": "ينتهي عقد الإيجار خلال {n} أسابيع",
+  "Marked as selling, no live listing with us": "مسجَّل كراغب في البيع ولا يوجد إعلان نشط لدينا",
+  "Home at {home} is not listed with us": "العقار في {home} غير معروض لدينا",
+  "Off-plan handover due in {when}": "موعد تسليم العقار على الخارطة في {when}",
 };
 
 export const isLang = (v: unknown): v is Lang => v === "en" || v === "ar";

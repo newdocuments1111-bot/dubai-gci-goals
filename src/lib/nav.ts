@@ -40,6 +40,7 @@ export const MAIN_SECTIONS: readonly NavSection[] = [
     label: "Insights",
     pages: [
       { to: "/stats", label: "Statistics", show: "owner" },
+      { to: "/reply-speed", label: "Reply speed" },
       { to: "/owner/weekly-report", label: "Weekly report", show: "manager" },
       { to: "/ads", label: "Ads" },
       { to: "/market-insights", label: "Market insights" },

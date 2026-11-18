@@ -138,6 +138,24 @@ export const listCalls = createServerFn({ method: "POST" })
     return (calls ?? []).map((c) => ({ ...c, by: name(c.user_id) }));
   });
 
+/** Record that the client asked not to be called (or take it back). The lead page then hides the call button. */
+export const setDoNotCall = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ leadId: z.string().uuid(), doNotCall: z.boolean() }))
+  .handler(async ({ data, context }) => {
+    await guard(context);
+    const { data: allowed } = await context.supabase.rpc("can_access_lead", { _lead: data.leadId });
+    if (!allowed) throw new Error("You can only change this on your own leads.");
+    // Row-level security applies as well: no row back means nothing was saved.
+    const { data: saved, error } = await context.supabase
+      .from("leads")
+      .update({ do_not_call: data.doNotCall })
+      .eq("id", data.leadId)
+      .select("id");
+    if (error || !saved || saved.length === 0) throw new Error("Could not save this. Try again.");
+    return { success: true };
+  });
+
 export const getSavedLists = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {

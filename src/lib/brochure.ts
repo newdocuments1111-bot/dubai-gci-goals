@@ -1,5 +1,7 @@
 /** What goes on a listing brochure. Browser-safe and tested. Internal notes never appear on it. */
 
+import { advertCheck, type AdvertAgency, type AdvertListing } from "./advert";
+
 export type BrochureListing = {
   title: string;
   community: string;
@@ -88,6 +90,10 @@ export function brochureNearby(l: BrochureListing): [string, string][] {
   return rows.filter(([, v]) => v);
 }
 
-/** Dubai adverts need a permit number on them, so a brochure without one is not ready to share. */
-export const brochureReady = (l: Pick<BrochureListing, "permit_number">) =>
-  Boolean(l.permit_number.trim());
+/** The advert check for a brochure: the same rules as a social post (see advert.ts). */
+export const brochureCheck = (l: AdvertListing, agency: AdvertAgency, today: string) =>
+  advertCheck(l, agency, today);
+
+/** A brochure is ready to share only when the advert check finds nothing that blocks it. */
+export const brochureReady = (l: AdvertListing, agency: AdvertAgency, today: string) =>
+  brochureCheck(l, agency, today).blockers.length === 0;

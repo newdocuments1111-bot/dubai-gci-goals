@@ -173,6 +173,7 @@ export const duplicateListing = createServerFn({ method: "POST" })
         title: `${original.title.slice(0, 190)} (copy)`,
         status: "Reserved",
         permit_number: "",
+        permit_expires_on: null,
         photos: await copyMedia(original.photos),
         videos: await copyMedia(original.videos),
         floor_plan: original.floor_plan ? ((await copyMedia([original.floor_plan]))[0] ?? "") : "",

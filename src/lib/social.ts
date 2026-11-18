@@ -3,6 +3,8 @@
  * Dubai adverts must show the permit number, so a listing without one cannot be posted from here.
  */
 
+import { advertCheck, type AdvertAgency } from "./advert";
+
 export type SocialListing = {
   title: string;
   community: string;
@@ -14,6 +16,8 @@ export type SocialListing = {
   completion: string;
   handover_date: string | null;
   permit_number: string;
+  /** Last day the permit is valid (YYYY-MM-DD), when recorded. */
+  permit_expires_on?: string | null | undefined;
   is_sample: boolean;
 };
 
@@ -39,15 +43,13 @@ export function hashtags(l: Pick<SocialListing, "community" | "property_type" | 
   return [...new Set(tags)];
 }
 
-/** Why this listing cannot be posted yet, or an empty list. */
-export function postProblems(l: SocialListing): string[] {
-  const problems: string[] = [];
-  if (!l.permit_number.trim())
-    problems.push(
-      "Add the DLD / Trakheesi permit number on the listing. Dubai adverts must show it.",
-    );
-  if (l.is_sample) problems.push("This is a sample listing with a fictional property.");
-  return problems;
+/** The advert check for a social post: the same rules as the brochure (see advert.ts). */
+export const postCheck = (l: SocialListing, agency: AdvertAgency, today: string) =>
+  advertCheck(l, agency, today);
+
+/** Why this listing cannot be posted yet, or an empty list. `today` is YYYY-MM-DD. */
+export function postProblems(l: SocialListing, agency: AdvertAgency, today: string): string[] {
+  return postCheck(l, agency, today).blockers;
 }
 
 /** The caption to paste into the app. */
