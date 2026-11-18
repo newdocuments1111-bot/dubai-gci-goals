@@ -1,3 +1,4 @@
+import { downloadIcs, viewingEvent } from '@/lib/calendar';
 import { createFileRoute } from '@tanstack/react-router';
 import { queryOptions, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
@@ -69,6 +70,7 @@ function ViewingsPage() {
         </div>
         <span className={`rounded px-2 py-0.5 text-xs ${v.status === 'booked' ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'}`}>{v.status}</span>
         {v.status === 'booked' && <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => downloadIcs(`viewing-${dubaiDate(v.starts_at).replace(/[^\w]+/g, '-')}`, viewingEvent({ id: v.id, kind: v.kind, starts_at: v.starts_at, leadName: (v.leads as { name?: string } | null)?.name ?? null, listingTitle: (v.listings as { title?: string } | null)?.title ?? null }))}><CalendarPlus className="size-4" />Add to calendar</Button>
           <Button variant="outline" size="sm" onClick={async () => { await setStatus({ data: { id: v.id, status: 'done' } }); refresh(); }}>Mark as done</Button>
           <Button variant="ghost" size="sm" onClick={async () => { await setStatus({ data: { id: v.id, status: 'no-show' } }); refresh(); }}>No-show</Button>
         </div>}

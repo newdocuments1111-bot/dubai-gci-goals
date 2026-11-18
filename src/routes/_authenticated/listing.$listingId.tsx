@@ -1,3 +1,4 @@
+import { ListingBuyers } from '@/components/ListingBuyers';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useSuspenseQuery, useQueryClient } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
@@ -59,6 +60,7 @@ function ListingDetails() {
       </div>
     </div>
     <ListingAiDetails listing={listing} mediaUrls={data.mediaUrls} />
+    <ListingBuyers listing={listing} />
     {editing && <ListingEditor listing={listing} mediaUrls={data.mediaUrls} onClose={() => setEditing(false)} onSaved={reload} />}
     <Dialog open={deleting} onOpenChange={open => { if (!busy) setDeleting(open); }}><DialogContent><DialogTitle>Delete listing?</DialogTitle><DialogDescription>{listing.title} and its uploaded media will be removed permanently.</DialogDescription><div className="flex justify-end gap-2"><Button variant="outline" disabled={busy} onClick={() => setDeleting(false)}>Cancel</Button><Button variant="destructive" disabled={busy} onClick={async () => { setBusy(true); setError(''); try { await remove({ data: listing.id }); setDeleting(false); await reload(); await navigate({ to: '/listings' }); } catch { setError('Could not delete listing. Please try again.'); } finally { setBusy(false); } }}>Delete listing</Button></div></DialogContent></Dialog>
   </div></main>;

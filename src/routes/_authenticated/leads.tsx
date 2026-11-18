@@ -1,74 +1,323 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
-import { queryOptions, useSuspenseQuery } from '@tanstack/react-query';
-import { useState } from 'react';
-import { useServerFn } from '@tanstack/react-start';
-import { Plus, Download } from 'lucide-react';
-import { leadsCsv, downloadCsv } from '@/lib/chat-extras';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { createLead, listLeads } from '@/lib/leads-app.functions';
-import { timezoneFromPhone } from '@/lib/leads-app';
-import { useNavigate } from '@tanstack/react-router';
-import { useQuery } from '@tanstack/react-query';
-import { useMembership } from '@/hooks/use-membership';
-import { getDealOptions } from '@/lib/deals.functions';
-import { memberName } from '@/lib/agency';
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { queryOptions, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { useMemo, useState } from "react";
+import { Bookmark, Download, Search, Upload, X } from "lucide-react";
+import { leadsCsv, downloadCsv } from "@/lib/chat-extras";
+import { listLeads } from "@/lib/leads-app.functions";
+import { getDealOptions } from "@/lib/deals.functions";
+import { deleteList, getSavedLists, saveList } from "@/lib/leadtools.functions";
+import { memberName } from "@/lib/agency";
+import { LEAD_SOURCES } from "@/lib/inbox";
+import {
+  EMPTY_FILTER,
+  STEP_RANGES,
+  applyFilter,
+  isFiltered,
+  suggestName,
+  type LeadFilter,
+} from "@/lib/lists";
+import { useMembership } from "@/hooks/use-membership";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
-export const leadsQuery = queryOptions({ queryKey: ['leads'], queryFn: () => listLeads() });
+export const leadsQuery = queryOptions({ queryKey: ["leads"], queryFn: () => listLeads() });
+const listsQuery = queryOptions({ queryKey: ["saved-lists"], queryFn: () => getSavedLists() });
 
-export const Route = createFileRoute('/_authenticated/leads')({
-  head: () => ({ meta: [
-    { title: 'Leads — Dubai AI GCI' }, { name: 'description', content: 'Every conversation as a lead with type, score, source and full chat.' },
-    { property: 'og:title', content: 'Leads — Dubai AI GCI' }, { property: 'og:description', content: 'Owner-managed leads and conversations.' },
-    { property: 'og:type', content: 'website' }, { name: 'twitter:card', content: 'summary' }, { name: 'robots', content: 'noindex' },
-  ] }),
+export const Route = createFileRoute("/_authenticated/leads")({
+  head: () => ({
+    meta: [
+      { title: "Leads — Dubai AI GCI" },
+      {
+        name: "description",
+        content: "Every lead with score, source and step. Filter and save your own lists.",
+      },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
   loader: ({ context }) => context.queryClient.ensureQueryData(leadsQuery),
   component: LeadsPage,
 });
 
-const SCORE_STYLE = { Hot: 'bg-destructive/15 text-destructive', Warm: 'bg-warning/15 text-warning-foreground', Cold: 'bg-muted text-muted-foreground' } as const;
+const SCORE_STYLE = {
+  Hot: "bg-destructive/10 text-destructive",
+  Warm: "bg-warning/15 text-warning-foreground",
+  Cold: "bg-muted text-muted-foreground",
+} as const;
+const selectCls = "h-9 rounded-md border border-input bg-background px-2 text-sm";
 
 function LeadsPage() {
   const { data: leads } = useSuspenseQuery(leadsQuery);
-  const create = useServerFn(createLead);
-  const navigate = useNavigate();
+  const { data: lists } = useQuery(listsQuery);
   const membership = useMembership();
-  const { data: options } = useQuery({ queryKey: ['deal-options'], queryFn: () => getDealOptions(), enabled: membership.isOwner });
-  const agentName = (id: string | null) => memberName(options?.members.find(m => m.user_id === id));
-  const [name, setName] = useState(''), [phone, setPhone] = useState(''), [busy, setBusy] = useState(false), [error, setError] = useState('');
+  const client = useQueryClient();
+  const save = useServerFn(saveList);
+  const remove = useServerFn(deleteList);
+  const { data: options } = useQuery({
+    queryKey: ["deal-options"],
+    queryFn: () => getDealOptions(),
+    enabled: membership.isOwner,
+  });
+  const [filter, setFilter] = useState<LeadFilter>(EMPTY_FILTER);
+  const [activeList, setActiveList] = useState<string | null>(null);
+  const [error, setError] = useState("");
+  const set = (patch: Partial<LeadFilter>) => {
+    setFilter({ ...filter, ...patch });
+    setActiveList(null);
+  };
+  const shown = useMemo(() => applyFilter(leads, filter), [leads, filter]);
+  const agentName = (id: string | null) =>
+    id ? memberName(options?.members.find((m) => m.user_id === id)) : "Pool";
+  const refreshLists = () => client.invalidateQueries({ queryKey: ["saved-lists"] });
 
-  return <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
-    <div className="mb-2 flex flex-wrap items-center justify-between gap-3"><h1 className="text-3xl font-bold">Leads</h1>{membership.isOwner && <Button variant="outline" onClick={() => downloadCsv(leadsCsv(leads))}><Download className="size-4" />Export to CSV</Button>}</div>
-    <p className="mb-6 text-sm text-muted-foreground">{membership.isOwner ? 'All leads in your agency.' : 'Leads assigned to you.'} Every conversation becomes a lead. Hot first. Scores use the same 3 signs as the Lead Finder: budget, location, move-in time.</p>
-    <section className="mb-6 flex flex-wrap items-end gap-3 rounded-lg border border-border p-4">
-      <label className="text-sm">Name<Input className="mt-1 w-48" maxLength={200} value={name} onChange={e => setName(e.target.value)} /></label>
-      <label className="text-sm">Phone (with country code)<Input className="mt-1 w-48" maxLength={50} placeholder="+971…" value={phone} onChange={e => setPhone(e.target.value)} /></label>
-      <Button disabled={busy || !name.trim()} onClick={async () => { setBusy(true); setError('');
-        try { const lead = await create({ data: { name, phone, type: 'buyer', source: 'Other', timezone: timezoneFromPhone(phone) } }); navigate({ to: '/lead/$leadId', params: { leadId: lead.id } }); }
-        catch { setError('Could not create the lead.'); } finally { setBusy(false); } }}>
-        <Plus className="size-4" />New lead
-      </Button>
-      {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-    </section>
-    {leads.length === 0 && <p className="text-sm text-muted-foreground">No leads yet. Start a conversation in Test Chat or add one above.</p>}
-    <div className="space-y-3">{leads.map(lead => {
-      const learned = lead.learned as Record<string, unknown>;
-      return <Link key={lead.id} to="/lead/$leadId" params={{ leadId: lead.id }} className="block rounded-lg border border-border p-4 hover:border-primary">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="font-semibold">{lead.name || 'Unnamed lead'}</span>
-          <span className={`rounded px-2 py-0.5 text-xs font-medium ${SCORE_STYLE[lead.score as keyof typeof SCORE_STYLE]}`}>{lead.score === 'Hot' ? '🔥 Hot' : lead.score === 'Warm' ? '🟡 Warm' : '❄️ Cold'}</span>
-          <span className="rounded bg-muted px-2 py-0.5 text-xs">{lead.type}</span>
-          <span className="rounded bg-muted px-2 py-0.5 text-xs">{lead.source}</span>
-          {lead.flagged && <span className="rounded bg-warning/15 px-2 py-0.5 text-xs text-warning-foreground">Needs your confirmation</span>}
-          {lead.ai_paused && <span className="rounded bg-muted px-2 py-0.5 text-xs">You are replying</span>}
-          {lead.stopped && <span className="rounded bg-muted px-2 py-0.5 text-xs">Stopped</span>}
-          {membership.isOwner && options && <span className="ml-auto text-xs text-muted-foreground">Agent: {agentName(lead.assigned_agent_id)}</span>}
+  return (
+    <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Leads</h1>
+          <p className="text-sm text-muted-foreground">
+            {membership.isOwner ? "All leads in your agency." : "Leads assigned to you."} Hot first.
+          </p>
         </div>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {[lead.area && `area: ${lead.area}`, lead.budget && `budget: ${lead.budget}`, lead.timing && `timing: ${lead.timing}`].filter(Boolean).join(' · ') || ['budget', 'location', 'move_in'].map(k => learned[k] ? `${k.replace('_', ' ')}: ${String(learned[k])}` : null).filter(Boolean).join(' · ') || 'Nothing learned yet'}
-          {lead.next_step && <span className="block text-xs">Next step: {lead.next_step}</span>}
+        <div className="flex gap-2">
+          <Button asChild variant="outline" size="sm">
+            <Link to="/leads/import">
+              <Upload className="size-4" />
+              Import
+            </Link>
+          </Button>
+          {membership.isOwner && (
+            <Button variant="outline" size="sm" onClick={() => downloadCsv(leadsCsv(shown))}>
+              <Download className="size-4" />
+              Export {shown.length}
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <div className="mb-3 flex flex-wrap items-center gap-2" aria-label="My lists">
+        <button
+          type="button"
+          onClick={() => {
+            setFilter(EMPTY_FILTER);
+            setActiveList(null);
+          }}
+          className={`rounded-full border px-3 py-1 text-sm ${!activeList && !isFiltered(filter) ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary"}`}
+        >
+          All open ({applyFilter(leads, EMPTY_FILTER).length})
+        </button>
+        {(lists ?? []).map((l) => (
+          <span
+            key={l.id}
+            className={`inline-flex items-center rounded-full border text-sm ${activeList === l.id ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary"}`}
+          >
+            <button
+              type="button"
+              className="py-1 pl-3 pr-1"
+              onClick={() => {
+                setFilter(l.filters);
+                setActiveList(l.id);
+              }}
+            >
+              {l.name} ({applyFilter(leads, l.filters).length})
+            </button>
+            <button
+              type="button"
+              aria-label={`Remove list ${l.name}`}
+              className="py-1 pl-1 pr-2 opacity-60 hover:opacity-100"
+              onClick={async () => {
+                if (!window.confirm(`Remove the list "${l.name}"? The leads stay.`)) return;
+                await remove({ data: l.id });
+                if (activeList === l.id) setActiveList(null);
+                void refreshLists();
+              }}
+            >
+              <X className="size-3.5" />
+            </button>
+          </span>
+        ))}
+      </div>
+
+      <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-background p-3">
+        <div className="relative min-w-48 flex-1">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            aria-label="Search leads"
+            className="h-9 pl-8"
+            placeholder="Name, phone, area or budget"
+            maxLength={100}
+            value={filter.q}
+            onChange={(e) => set({ q: e.target.value })}
+          />
+        </div>
+        <select
+          aria-label="Score"
+          className={selectCls}
+          value={filter.score}
+          onChange={(e) => set({ score: e.target.value as LeadFilter["score"] })}
+        >
+          <option value="">Any score</option>
+          <option>Hot</option>
+          <option>Warm</option>
+          <option>Cold</option>
+        </select>
+        <select
+          aria-label="Source"
+          className={selectCls}
+          value={filter.source}
+          onChange={(e) => set({ source: e.target.value })}
+        >
+          <option value="">Any source</option>
+          {LEAD_SOURCES.map((s) => (
+            <option key={s}>{s}</option>
+          ))}
+        </select>
+        <select
+          aria-label="Step"
+          className={selectCls}
+          value={filter.step}
+          onChange={(e) => set({ step: e.target.value as LeadFilter["step"] })}
+        >
+          <option value="">Any step</option>
+          {Object.entries(STEP_RANGES).map(([k, v]) => (
+            <option key={k} value={k}>
+              {v.label}
+            </option>
+          ))}
+        </select>
+        <select
+          aria-label="Reply"
+          className={selectCls}
+          value={filter.reply}
+          onChange={(e) => set({ reply: e.target.value as LeadFilter["reply"] })}
+        >
+          <option value="">Replied or not</option>
+          <option value="waiting">Not replied</option>
+          <option value="replied">Replied</option>
+        </select>
+        {membership.isOwner && (
+          <select
+            aria-label="Agent"
+            className={selectCls}
+            value={filter.agent}
+            onChange={(e) => set({ agent: e.target.value })}
+          >
+            <option value="">Any agent</option>
+            <option value="pool">Pool (no agent)</option>
+            {(options?.members ?? []).map((m) => (
+              <option key={m.user_id} value={m.user_id}>
+                {memberName(m)}
+              </option>
+            ))}
+          </select>
+        )}
+        <select
+          aria-label="Outcome"
+          className={selectCls}
+          value={filter.outcome}
+          onChange={(e) => set({ outcome: e.target.value as LeadFilter["outcome"] })}
+        >
+          <option value="open">Open</option>
+          <option value="not_now">Not now</option>
+          <option value="won">Won</option>
+          <option value="lost">Lost</option>
+          <option value="all">All</option>
+        </select>
+        {isFiltered(filter) && !activeList && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9"
+            onClick={async () => {
+              const name = window.prompt("Name this list", suggestName(filter));
+              if (!name?.trim()) return;
+              setError("");
+              try {
+                await save({ data: { name: name.trim().slice(0, 60), filters: filter } });
+                void refreshLists();
+              } catch (e) {
+                setError(e instanceof Error ? e.message : "Could not save the list.");
+              }
+            }}
+          >
+            <Bookmark className="size-4" />
+            Save as list
+          </Button>
+        )}
+      </div>
+      {error && (
+        <p role="alert" className="mb-3 text-sm text-destructive">
+          {error}
         </p>
-      </Link>;
-    })}</div>
-  </main>;
+      )}
+
+      {leads.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-border bg-background p-8 text-center">
+          <p className="font-medium">No leads yet.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Add one with New lead at the top, or{" "}
+            <Link to="/leads/import" className="underline">
+              import your list from Excel
+            </Link>
+            .
+          </p>
+        </div>
+      ) : shown.length === 0 ? (
+        <p className="rounded-xl border border-border bg-background p-6 text-sm text-muted-foreground">
+          No leads match these filters.
+        </p>
+      ) : (
+        <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-background">
+          {shown.slice(0, 300).map((lead) => (
+            <li key={lead.id}>
+              <Link
+                to="/lead/$leadId"
+                params={{ leadId: lead.id }}
+                className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 hover:bg-muted/40"
+              >
+                <div className="min-w-0 flex-1 basis-64">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="truncate font-medium">{lead.name || "Unnamed lead"}</span>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${SCORE_STYLE[lead.score as keyof typeof SCORE_STYLE] ?? SCORE_STYLE.Cold}`}
+                    >
+                      {lead.score}
+                    </span>
+                    {lead.flagged && (
+                      <span className="rounded-full bg-warning/15 px-2 py-0.5 text-xs text-warning-foreground">
+                        Needs your confirmation
+                      </span>
+                    )}
+                    {lead.stopped && (
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-xs">Stopped</span>
+                    )}
+                  </div>
+                  <p className="mt-0.5 truncate text-sm text-muted-foreground">
+                    {[lead.area, lead.budget, lead.timing].filter(Boolean).join(" · ") ||
+                      "Nothing learned yet"}
+                  </p>
+                </div>
+                <span className="w-28 shrink-0 text-xs text-muted-foreground">
+                  {lead.source} · {lead.type}
+                </span>
+                <span className="w-36 shrink-0 truncate text-xs">
+                  {lead.stage_name ?? `Step ${lead.stage}`}
+                </span>
+                {membership.isOwner && (
+                  <span className="w-28 shrink-0 truncate text-xs text-muted-foreground">
+                    {agentName(lead.assigned_agent_id)}
+                  </span>
+                )}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+      {shown.length > 300 && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          Showing the first 300 of {shown.length}. Narrow the filters to see the rest.
+        </p>
+      )}
+    </main>
+  );
 }

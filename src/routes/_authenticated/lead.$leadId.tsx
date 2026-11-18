@@ -11,6 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { LeadChat } from '@/components/LeadChat';
 import { LeadDocuments } from '@/components/LeadDocuments';
 import { LeadDealPanel } from '@/components/LeadDealPanel';
+import { LeadCalls } from '@/components/LeadCalls';
 import { CoachPanel } from '@/components/CoachPanel';
 import { SendTemplatePanel } from '@/components/SendTemplatePanel';
 import { useMembership } from '@/hooks/use-membership';
@@ -73,6 +74,7 @@ function LeadPage() {
           <div key={k} className={k === 'Next step' ? 'sm:col-span-5' : ''}><dt className="text-xs text-muted-foreground">{k}</dt><dd>{v || '—'}</dd></div>)}
       </dl>
     </section>
+    <LeadCalls leadId={leadId} phone={lead.phone} onChanged={refresh} />
     <LeadDealPanel lead={lead} onChanged={refresh} />
     <LeadChat lead={lead} messages={messages} onChanged={refresh} playAsClient />
     {messages.some(m => m.role === 'owner') && <CoachPanel leadId={leadId} />}
