@@ -571,6 +571,11 @@ const AR: Record<string, string> = {
   "Marked as selling, no live listing with us": "مسجَّل كراغب في البيع ولا يوجد إعلان نشط لدينا",
   "Home at {home} is not listed with us": "العقار في {home} غير معروض لدينا",
   "Off-plan handover due in {when}": "موعد تسليم العقار على الخارطة في {when}",
+  // Phone shell and phone layouts
+  More: "المزيد",
+  "Quick menu": "القائمة السريعة",
+  Call: "اتصال",
+  Filters: "الفلاتر",
 };
 
 export const isLang = (v: unknown): v is Lang => v === "en" || v === "ar";
