@@ -123,6 +123,7 @@ export type Database = {
           id: string
           rules: Json
           updated_at: string
+          voice_replies: boolean
         }
         Insert: {
           agency_id?: string
@@ -131,6 +132,7 @@ export type Database = {
           id?: string
           rules?: Json
           updated_at?: string
+          voice_replies?: boolean
         }
         Update: {
           agency_id?: string
@@ -139,6 +141,7 @@ export type Database = {
           id?: string
           rules?: Json
           updated_at?: string
+          voice_replies?: boolean
         }
         Relationships: [
           {
@@ -349,6 +352,9 @@ export type Database = {
           role: string
           sent: boolean
           translation_en: string | null
+          voice_error: string | null
+          voice_status: string | null
+          voice_wa_message_id: string | null
           wa_delivered_at: string | null
           wa_error: string | null
           wa_failed_at: string | null
@@ -373,6 +379,9 @@ export type Database = {
           role: string
           sent?: boolean
           translation_en?: string | null
+          voice_error?: string | null
+          voice_status?: string | null
+          voice_wa_message_id?: string | null
           wa_delivered_at?: string | null
           wa_error?: string | null
           wa_failed_at?: string | null
@@ -397,6 +406,9 @@ export type Database = {
           role?: string
           sent?: boolean
           translation_en?: string | null
+          voice_error?: string | null
+          voice_status?: string | null
+          voice_wa_message_id?: string | null
           wa_delivered_at?: string | null
           wa_error?: string | null
           wa_failed_at?: string | null
@@ -732,6 +744,258 @@ export type Database = {
           },
         ]
       }
+      dev_holds: {
+        Row: {
+          agency_id: string
+          broker_agency: string
+          broker_name: string
+          broker_phone: string
+          client_name: string
+          client_phone: string
+          created_at: string
+          expires_at: string
+          held_by: string | null
+          id: string
+          notes: string
+          project_id: string
+          release_reason: string | null
+          released_at: string | null
+          released_by: string | null
+          unit_id: string
+        }
+        Insert: {
+          agency_id?: string
+          broker_agency?: string
+          broker_name?: string
+          broker_phone?: string
+          client_name: string
+          client_phone?: string
+          created_at?: string
+          expires_at: string
+          held_by?: string | null
+          id?: string
+          notes?: string
+          project_id: string
+          release_reason?: string | null
+          released_at?: string | null
+          released_by?: string | null
+          unit_id: string
+        }
+        Update: {
+          agency_id?: string
+          broker_agency?: string
+          broker_name?: string
+          broker_phone?: string
+          client_name?: string
+          client_phone?: string
+          created_at?: string
+          expires_at?: string
+          held_by?: string | null
+          id?: string
+          notes?: string
+          project_id?: string
+          release_reason?: string | null
+          released_at?: string | null
+          released_by?: string | null
+          unit_id?: string
+        }
+        Relationships: []
+      }
+      dev_instalments: {
+        Row: {
+          agency_id: string
+          amount_aed: number
+          created_at: string
+          due_date: string | null
+          id: string
+          label: string
+          paid_amount: number | null
+          paid_at: string | null
+          paid_by: string | null
+          position: number
+          project_id: string
+          sale_id: string
+        }
+        Insert: {
+          agency_id?: string
+          amount_aed: number
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          label: string
+          paid_amount?: number | null
+          paid_at?: string | null
+          paid_by?: string | null
+          position?: number
+          project_id: string
+          sale_id: string
+        }
+        Update: {
+          agency_id?: string
+          amount_aed?: number
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          label?: string
+          paid_amount?: number | null
+          paid_at?: string | null
+          paid_by?: string | null
+          position?: number
+          project_id?: string
+          sale_id?: string
+        }
+        Relationships: []
+      }
+      dev_projects: {
+        Row: {
+          agency_id: string
+          community: string
+          created_at: string
+          created_by: string | null
+          developer_name: string
+          handover_date: string | null
+          id: string
+          name: string
+          notes: string
+          payment_plan: Json
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          agency_id?: string
+          community?: string
+          created_at?: string
+          created_by?: string | null
+          developer_name?: string
+          handover_date?: string | null
+          id?: string
+          name: string
+          notes?: string
+          payment_plan?: Json
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          agency_id?: string
+          community?: string
+          created_at?: string
+          created_by?: string | null
+          developer_name?: string
+          handover_date?: string | null
+          id?: string
+          name?: string
+          notes?: string
+          payment_plan?: Json
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      dev_sales: {
+        Row: {
+          agency_id: string
+          broker_agency: string
+          broker_commission_percent: number
+          broker_name: string
+          broker_phone: string
+          buyer_name: string
+          buyer_phone: string
+          created_at: string
+          hold_id: string | null
+          id: string
+          lead_id: string | null
+          project_id: string
+          sale_date: string
+          sale_price_aed: number
+          sold_by: string | null
+          unit_id: string
+        }
+        Insert: {
+          agency_id?: string
+          broker_agency?: string
+          broker_commission_percent?: number
+          broker_name?: string
+          broker_phone?: string
+          buyer_name: string
+          buyer_phone?: string
+          created_at?: string
+          hold_id?: string | null
+          id?: string
+          lead_id?: string | null
+          project_id: string
+          sale_date?: string
+          sale_price_aed: number
+          sold_by?: string | null
+          unit_id: string
+        }
+        Update: {
+          agency_id?: string
+          broker_agency?: string
+          broker_commission_percent?: number
+          broker_name?: string
+          broker_phone?: string
+          buyer_name?: string
+          buyer_phone?: string
+          created_at?: string
+          hold_id?: string | null
+          id?: string
+          lead_id?: string | null
+          project_id?: string
+          sale_date?: string
+          sale_price_aed?: number
+          sold_by?: string | null
+          unit_id?: string
+        }
+        Relationships: []
+      }
+      dev_units: {
+        Row: {
+          agency_id: string
+          bedrooms: number
+          created_at: string
+          floor: string
+          id: string
+          price_aed: number
+          project_id: string
+          size_sqft: number
+          status: string
+          unit_number: string
+          unit_type: string
+          updated_at: string
+          view: string
+        }
+        Insert: {
+          agency_id?: string
+          bedrooms?: number
+          created_at?: string
+          floor?: string
+          id?: string
+          price_aed?: number
+          project_id: string
+          size_sqft?: number
+          status?: string
+          unit_number: string
+          unit_type?: string
+          updated_at?: string
+          view?: string
+        }
+        Update: {
+          agency_id?: string
+          bedrooms?: number
+          created_at?: string
+          floor?: string
+          id?: string
+          price_aed?: number
+          project_id?: string
+          size_sqft?: number
+          status?: string
+          unit_number?: string
+          unit_type?: string
+          updated_at?: string
+          view?: string
+        }
+        Relationships: []
+      }
       demo_usage: {
         Row: {
           day: string
@@ -925,6 +1189,250 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      hh_bookings: {
+        Row: {
+          agency_id: string
+          channel_fee_aed: number
+          check_in: string
+          check_out: string
+          cleaning_fee_aed: number
+          created_at: string
+          created_by: string | null
+          external_uid: string | null
+          guest_country: string
+          guest_email: string
+          guest_id_received: boolean
+          guest_language: string
+          guest_name: string
+          guest_phone: string
+          guests: number
+          home_id: string
+          id: string
+          notes: string
+          source: string
+          status: string
+          total_amount_aed: number
+          updated_at: string
+        }
+        Insert: {
+          agency_id?: string
+          channel_fee_aed?: number
+          check_in: string
+          check_out: string
+          cleaning_fee_aed?: number
+          created_at?: string
+          created_by?: string | null
+          external_uid?: string | null
+          guest_country?: string
+          guest_email?: string
+          guest_id_received?: boolean
+          guest_language?: string
+          guest_name?: string
+          guest_phone?: string
+          guests?: number
+          home_id: string
+          id?: string
+          notes?: string
+          source?: string
+          status?: string
+          total_amount_aed?: number
+          updated_at?: string
+        }
+        Update: {
+          agency_id?: string
+          channel_fee_aed?: number
+          check_in?: string
+          check_out?: string
+          cleaning_fee_aed?: number
+          created_at?: string
+          created_by?: string | null
+          external_uid?: string | null
+          guest_country?: string
+          guest_email?: string
+          guest_id_received?: boolean
+          guest_language?: string
+          guest_name?: string
+          guest_phone?: string
+          guests?: number
+          home_id?: string
+          id?: string
+          notes?: string
+          source?: string
+          status?: string
+          total_amount_aed?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hh_bookings_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hh_bookings_home_id_fkey"
+            columns: ["home_id"]
+            isOneToOne: false
+            referencedRelation: "hh_homes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hh_homes: {
+        Row: {
+          active: boolean
+          agency_id: string
+          bedrooms: number | null
+          building: string
+          check_in_instructions: string
+          cleaning_fee_aed: number
+          community: string
+          created_at: string
+          created_by: string | null
+          id: string
+          management_fee_percent: number
+          name: string
+          nightly_price_aed: number
+          owner_id: string | null
+          owner_name: string
+          owner_phone: string
+          permit_expires_on: string | null
+          permit_number: string
+          sleeps: number | null
+          updated_at: string
+          wifi: string
+        }
+        Insert: {
+          active?: boolean
+          agency_id?: string
+          bedrooms?: number | null
+          building?: string
+          check_in_instructions?: string
+          cleaning_fee_aed?: number
+          community?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          management_fee_percent?: number
+          name: string
+          nightly_price_aed?: number
+          owner_id?: string | null
+          owner_name?: string
+          owner_phone?: string
+          permit_expires_on?: string | null
+          permit_number?: string
+          sleeps?: number | null
+          updated_at?: string
+          wifi?: string
+        }
+        Update: {
+          active?: boolean
+          agency_id?: string
+          bedrooms?: number | null
+          building?: string
+          check_in_instructions?: string
+          cleaning_fee_aed?: number
+          community?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          management_fee_percent?: number
+          name?: string
+          nightly_price_aed?: number
+          owner_id?: string | null
+          owner_name?: string
+          owner_phone?: string
+          permit_expires_on?: string | null
+          permit_number?: string
+          sleeps?: number | null
+          updated_at?: string
+          wifi?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hh_homes_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hh_homes_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "owners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hh_tasks: {
+        Row: {
+          agency_id: string
+          assigned_to: string
+          booking_id: string | null
+          created_at: string
+          created_by: string | null
+          due_at: string
+          home_id: string
+          id: string
+          kind: string
+          note: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          agency_id?: string
+          assigned_to?: string
+          booking_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          due_at: string
+          home_id: string
+          id?: string
+          kind?: string
+          note?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          agency_id?: string
+          assigned_to?: string
+          booking_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          due_at?: string
+          home_id?: string
+          id?: string
+          kind?: string
+          note?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hh_tasks_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hh_tasks_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "hh_bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hh_tasks_home_id_fkey"
+            columns: ["home_id"]
+            isOneToOne: false
+            referencedRelation: "hh_homes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lead_events: {
         Row: {
@@ -1634,6 +2142,298 @@ export type Database = {
           },
         ]
       }
+      pm_cheques: {
+        Row: {
+          agency_id: string
+          amount_aed: number
+          bank_date: string | null
+          cleared_on: string | null
+          created_at: string
+          due_date: string
+          id: string
+          lease_id: string
+          note: string
+          seq: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          agency_id?: string
+          amount_aed: number
+          bank_date?: string | null
+          cleared_on?: string | null
+          created_at?: string
+          due_date: string
+          id?: string
+          lease_id: string
+          note?: string
+          seq: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          agency_id?: string
+          amount_aed?: number
+          bank_date?: string | null
+          cleared_on?: string | null
+          created_at?: string
+          due_date?: string
+          id?: string
+          lease_id?: string
+          note?: string
+          seq?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_cheques_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_cheques_lease_id_fkey"
+            columns: ["lease_id"]
+            isOneToOne: false
+            referencedRelation: "pm_leases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_leases: {
+        Row: {
+          agency_id: string
+          annual_rent_aed: number
+          cheque_count: number
+          created_at: string
+          created_by: string | null
+          deposit_aed: number
+          ejari_number: string
+          end_date: string
+          id: string
+          lead_id: string | null
+          proposed_rent: string
+          renewal_note: string
+          start_date: string
+          status: string
+          tenant_email: string
+          tenant_name: string
+          tenant_phone: string
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          agency_id?: string
+          annual_rent_aed: number
+          cheque_count?: number
+          created_at?: string
+          created_by?: string | null
+          deposit_aed?: number
+          ejari_number?: string
+          end_date: string
+          id?: string
+          lead_id?: string | null
+          proposed_rent?: string
+          renewal_note?: string
+          start_date: string
+          status?: string
+          tenant_email?: string
+          tenant_name?: string
+          tenant_phone?: string
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          agency_id?: string
+          annual_rent_aed?: number
+          cheque_count?: number
+          created_at?: string
+          created_by?: string | null
+          deposit_aed?: number
+          ejari_number?: string
+          end_date?: string
+          id?: string
+          lead_id?: string | null
+          proposed_rent?: string
+          renewal_note?: string
+          start_date?: string
+          status?: string
+          tenant_email?: string
+          tenant_name?: string
+          tenant_phone?: string
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_leases_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_leases_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_leases_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "pm_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_tickets: {
+        Row: {
+          agency_id: string
+          closed_on: string | null
+          contractor_name: string
+          contractor_phone: string
+          cost_aed: number | null
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          opened_on: string
+          priority: string
+          reported_by: string
+          status: string
+          title: string
+          unit_id: string
+          updated_at: string
+          who_pays: string
+        }
+        Insert: {
+          agency_id?: string
+          closed_on?: string | null
+          contractor_name?: string
+          contractor_phone?: string
+          cost_aed?: number | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          opened_on?: string
+          priority?: string
+          reported_by?: string
+          status?: string
+          title: string
+          unit_id: string
+          updated_at?: string
+          who_pays?: string
+        }
+        Update: {
+          agency_id?: string
+          closed_on?: string | null
+          contractor_name?: string
+          contractor_phone?: string
+          cost_aed?: number | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          opened_on?: string
+          priority?: string
+          reported_by?: string
+          status?: string
+          title?: string
+          unit_id?: string
+          updated_at?: string
+          who_pays?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_tickets_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_tickets_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "pm_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_units: {
+        Row: {
+          agency_id: string
+          bedrooms: number | null
+          building: string
+          community: string
+          created_at: string
+          created_by: string | null
+          id: string
+          management_fee_percent: number
+          notes: string
+          owner_id: string
+          size_sqft: number | null
+          status: string
+          unit_number: string
+          unit_type: string
+          updated_at: string
+        }
+        Insert: {
+          agency_id?: string
+          bedrooms?: number | null
+          building?: string
+          community?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          management_fee_percent?: number
+          notes?: string
+          owner_id: string
+          size_sqft?: number | null
+          status?: string
+          unit_number?: string
+          unit_type?: string
+          updated_at?: string
+        }
+        Update: {
+          agency_id?: string
+          bedrooms?: number | null
+          building?: string
+          community?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          management_fee_percent?: number
+          notes?: string
+          owner_id?: string
+          size_sqft?: number | null
+          status?: string
+          unit_number?: string
+          unit_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_units_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_units_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "owners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       push_keys: {
         Row: {
           id: number
@@ -2272,6 +3072,40 @@ export type Database = {
       can_access_deal: { Args: { _deal: string }; Returns: boolean }
       can_edit_deal: { Args: { _deal: string }; Returns: boolean }
       issue_deal_invoice: { Args: { _deal: string; _snapshot: Json }; Returns: string }
+      dev_cancel_sale: { Args: { _sale: string }; Returns: undefined }
+      dev_hold_unit: {
+        Args: {
+          _broker_agency: string
+          _broker_name: string
+          _broker_phone: string
+          _client_name: string
+          _client_phone: string
+          _hours: number
+          _notes: string
+          _unit: string
+        }
+        Returns: string
+      }
+      dev_release_expired_holds: { Args: never; Returns: number }
+      dev_release_hold: { Args: { _hold: string }; Returns: undefined }
+      dev_sell_unit: {
+        Args: {
+          _broker_agency: string
+          _broker_commission_percent: number
+          _broker_name: string
+          _broker_phone: string
+          _buyer_name: string
+          _buyer_phone: string
+          _hold: string | null
+          _instalments: Json
+          _lead: string | null
+          _sale_date: string
+          _sale_price_aed: number
+          _unit: string
+        }
+        Returns: string
+      }
+      dev_unit_status: { Args: { _unit: string }; Returns: string }
       claim_alert_deliveries: {
         Args: { _limit: number }
         Returns: {
