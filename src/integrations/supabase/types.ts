@@ -1075,6 +1075,7 @@ export type Database = {
       }
       leads: {
         Row: {
+          do_not_call: boolean
           reminded_at: string | null
           assigned_at: string | null
           email: string
@@ -1122,6 +1123,7 @@ export type Database = {
           whatsapp_last_inbound_at: string | null
         }
         Insert: {
+          do_not_call?: boolean
           reminded_at?: string | null
           assigned_at?: string | null
           email?: string
@@ -1169,6 +1171,7 @@ export type Database = {
           whatsapp_last_inbound_at?: string | null
         }
         Update: {
+          do_not_call?: boolean
           reminded_at?: string | null
           assigned_at?: string | null
           email?: string
@@ -1261,6 +1264,7 @@ export type Database = {
           needs_check: boolean
           parking_spaces: number | null
           payment_plan: string
+          permit_expires_on: string | null
           permit_number: string
           photos: string[]
           price_aed: number
@@ -1311,6 +1315,7 @@ export type Database = {
           needs_check?: boolean
           parking_spaces?: number | null
           payment_plan?: string
+          permit_expires_on?: string | null
           permit_number?: string
           photos?: string[]
           price_aed?: number
@@ -1361,6 +1366,7 @@ export type Database = {
           needs_check?: boolean
           parking_spaces?: number | null
           payment_plan?: string
+          permit_expires_on?: string | null
           permit_number?: string
           photos?: string[]
           price_aed?: number
@@ -2022,6 +2028,7 @@ export type Database = {
           error: string | null
           id: string
           lead_id: string
+          meta_limit_retries: number
           preview: string
           purpose: string
           send_after: string
@@ -2049,6 +2056,7 @@ export type Database = {
           error?: string | null
           id?: string
           lead_id: string
+          meta_limit_retries?: number
           preview?: string
           purpose?: string
           send_after?: string
@@ -2076,6 +2084,7 @@ export type Database = {
           error?: string | null
           id?: string
           lead_id?: string
+          meta_limit_retries?: number
           preview?: string
           purpose?: string
           send_after?: string
@@ -2361,6 +2370,7 @@ export type Database = {
           error: string | null
           id: string
           lead_id: string
+          meta_limit_retries: number
           preview: string
           purpose: string
           send_after: string
