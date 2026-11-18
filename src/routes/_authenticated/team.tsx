@@ -3,7 +3,8 @@ import { queryOptions, useQueryClient, useSuspenseQuery } from '@tanstack/react-
 import { useServerFn } from '@tanstack/react-start';
 import { useState } from 'react';
 import { Mail, Save, Trash2 } from 'lucide-react';
-import { getTeam, inviteAgent, removeAgent, updateMember } from '@/lib/team.functions';
+import { getTeam, inviteAgent, removeAgent, updateMember, updateMemberTeam } from '@/lib/team.functions';
+import { TargetsCard } from '@/components/TargetsCard';
 import { canInvite, canOwnerSetOthersGoal, goalModeLabels, loginLimitMessage } from '@/lib/agency';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,13 +49,18 @@ function TeamPage() {
     </section>
 
     <section aria-label="Team members" className="space-y-3">
-      {data.members.map(m => <MemberRow key={m.id} member={m} canSetGoal={m.user_id === data.access.userId || canOwnerSetOthersGoal(data.access.goalMode)} onChanged={refresh} />)}
+      {data.members.map(m => <MemberRow key={m.id} member={m} members={data.members} canSetGoal={m.user_id === data.access.userId || canOwnerSetOthersGoal(data.access.goalMode)} onChanged={refresh} />)}
     </section>
+    <div className="mt-6"><TargetsCard /></div>
   </main>;
 }
 
-function MemberRow({ member, canSetGoal, onChanged }: { member: Member; canSetGoal: boolean; onChanged: () => void }) {
-  const update = useServerFn(updateMember), remove = useServerFn(removeAgent);
+function MemberRow({ member, members, canSetGoal, onChanged }: { member: Member; members: Member[]; canSetGoal: boolean; onChanged: () => void }) {
+  const update = useServerFn(updateMember), remove = useServerFn(removeAgent), updateTeam = useServerFn(updateMemberTeam);
+  const client = useQueryClient();
+  const [leader, setLeader] = useState(member.team_leader_id ?? ''), [tGci, setTGci] = useState(member.target_gci_month_aed === null ? '' : String(member.target_gci_month_aed));
+  const [tView, setTView] = useState(member.target_viewings_month === null ? '' : String(member.target_viewings_month)), [tCalls, setTCalls] = useState(member.target_calls_month === null ? '' : String(member.target_calls_month));
+  const numOrNull = (v: string) => v.trim() ? Math.max(0, Math.round(Number(v.replace(/[^\d.]/g, '')) || 0)) : null;
   const [name, setName] = useState(member.display_name), [split, setSplit] = useState(String(member.split_percent)), [goal, setGoal] = useState(member.annual_gci_goal_aed === null ? '' : String(member.annual_gci_goal_aed));
   const [note, setNote] = useState('');
   return <div className="flex flex-wrap items-end gap-3 rounded-lg border border-border p-4">
@@ -66,6 +72,20 @@ function MemberRow({ member, canSetGoal, onChanged }: { member: Member; canSetGo
       const r = await update({ data: { id: member.id, displayName: name, splitPercent: Math.min(100, Math.max(0, Number(split) || 0)), goal: goal.trim() ? Math.max(0, Number(goal.replace(/[^\d.]/g, '')) || 0) : null } });
       setNote('error' in r ? r.error ?? 'Could not save.' : 'Saved.'); onChanged(); }}><Save className="size-4" />Save</Button>
     {member.role === 'agent' && <Button variant="ghost" size="sm" aria-label={`Remove ${member.email}`} onClick={async () => { if (!confirm(`Remove ${member.email} from the agency?`)) return; const r = await remove({ data: member.id }); if ('error' in r) setNote(r.error ?? ''); else onChanged(); }}><Trash2 className="size-4" /></Button>}
+    <div className="flex w-full flex-wrap items-end gap-3 border-t border-border pt-3">
+      <span className="w-full text-xs font-medium text-muted-foreground">Team and monthly targets</span>
+      {member.role === 'agent' && <label className="text-sm">Reports to<select aria-label={`Team leader for ${member.email}`} className="mt-1 block h-9 w-44 rounded-md border border-input bg-background px-2 text-sm" value={leader} onChange={e => setLeader(e.target.value)}>
+        <option value="">Owner only</option>
+        {members.filter(x => x.user_id !== member.user_id && x.role === 'agent').map(x => <option key={x.user_id} value={x.user_id}>{x.display_name || x.email}</option>)}
+      </select></label>}
+      <label className="text-sm">GCI a month (AED)<Input className="mt-1 w-32" inputMode="numeric" value={tGci} onChange={e => setTGci(e.target.value)} /></label>
+      <label className="text-sm">Viewings a month<Input className="mt-1 w-24" inputMode="numeric" value={tView} onChange={e => setTView(e.target.value)} /></label>
+      <label className="text-sm">Calls a month<Input className="mt-1 w-24" inputMode="numeric" value={tCalls} onChange={e => setTCalls(e.target.value)} /></label>
+      <Button variant="outline" size="sm" onClick={async () => { setNote('');
+        try { await updateTeam({ data: { id: member.id, teamLeaderId: member.role === 'agent' && leader ? leader : null, targetGci: numOrNull(tGci), targetViewings: numOrNull(tView), targetCalls: numOrNull(tCalls) } }); setNote('Targets saved.'); client.invalidateQueries({ queryKey: ['targets'] }); onChanged(); }
+        catch (e) { setNote(e instanceof Error ? e.message : 'Could not save targets.'); } }}><Save className="size-4" />Save targets</Button>
+      {leader && <span className="text-xs text-muted-foreground">Their team leader sees and works this agent's leads.</span>}
+    </div>
     {note && <p role="status" className="w-full text-xs">{note}</p>}
   </div>;
 }

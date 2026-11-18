@@ -19,7 +19,7 @@ export const Route = createFileRoute('/_authenticated/follow-ups')({
   component: FollowUpsPage,
 });
 
-const KIND_LABELS: Record<string, string> = { 'follow-up': 'Follow-up', viewing_followup:'After-viewing check-in', viewing_2day:'After-viewing: 2-day check-in', 'payment-reminder': 'Payment reminder', 'milestone-update': 'Milestone update', 'value-update': 'Value update', anniversary: 'Home anniversary', 'lease-reminder': 'Lease reminder', revival: 'Old lead check-in' };
+const KIND_LABELS: Record<string, string> = { nurture: 'Not-now check-in', 'follow-up': 'Follow-up', viewing_followup:'After-viewing check-in', viewing_2day:'After-viewing: 2-day check-in', 'payment-reminder': 'Payment reminder', 'milestone-update': 'Milestone update', 'value-update': 'Value update', anniversary: 'Home anniversary', 'lease-reminder': 'Lease reminder', revival: 'Old lead check-in' };
 
 function FollowUpsPage() {
   const { data: items } = useSuspenseQuery(followUpsQuery);

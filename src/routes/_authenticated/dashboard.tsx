@@ -14,6 +14,7 @@ import { Progress } from "@/components/ui/progress";
 import { getWeeklyReport } from "@/lib/weekly-report.functions";
 import { greeting } from "@/lib/nav";
 import { AskCrm } from "@/components/AskCrm";
+import { TargetsCard } from "@/components/TargetsCard";
 import { isOverdue } from "@/lib/pipeline";
 import { getPipeline } from "@/lib/pipeline.functions";
 
@@ -218,6 +219,8 @@ function AgentHome() {
           )}
         </div>
       </section>
+
+      <TargetsCard onlyMe />
 
       <section
         aria-label="AI daily summary"

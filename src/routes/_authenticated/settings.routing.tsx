@@ -57,6 +57,7 @@ function RoutingPage() {
   const [agentId, setAgentId] = useState(data.members[0]?.user_id ?? "");
   const [minutes, setMinutes] = useState(String(data.poolAfterMinutes));
   const [limit, setLimit] = useState(String(data.poolDailyLimit));
+  const [nurture, setNurture] = useState(String(data.nurtureDays));
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -270,6 +271,7 @@ function RoutingPage() {
                   data: {
                     pool_after_minutes: Math.round(Number(minutes) || 15),
                     pool_daily_limit: Math.round(Number(limit) || 5),
+                    nurture_days: Math.max(0, Math.round(Number(nurture) || 0)),
                   },
                 }),
               "Pool settings saved.",
@@ -298,6 +300,17 @@ function RoutingPage() {
               onChange={(e) => setLimit(e.target.value)}
             />
           </label>
+          <label className="text-sm">
+            Check in with &quot;not now&quot; leads every (days)
+            <Input
+              className="mt-1 h-9 w-32"
+              type="number"
+              min={0}
+              max={365}
+              value={nurture}
+              onChange={(e) => setNurture(e.target.value)}
+            />
+          </label>
           <Button type="submit" size="sm" variant="outline" className="h-9" disabled={busy}>
             Save
           </Button>
@@ -305,6 +318,8 @@ function RoutingPage() {
         <p className="mt-2 text-xs text-muted-foreground">
           &quot;No reply&quot; means the agent sent no message and booked no viewing. AI replies
           don&apos;t count. A lead you assign by hand never goes back to the pool by itself.
+          Check-ins for &quot;not now&quot; leads are drafted once a day for clients who agreed to
+          messages, and wait in Follow-ups for your approval. 0 turns them off.
         </p>
       </section>
 
