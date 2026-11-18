@@ -6,6 +6,7 @@ import { sendClientMessage, sendOwnerMessage, setAiPaused } from '@/lib/leads-ap
 import type { ChatMessage, Lead } from '@/lib/leads-app';
 import { dubaiDate } from '@/lib/listings';
 import { serviceWindowEndsAt, waStatusLabel, withinServiceWindow } from '@/lib/whatsapp';
+import { voiceStatusLabel } from '@/lib/voice';
 import { ChatMediaInput } from './ChatMediaInput';
 import { SAMPLE_BUYERS, type Language } from '@/lib/reply-i18n';
 
@@ -42,7 +43,7 @@ export function LeadChat({ lead, messages, onChanged, playAsClient }: { lead: Le
   const windowOpen = onWhatsApp && withinServiceWindow(lead.whatsapp_last_inbound_at);
   const footer = (m: (typeof messages)[number]) => {
     const who = m.role === 'ai' ? 'AI' : m.role === 'owner' ? 'You' : m.role === 'system' ? 'Automatic' : 'Client';
-    if (m.channel === 'whatsapp') return `${who} · ${dubaiDate(m.created_at)} · ${m.role === 'client' ? 'WhatsApp' : waStatusLabel(m.wa_status, m.wa_error)}`;
+    if (m.channel === 'whatsapp') return `${who} · ${dubaiDate(m.created_at)} · ${m.role === 'client' ? 'WhatsApp' : waStatusLabel(m.wa_status, m.wa_error)}${m.voice_status ? ` · ${voiceStatusLabel(m.voice_status, m.voice_error)}` : ''}`;
     return `${who} · ${dubaiDate(m.created_at)}${m.sent ? ' · Sent' : ' · Queued (quiet hours)'}`;
   };
 
