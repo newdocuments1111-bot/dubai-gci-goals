@@ -38,8 +38,8 @@ function DealsPage() {
     {error && <p role="alert" className="mb-3 text-sm text-destructive">{error}</p>}
     {data.deals.length === 0 ? <p className="rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground">No deals yet. Open a lead and choose “Turn into a deal”.</p> :
       <div className="overflow-x-auto rounded-lg border border-border">
-        <table className="w-full min-w-[820px] text-sm">
-          <thead className="bg-muted/50 text-left text-muted-foreground"><tr><th className="p-2">Client</th><th>Agent</th><th>Type</th><th>Price</th><th>Comm.</th><th>GCI</th><th>Agent share</th><th>Agency share</th><th>Status</th><th></th></tr></thead>
+        <table className="w-full min-w-[980px] text-sm">
+          <thead className="bg-muted/50 text-left text-muted-foreground"><tr><th className="p-2">Client</th><th>Agent</th><th>Type</th><th>Price</th><th>Comm.</th><th>GCI</th><th>Agent share</th><th>Agency share</th><th>Next step</th><th>Status</th><th></th></tr></thead>
           <tbody>{data.deals.map(d => (
             <tr key={d.id} className="border-t border-border">
               <td className="p-2">{d.lead_id ? <Link className="underline" to="/lead/$leadId" params={{ leadId: d.lead_id }}>{(d.leads as { name: string } | null)?.name || 'Lead'}</Link> : '—'}
@@ -47,11 +47,12 @@ function DealsPage() {
                 {d.listings && <div className="text-xs text-muted-foreground">{(d.listings as { title: string }).title}</div>}</td>
               <td>{d.agentName}</td><td className="capitalize">{d.deal_type}</td><td>{aed(d.price_aed)}</td><td>{d.commission_percent}%</td>
               <td className="font-medium">{aed(d.gci)}</td><td>{aed(d.agentShare)} <span className="text-xs text-muted-foreground">({d.splitPercent}%)</span></td><td>{aed(d.agencyShare)}</td>
+              <td className="pr-2 text-xs">{d.nextStep ? <><span className="font-medium">{d.nextStep.label}</span>{d.nextStep.due_at && <span className={new Date(d.nextStep.due_at) < new Date() ? 'block text-destructive' : 'block text-muted-foreground'}>due {new Date(d.nextStep.due_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'Asia/Dubai' })}</span>}</> : d.stepsTotal > 0 ? <span className="text-primary">All steps done</span> : <span className="text-muted-foreground">Open the Deal Room</span>}</td>
               <td><select aria-label="Deal status" className="rounded-md border border-input bg-background px-2 py-1 text-sm" value={d.status}
                 onChange={async e => { setError(''); try { await setStatus({ data: { id: d.id, status: e.target.value as 'closed' } }); await client.invalidateQueries({ queryKey: dealsQuery.queryKey }); client.invalidateQueries({ queryKey: ['home'] }); } catch { setError('Only the deal’s agent or the owner can change it.'); } }}>
                 {['under offer', 'closed', 'fell through'].map(s => <option key={s} value={s}>{s}</option>)}</select>
                 {d.closed_at && <div className="text-xs text-muted-foreground">{new Date(d.closed_at).toLocaleDateString('en-GB', { timeZone: 'Asia/Dubai' })}</div>}</td>
-              <td className="pr-2"><Button variant="ghost" size="sm" onClick={() => setPaperwork(d.id)}><FileText className="size-4" />Paperwork</Button></td>
+              <td className="whitespace-nowrap pr-2"><Button asChild size="sm" variant="outline"><Link to="/deal/$dealId" params={{ dealId: d.id }}>Deal Room</Link></Button><Button variant="ghost" size="sm" onClick={() => setPaperwork(d.id)}><FileText className="size-4" />Paperwork</Button></td>
             </tr>))}</tbody>
         </table>
       </div>}
