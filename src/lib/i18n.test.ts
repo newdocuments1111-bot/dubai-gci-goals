@@ -12,9 +12,17 @@ describe("app language", () => {
     expect(labels.filter((l) => !hasArabic(l))).toEqual([]);
   });
 
-  it("has Arabic for every text on the Inbox and Leads pages", () => {
+  it("has Arabic for every text on the translated pages", () => {
     const missing: string[] = [];
-    for (const page of ["inbox.tsx", "leads.tsx"]) {
+    for (const page of [
+      "inbox.tsx",
+      "leads.tsx",
+      "viewings.tsx",
+      "follow-ups.tsx",
+      "deals.tsx",
+      "pipeline.tsx",
+      "dashboard.tsx",
+    ]) {
       const source = readFileSync(`src/routes/_authenticated/${page}`, "utf8");
       // t("…") and t('…') calls with a fixed text.
       for (const m of source.matchAll(/\bt\(\s*(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)')/g)) {

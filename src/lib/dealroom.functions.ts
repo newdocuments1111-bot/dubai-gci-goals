@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { getAccess, requireOwner } from "./agency-access";
 import { DEFAULT_SPLIT_PERCENT } from "./agency";
 import { leadFolder } from "./documents";
+import { EMPTY_COMPLIANCE } from "./aml";
 import {
   DEFAULT_FEES,
   buyerCosts,
@@ -78,30 +79,36 @@ export const getDealRoom = createServerFn({ method: "POST" })
       phone: string;
       agency_id: string;
     } | null;
-    const [{ data: payments }, { data: invoices }, { data: settings }, { data: member }] =
-      await Promise.all([
-        context.supabase
-          .from("deal_payments")
-          .select("*")
-          .eq("deal_id", dealId)
-          .order("paid_on", { ascending: false }),
-        context.supabase
-          .from("deal_invoices")
-          .select("id,number,issued_at")
-          .eq("deal_id", dealId)
-          .order("issued_at", { ascending: false }),
-        context.supabase
-          .from("app_settings")
-          .select("*")
-          .eq("agency_id", deal.agency_id)
-          .maybeSingle(),
-        context.supabase
-          .from("agency_members")
-          .select("display_name,email,split_percent")
-          .eq("agency_id", deal.agency_id)
-          .eq("user_id", deal.agent_id)
-          .maybeSingle(),
-      ]);
+    const [
+      { data: payments },
+      { data: invoices },
+      { data: settings },
+      { data: member },
+      { data: compliance },
+    ] = await Promise.all([
+      context.supabase
+        .from("deal_payments")
+        .select("*")
+        .eq("deal_id", dealId)
+        .order("paid_on", { ascending: false }),
+      context.supabase
+        .from("deal_invoices")
+        .select("id,number,issued_at")
+        .eq("deal_id", dealId)
+        .order("issued_at", { ascending: false }),
+      context.supabase
+        .from("app_settings")
+        .select("*")
+        .eq("agency_id", deal.agency_id)
+        .maybeSingle(),
+      context.supabase
+        .from("agency_members")
+        .select("display_name,email,split_percent")
+        .eq("agency_id", deal.agency_id)
+        .eq("user_id", deal.agent_id)
+        .maybeSingle(),
+      context.supabase.from("deal_compliance").select("*").eq("deal_id", dealId).maybeSingle(),
+    ]);
 
     let vaultFiles: string[] = [];
     if (lead) {
@@ -173,6 +180,9 @@ export const getDealRoom = createServerFn({ method: "POST" })
         trn: (settings?.company_trn as string | undefined) ?? "",
       },
       vaultFiles,
+      compliance: compliance
+        ? { ...compliance, cash_aed: Number(compliance.cash_aed) }
+        : { ...EMPTY_COMPLIANCE, updated_at: null as string | null },
     };
   });
 
@@ -422,5 +432,47 @@ export const saveDealSettings = createServerFn({ method: "POST" })
         { onConflict: "agency_id" },
       );
     if (error) throw new Error("Could not save the deal settings.");
+    return { success: true };
+  });
+
+export const complianceSchema = z.object({
+  dealId: z.string().uuid(),
+  buyer_id_collected: z.boolean(),
+  seller_id_collected: z.boolean(),
+  is_company: z.boolean(),
+  company_papers_collected: z.boolean(),
+  payer_is_the_buyer: z.boolean(),
+  payer_name: z.string().trim().max(200),
+  cash_aed: z.number().min(0).max(100_000_000_000),
+  virtual_asset: z.boolean(),
+  source_of_funds: z.string().trim().max(500),
+  politically_exposed: z.boolean(),
+  rear_filed: z.boolean(),
+  rear_reference: z.string().trim().max(100),
+  rear_filed_on: z.string().date().nullable(),
+  notes: z.string().trim().max(2000),
+});
+
+/** Save the deal's money-and-ID record. Only the deal's agent or the owner, and every change is logged. */
+export const saveCompliance = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(complianceSchema)
+  .handler(async ({ data, context }) => {
+    const { dealId, ...row } = data;
+    const deal = await loadDeal(context, dealId);
+    const { data: canEdit } = await context.supabase.rpc("can_edit_deal", { _deal: dealId });
+    if (canEdit !== true)
+      throw new Error("Only the deal's agent or the agency owner can change this record.");
+    const { error } = await context.supabase.from("deal_compliance").upsert(
+      {
+        ...row,
+        deal_id: dealId,
+        agency_id: deal.agency_id,
+        updated_by: context.userId,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "deal_id" },
+    );
+    if (error) throw new Error("Could not save the record.");
     return { success: true };
   });
