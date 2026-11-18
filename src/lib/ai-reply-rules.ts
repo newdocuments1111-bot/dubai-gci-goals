@@ -37,6 +37,8 @@ export const replySettingsSchema = z.object({
   agency_name: z.string().trim().max(200),
   rules: z.object(Object.fromEntries(Object.keys(defaultReplyRules).map(key => [key, z.string().trim().min(1).max(10000)])) as Record<keyof typeof defaultReplyRules, z.ZodString>),
   fees: feesSchema,
+  /** Voice Agent: also answer a client's WhatsApp voice note with a voice note. Off unless the owner switches it on. */
+  voice_replies: z.boolean().default(false),
 });
 export type ReplySettings = z.infer<typeof replySettingsSchema>;
 export function openingPreview(settings: ReplySettings) { return settings.rules.opening.replaceAll('[Agency Name]', settings.agency_name || '[Agency Name]'); }

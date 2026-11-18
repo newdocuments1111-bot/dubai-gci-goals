@@ -319,5 +319,7 @@ export async function generateLeadReply(
   }
   // Lets the WhatsApp handler know whether this reply changed an appointment (it must then always be sent).
   const appointmentChanged = JSON.stringify(nextState ?? null) !== JSON.stringify(state ?? null);
-  return { id: saved.id, reply, stopped: ai.stopped, appointmentChanged };
+  // The Voice Agent needs the real reply language (the saved one is only en/ar/hi/ru) and the script.
+  const replyLanguage: string = language !== "en" ? language : foreign ? ai.language : "en";
+  return { id: saved.id, reply, stopped: ai.stopped, appointmentChanged, replyLanguage, script };
 }

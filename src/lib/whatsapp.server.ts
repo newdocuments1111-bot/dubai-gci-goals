@@ -80,6 +80,68 @@ export async function sendText(phoneNumberId: string, to: string, body: string) 
   );
 }
 
+/** Upload audio to Meta for this number and return its media id (the bytes are never stored by the app). */
+export async function uploadMedia(
+  phoneNumberId: string,
+  bytes: Uint8Array,
+  mime: string,
+  filename: string,
+) {
+  const form = new FormData();
+  form.append("messaging_product", "whatsapp");
+  form.append("type", mime);
+  form.append("file", new Blob([bytes as BlobPart], { type: mime }), filename);
+  // Not through graph(): a file upload must not carry the JSON content type.
+  const res = await fetch(`${GRAPH}/${phoneNumberId}/media`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${accessToken()}` },
+    body: form,
+  });
+  const text = await res.text();
+  if (!res.ok) {
+    console.error(`WhatsApp media upload failed [${res.status}]: ${text}`);
+    let detail = text.slice(0, 300);
+    try {
+      const e = obj(obj(JSON.parse(text))["error"]);
+      detail = `${String(e["message"] ?? "Error")}${e["code"] ? ` (code ${String(e["code"])})` : ""}`;
+    } catch {
+      /* keep raw */
+    }
+    throw new WhatsAppApiError(
+      `Meta refused the audio upload [${res.status}]: ${detail}`.slice(0, 900),
+    );
+  }
+  let id = "";
+  try {
+    id = String(obj(JSON.parse(text))["id"] ?? "");
+  } catch {
+    /* no id */
+  }
+  if (!id) throw new WhatsAppApiError("Meta did not return a media id.");
+  return id;
+}
+
+/** Send uploaded audio. `voice` asks WhatsApp to show it as a voice note (needs OGG/Opus, one channel). */
+export async function sendAudio(
+  phoneNumberId: string,
+  to: string,
+  mediaId: string,
+  voice: boolean,
+) {
+  return sentId(
+    await graph(`/${phoneNumberId}/messages`, {
+      method: "POST",
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        recipient_type: "individual",
+        to: phoneDigits(to),
+        type: "audio",
+        audio: { id: mediaId, ...(voice ? { voice: true } : {}) },
+      }),
+    }),
+  );
+}
+
 /** Meta's built-in "hello_world" template, available on every test number. Used only by "Send test message". */
 export async function sendHelloWorld(phoneNumberId: string, to: string) {
   return sentId(
@@ -430,6 +492,23 @@ async function processEvent(admin: Admin, ev: Event): Promise<string | null> {
     });
     if (error) throw new Error(`Could not apply status: ${error.message}`);
     if (found) return `Status ${String(s["status"])} applied`;
+    // The status may belong to a voice reply, which is kept on the text reply's row.
+    const { data: voiceRow } = await admin
+      .from("chat_messages")
+      .select("id")
+      .eq("voice_wa_message_id", ev.wa_id)
+      .maybeSingle();
+    if (voiceRow) {
+      if (String(s["status"] ?? "") === "failed")
+        await admin
+          .from("chat_messages")
+          .update({
+            voice_status: "failed",
+            voice_error: (errorText ?? "Meta could not deliver the voice reply").slice(0, 1000),
+          })
+          .eq("id", voiceRow.id);
+      return `Voice reply status ${String(s["status"])}`;
+    }
     // A message sent outside this app (e.g. from Meta's dashboard) never matches; stop retrying after 30 minutes.
     return Date.now() - new Date(ev.received_at).getTime() > 30 * 60_000 ? "No matching message in the app" : null;
   }
@@ -658,7 +737,28 @@ async function processMessage(admin: Admin, ev: Event, payload: Obj): Promise<st
     return "Newer message arrived while replying; answered together";
   }
   const sent = await deliverChatMessage(admin, result.id, { allowStopped: result.stopped });
-  return sent.ok ? "AI replied on WhatsApp" : `AI reply saved but not sent: ${sent.reason}`;
+  if (!sent.ok) return `AI reply saved but not sent: ${sent.reason}`;
+  // 6. Voice Agent: the text reply is out. A client's voice note may also get a voice note back (agency setting,
+  //    off by default). Whatever happens here, the text reply is never blocked, changed or sent again.
+  let voiceNote = "";
+  if (incoming.kind === "audio" && !result.stopped && !lead.stopped) {
+    try {
+      const { maybeSendVoiceReply } = await import("./voice.server");
+      voiceNote = await maybeSendVoiceReply(admin, {
+        messageId: result.id,
+        lead,
+        settings,
+        inboundWasVoice: true,
+        language: result.replyLanguage,
+        script: result.script,
+        replyText: result.reply,
+      });
+    } catch (e) {
+      console.error("Voice reply failed", result.id, e instanceof Error ? e.message : String(e));
+      voiceNote = "; voice reply failed";
+    }
+  }
+  return `AI replied on WhatsApp${voiceNote}`;
 }
 
 /** Send one saved chat message to the lead on WhatsApp, after every safety check. Never sends the same row twice. */
@@ -720,6 +820,99 @@ export async function deliverChatMessage(admin: Admin, messageId: string, opts: 
   if (saveError) console.error("WhatsApp message sent but its id could not be saved", msg.id, saveError.message);
   await reconcileStatuses(admin, wamid);
   return { ok: true, reason: "" };
+}
+
+/**
+ * Send a voice note for a text reply that has already gone out. Same guard path as text: the row is claimed first
+ * (so it can never be sent twice), sendBlockReason (test-mode safety list, STOP, 24-hour window) is checked before the
+ * audio is made and again right before Meta is called, and the result is recorded on the text reply's row.
+ * A failure here is logged on the row and never touches the text reply.
+ */
+export async function deliverVoiceReply(
+  admin: Admin,
+  messageId: string,
+  makeAudio: () => Promise<{ bytes: Uint8Array; mime: string; mono: boolean }>,
+) {
+  const { data: msg, error } = await admin
+    .from("chat_messages")
+    .select("id,lead_id,role,wa_status,voice_status")
+    .eq("id", messageId)
+    .single();
+  if (error || !msg) return { ok: false, reason: "Message not found." };
+  if (msg.voice_status) return { ok: msg.voice_status === "sent", reason: "Already handled" };
+  if (msg.role !== "ai") return { ok: false, reason: "Only AI replies get a voice reply." };
+  if (!msg.wa_status || msg.wa_status === "sending" || msg.wa_status === "failed")
+    return { ok: false, reason: "The text reply was not sent." };
+  const readGuard = async () => {
+    const { data: lead } = await admin
+      .from("leads")
+      .select("id,agency_id,phone,stopped,ai_paused,whatsapp_last_inbound_at")
+      .eq("id", msg.lead_id)
+      .single();
+    if (!lead) return { lead: null, settings: null, block: "Lead not found." };
+    const { data: settings } = await admin
+      .from("whatsapp_settings")
+      .select("*")
+      .eq("agency_id", lead.agency_id)
+      .maybeSingle();
+    const block =
+      sendBlockReason({
+        settings,
+        to: lead.phone,
+        stopped: lead.stopped,
+        lastInboundAt: lead.whatsapp_last_inbound_at,
+      }) ?? (lead.ai_paused ? "The agent has taken over this chat." : null);
+    return { lead, settings, block };
+  };
+  // Claim before anything is made or sent, so a retry or a second delivery can never send a second voice note.
+  const { data: claimed } = await admin
+    .from("chat_messages")
+    .update({ voice_status: "sending" })
+    .eq("id", msg.id)
+    .is("voice_status", null)
+    .select("id");
+  if (!claimed?.length) return { ok: false, reason: "Already being sent" };
+  const fail = async (reason: string) => {
+    await admin
+      .from("chat_messages")
+      .update({ voice_status: "failed", voice_error: reason.slice(0, 1000) })
+      .eq("id", msg.id);
+    return { ok: false, reason };
+  };
+  try {
+    const before = await readGuard();
+    if (before.block) return await fail(before.block);
+    const audio = await makeAudio();
+    if (audio.bytes.byteLength > MAX_MEDIA_BYTES)
+      return await fail("The voice reply is larger than 8 MB.");
+    // Making the audio takes a few seconds: check STOP, test mode and the 24-hour window again right before sending.
+    const now = await readGuard();
+    if (now.block || !now.lead || !now.settings)
+      return await fail(now.block ?? "WhatsApp is not set up for this agency yet.");
+    const mediaId = await uploadMedia(
+      now.settings.phone_number_id,
+      audio.bytes,
+      audio.mime,
+      "voice-reply.ogg",
+    );
+    const wamid = await sendAudio(
+      now.settings.phone_number_id,
+      now.lead.phone,
+      mediaId,
+      audio.mono,
+    );
+    const { error: saveError } = await admin
+      .from("chat_messages")
+      .update({ voice_status: "sent", voice_wa_message_id: wamid, voice_error: null })
+      .eq("id", msg.id);
+    if (saveError)
+      console.error("Voice reply sent but could not be recorded", msg.id, saveError.message);
+    return { ok: true, reason: "" };
+  } catch (e) {
+    const reason = e instanceof Error ? e.message : "Voice reply failed";
+    console.error("Voice reply failed", msg.id, reason);
+    return await fail(reason);
+  }
 }
 
 /** Apply status callbacks that arrived before the sent message id was saved. */

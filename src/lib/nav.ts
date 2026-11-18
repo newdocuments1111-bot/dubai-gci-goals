@@ -33,6 +33,9 @@ export const MAIN_SECTIONS: readonly NavSection[] = [
     pages: [
       { to: "/listings", label: "Listings" },
       { to: "/owners", label: "Owners" },
+      { to: "/projects", label: "Projects" },
+      { to: "/managed", label: "Managed homes" },
+      { to: "/holiday-homes", label: "Holiday homes" },
     ],
   },
   {
@@ -84,6 +87,7 @@ const DETAIL_PREFIXES: readonly { prefix: string; section: NavSectionId }[] = [
   { prefix: "/lead/", section: "leads" },
   { prefix: "/listing/", section: "listings" },
   { prefix: "/brochure/", section: "listings" },
+  { prefix: "/project/", section: "listings" },
   { prefix: "/deal/", section: "deals" },
   { prefix: "/invoice/", section: "deals" },
 ];

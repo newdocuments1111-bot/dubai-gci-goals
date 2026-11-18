@@ -1,11 +1,15 @@
 import { describe,it,expect } from 'vitest';
 import { defaultReplyRules, defaultFees, feesSummary, openingPreview, replySettingsSchema } from './ai-reply-rules';
 
-const base = { agency_name:'', rules:defaultReplyRules, fees:defaultFees };
+const base = { agency_name:'', rules:defaultReplyRules, fees:defaultFees, voice_replies:false };
 
 describe('reply settings', () => {
   it('uses the editable agency name in the opening', () => {
     expect(openingPreview({ ...base, agency_name:'Dubai Homes' })).toBe('Welcome to Dubai Homes 👋 We help buyers and investors find apartments, townhouses and villas across Dubai. How can we help you today?');
+  });
+  it('keeps Voice replies off unless it is switched on', () => {
+    expect(replySettingsSchema.parse({ agency_name:'', rules:defaultReplyRules, fees:defaultFees }).voice_replies).toBe(false);
+    expect(replySettingsSchema.parse({ ...base, voice_replies:true }).voice_replies).toBe(true);
   });
   it('requires all rules and rejects empty rule values', () => {
     expect(replySettingsSchema.safeParse(base).success).toBe(true);
