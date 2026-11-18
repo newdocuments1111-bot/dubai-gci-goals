@@ -40,6 +40,7 @@ import { Route as AuthenticatedViewingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedDealDealIdRouteImport } from './routes/_authenticated/deal.$dealId'
 import { Route as AuthenticatedInvoiceInvoiceIdRouteImport } from './routes/_authenticated/invoice.$invoiceId'
 import { Route as AuthenticatedLeadLeadIdRouteImport } from './routes/_authenticated/lead.$leadId'
+import { Route as AuthenticatedLeadsImportRouteImport } from './routes/_authenticated/leads_.import'
 import { Route as AuthenticatedListingListingIdRouteImport } from './routes/_authenticated/listing.$listingId'
 import { Route as AuthenticatedOwnerWeeklyReportRouteImport } from './routes/_authenticated/owner.weekly-report'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
@@ -210,6 +211,12 @@ const AuthenticatedLeadLeadIdRoute = AuthenticatedLeadLeadIdRouteImport.update({
   path: '/lead/$leadId',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedLeadsImportRoute =
+  AuthenticatedLeadsImportRouteImport.update({
+    id: '/leads_/import',
+    path: '/leads/import',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedListingListingIdRoute =
   AuthenticatedListingListingIdRouteImport.update({
     id: '/listing/$listingId',
@@ -305,6 +312,7 @@ export interface FileRoutesByFullPath {
   '/deal/$dealId': typeof AuthenticatedDealDealIdRoute
   '/invoice/$invoiceId': typeof AuthenticatedInvoiceInvoiceIdRoute
   '/lead/$leadId': typeof AuthenticatedLeadLeadIdRoute
+  '/leads/import': typeof AuthenticatedLeadsImportRoute
   '/listing/$listingId': typeof AuthenticatedListingListingIdRoute
   '/owner/weekly-report': typeof AuthenticatedOwnerWeeklyReportRoute
   '/settings/alerts': typeof AuthenticatedSettingsAlertsRoute
@@ -348,6 +356,7 @@ export interface FileRoutesByTo {
   '/deal/$dealId': typeof AuthenticatedDealDealIdRoute
   '/invoice/$invoiceId': typeof AuthenticatedInvoiceInvoiceIdRoute
   '/lead/$leadId': typeof AuthenticatedLeadLeadIdRoute
+  '/leads/import': typeof AuthenticatedLeadsImportRoute
   '/listing/$listingId': typeof AuthenticatedListingListingIdRoute
   '/owner/weekly-report': typeof AuthenticatedOwnerWeeklyReportRoute
   '/settings/alerts': typeof AuthenticatedSettingsAlertsRoute
@@ -393,6 +402,7 @@ export interface FileRoutesById {
   '/_authenticated/deal/$dealId': typeof AuthenticatedDealDealIdRoute
   '/_authenticated/invoice/$invoiceId': typeof AuthenticatedInvoiceInvoiceIdRoute
   '/_authenticated/lead/$leadId': typeof AuthenticatedLeadLeadIdRoute
+  '/_authenticated/leads_/import': typeof AuthenticatedLeadsImportRoute
   '/_authenticated/listing/$listingId': typeof AuthenticatedListingListingIdRoute
   '/_authenticated/owner/weekly-report': typeof AuthenticatedOwnerWeeklyReportRoute
   '/_authenticated/settings/alerts': typeof AuthenticatedSettingsAlertsRoute
@@ -438,6 +448,7 @@ export interface FileRouteTypes {
     | '/deal/$dealId'
     | '/invoice/$invoiceId'
     | '/lead/$leadId'
+    | '/leads/import'
     | '/listing/$listingId'
     | '/owner/weekly-report'
     | '/settings/alerts'
@@ -481,6 +492,7 @@ export interface FileRouteTypes {
     | '/deal/$dealId'
     | '/invoice/$invoiceId'
     | '/lead/$leadId'
+    | '/leads/import'
     | '/listing/$listingId'
     | '/owner/weekly-report'
     | '/settings/alerts'
@@ -525,6 +537,7 @@ export interface FileRouteTypes {
     | '/_authenticated/deal/$dealId'
     | '/_authenticated/invoice/$invoiceId'
     | '/_authenticated/lead/$leadId'
+    | '/_authenticated/leads_/import'
     | '/_authenticated/listing/$listingId'
     | '/_authenticated/owner/weekly-report'
     | '/_authenticated/settings/alerts'
@@ -772,6 +785,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLeadLeadIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/leads_/import': {
+      id: '/_authenticated/leads_/import'
+      path: '/leads/import'
+      fullPath: '/leads/import'
+      preLoaderRoute: typeof AuthenticatedLeadsImportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/listing/$listingId': {
       id: '/_authenticated/listing/$listingId'
       path: '/listing/$listingId'
@@ -876,6 +896,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDealDealIdRoute: typeof AuthenticatedDealDealIdRoute
   AuthenticatedInvoiceInvoiceIdRoute: typeof AuthenticatedInvoiceInvoiceIdRoute
   AuthenticatedLeadLeadIdRoute: typeof AuthenticatedLeadLeadIdRoute
+  AuthenticatedLeadsImportRoute: typeof AuthenticatedLeadsImportRoute
   AuthenticatedListingListingIdRoute: typeof AuthenticatedListingListingIdRoute
   AuthenticatedOwnerWeeklyReportRoute: typeof AuthenticatedOwnerWeeklyReportRoute
   AuthenticatedSettingsAlertsRoute: typeof AuthenticatedSettingsAlertsRoute
@@ -909,6 +930,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDealDealIdRoute: AuthenticatedDealDealIdRoute,
   AuthenticatedInvoiceInvoiceIdRoute: AuthenticatedInvoiceInvoiceIdRoute,
   AuthenticatedLeadLeadIdRoute: AuthenticatedLeadLeadIdRoute,
+  AuthenticatedLeadsImportRoute: AuthenticatedLeadsImportRoute,
   AuthenticatedListingListingIdRoute: AuthenticatedListingListingIdRoute,
   AuthenticatedOwnerWeeklyReportRoute: AuthenticatedOwnerWeeklyReportRoute,
   AuthenticatedSettingsAlertsRoute: AuthenticatedSettingsAlertsRoute,
