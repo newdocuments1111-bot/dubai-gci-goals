@@ -32,6 +32,7 @@ import { Route as AuthenticatedMarketInsightsRouteImport } from './routes/_authe
 import { Route as AuthenticatedOwnersRouteImport } from './routes/_authenticated/owners'
 import { Route as AuthenticatedPipelineRouteImport } from './routes/_authenticated/pipeline'
 import { Route as AuthenticatedQueueRouteImport } from './routes/_authenticated/queue'
+import { Route as AuthenticatedReplySpeedRouteImport } from './routes/_authenticated/reply-speed'
 import { Route as AuthenticatedStatsRouteImport } from './routes/_authenticated/stats'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as AuthenticatedTemplatesRouteImport } from './routes/_authenticated/templates'
@@ -170,6 +171,11 @@ const AuthenticatedPipelineRoute = AuthenticatedPipelineRouteImport.update({
 const AuthenticatedQueueRoute = AuthenticatedQueueRouteImport.update({
   id: '/queue',
   path: '/queue',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedReplySpeedRoute = AuthenticatedReplySpeedRouteImport.update({
+  id: '/reply-speed',
+  path: '/reply-speed',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedStatsRoute = AuthenticatedStatsRouteImport.update({
@@ -324,6 +330,7 @@ export interface FileRoutesByFullPath {
   '/owners': typeof AuthenticatedOwnersRoute
   '/pipeline': typeof AuthenticatedPipelineRoute
   '/queue': typeof AuthenticatedQueueRoute
+  '/reply-speed': typeof AuthenticatedReplySpeedRoute
   '/stats': typeof AuthenticatedStatsRoute
   '/team': typeof AuthenticatedTeamRoute
   '/templates': typeof AuthenticatedTemplatesRoute
@@ -371,6 +378,7 @@ export interface FileRoutesByTo {
   '/owners': typeof AuthenticatedOwnersRoute
   '/pipeline': typeof AuthenticatedPipelineRoute
   '/queue': typeof AuthenticatedQueueRoute
+  '/reply-speed': typeof AuthenticatedReplySpeedRoute
   '/stats': typeof AuthenticatedStatsRoute
   '/team': typeof AuthenticatedTeamRoute
   '/templates': typeof AuthenticatedTemplatesRoute
@@ -420,6 +428,7 @@ export interface FileRoutesById {
   '/_authenticated/owners': typeof AuthenticatedOwnersRoute
   '/_authenticated/pipeline': typeof AuthenticatedPipelineRoute
   '/_authenticated/queue': typeof AuthenticatedQueueRoute
+  '/_authenticated/reply-speed': typeof AuthenticatedReplySpeedRoute
   '/_authenticated/stats': typeof AuthenticatedStatsRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/_authenticated/templates': typeof AuthenticatedTemplatesRoute
@@ -469,6 +478,7 @@ export interface FileRouteTypes {
     | '/owners'
     | '/pipeline'
     | '/queue'
+    | '/reply-speed'
     | '/stats'
     | '/team'
     | '/templates'
@@ -516,6 +526,7 @@ export interface FileRouteTypes {
     | '/owners'
     | '/pipeline'
     | '/queue'
+    | '/reply-speed'
     | '/stats'
     | '/team'
     | '/templates'
@@ -564,6 +575,7 @@ export interface FileRouteTypes {
     | '/_authenticated/owners'
     | '/_authenticated/pipeline'
     | '/_authenticated/queue'
+    | '/_authenticated/reply-speed'
     | '/_authenticated/stats'
     | '/_authenticated/team'
     | '/_authenticated/templates'
@@ -767,6 +779,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedQueueRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/reply-speed': {
+      id: '/_authenticated/reply-speed'
+      path: '/reply-speed'
+      fullPath: '/reply-speed'
+      preLoaderRoute: typeof AuthenticatedReplySpeedRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/stats': {
       id: '/_authenticated/stats'
       path: '/stats'
@@ -947,6 +966,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOwnersRoute: typeof AuthenticatedOwnersRoute
   AuthenticatedPipelineRoute: typeof AuthenticatedPipelineRoute
   AuthenticatedQueueRoute: typeof AuthenticatedQueueRoute
+  AuthenticatedReplySpeedRoute: typeof AuthenticatedReplySpeedRoute
   AuthenticatedStatsRoute: typeof AuthenticatedStatsRoute
   AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
   AuthenticatedTemplatesRoute: typeof AuthenticatedTemplatesRoute
@@ -984,6 +1004,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOwnersRoute: AuthenticatedOwnersRoute,
   AuthenticatedPipelineRoute: AuthenticatedPipelineRoute,
   AuthenticatedQueueRoute: AuthenticatedQueueRoute,
+  AuthenticatedReplySpeedRoute: AuthenticatedReplySpeedRoute,
   AuthenticatedStatsRoute: AuthenticatedStatsRoute,
   AuthenticatedTeamRoute: AuthenticatedTeamRoute,
   AuthenticatedTemplatesRoute: AuthenticatedTemplatesRoute,
