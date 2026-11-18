@@ -218,6 +218,15 @@ export type Database = {
       }
       app_settings: {
         Row: {
+          bank_details: string
+          company_trn: string
+          default_commission_percent: number
+          dld_admin_aed: number
+          dld_fee_percent: number
+          mortgage_reg_percent: number
+          trustee_fee_high_aed: number
+          trustee_fee_low_aed: number
+          vat_percent: number
           pool_after_minutes: number
           pool_daily_limit: number
           agency_id: string
@@ -239,6 +248,15 @@ export type Database = {
           working_days: string[]
         }
         Insert: {
+          bank_details?: string
+          company_trn?: string
+          default_commission_percent?: number
+          dld_admin_aed?: number
+          dld_fee_percent?: number
+          mortgage_reg_percent?: number
+          trustee_fee_high_aed?: number
+          trustee_fee_low_aed?: number
+          vat_percent?: number
           pool_after_minutes?: number
           pool_daily_limit?: number
           agency_id?: string
@@ -260,6 +278,15 @@ export type Database = {
           working_days?: string[]
         }
         Update: {
+          bank_details?: string
+          company_trn?: string
+          default_commission_percent?: number
+          dld_admin_aed?: number
+          dld_fee_percent?: number
+          mortgage_reg_percent?: number
+          trustee_fee_high_aed?: number
+          trustee_fee_low_aed?: number
+          vat_percent?: number
           pool_after_minutes?: number
           pool_daily_limit?: number
           agency_id?: string
@@ -422,8 +449,129 @@ export type Database = {
           },
         ]
       }
+      deal_invoices: {
+        Row: {
+          agency_id: string
+          deal_id: string
+          id: string
+          issued_at: string
+          issued_by: string | null
+          number: string
+          seq: number
+          snapshot: Json
+        }
+        Insert: {
+          agency_id: string
+          deal_id: string
+          id?: string
+          issued_at?: string
+          issued_by?: string | null
+          number: string
+          seq: number
+          snapshot: Json
+        }
+        Update: {
+          agency_id?: string
+          deal_id?: string
+          id?: string
+          issued_at?: string
+          issued_by?: string | null
+          number?: string
+          seq?: number
+          snapshot?: Json
+        }
+        Relationships: []
+      }
+      deal_payments: {
+        Row: {
+          agency_id: string
+          amount_aed: number
+          created_at: string
+          created_by: string | null
+          deal_id: string
+          id: string
+          kind: string
+          note: string
+          paid_on: string
+        }
+        Insert: {
+          agency_id: string
+          amount_aed: number
+          created_at?: string
+          created_by?: string | null
+          deal_id: string
+          id?: string
+          kind: string
+          note?: string
+          paid_on?: string
+        }
+        Update: {
+          agency_id?: string
+          amount_aed?: number
+          created_at?: string
+          created_by?: string | null
+          deal_id?: string
+          id?: string
+          kind?: string
+          note?: string
+          paid_on?: string
+        }
+        Relationships: []
+      }
+      deal_steps: {
+        Row: {
+          agency_id: string
+          deal_id: string
+          done_at: string | null
+          done_by: string | null
+          due_at: string | null
+          id: string
+          key: string
+          label: string
+          note: string
+          position: number
+          skipped: boolean
+          who: string
+        }
+        Insert: {
+          agency_id: string
+          deal_id: string
+          done_at?: string | null
+          done_by?: string | null
+          due_at?: string | null
+          id?: string
+          key: string
+          label: string
+          note?: string
+          position?: number
+          skipped?: boolean
+          who?: string
+        }
+        Update: {
+          agency_id?: string
+          deal_id?: string
+          done_at?: string | null
+          done_by?: string | null
+          due_at?: string | null
+          id?: string
+          key?: string
+          label?: string
+          note?: string
+          position?: number
+          skipped?: boolean
+          who?: string
+        }
+        Relationships: []
+      }
       deals: {
         Row: {
+          co_broker_name: string
+          co_broker_percent: number
+          loan_aed: number | null
+          seller_name: string
+          total_commission_percent: number | null
+          track: string
+          vat_percent: number
           agency_id: string
           agent_id: string
           ai_handled: boolean
@@ -439,6 +587,13 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          co_broker_name?: string
+          co_broker_percent?: number
+          loan_aed?: number | null
+          seller_name?: string
+          total_commission_percent?: number | null
+          track?: string
+          vat_percent?: number
           agency_id?: string
           agent_id?: string
           ai_handled?: boolean
@@ -454,6 +609,13 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          co_broker_name?: string
+          co_broker_percent?: number
+          loan_aed?: number | null
+          seller_name?: string
+          total_commission_percent?: number | null
+          track?: string
+          vat_percent?: number
           agency_id?: string
           agent_id?: string
           ai_handled?: boolean
@@ -1822,6 +1984,9 @@ export type Database = {
       }
     }
     Functions: {
+      can_access_deal: { Args: { _deal: string }; Returns: boolean }
+      can_edit_deal: { Args: { _deal: string }; Returns: boolean }
+      issue_deal_invoice: { Args: { _deal: string; _snapshot: Json }; Returns: string }
       claim_alert_deliveries: {
         Args: { _limit: number }
         Returns: {
