@@ -151,7 +151,7 @@ export function OwnerLayout() {
 
   return (
     <div className="min-h-screen bg-background">
-      <aside className="fixed inset-y-0 left-0 z-20 hidden w-60 border-r border-border bg-muted/40 lg:block">
+      <aside className="fixed inset-y-0 left-0 z-20 hidden w-60 border-r border-border bg-muted/40 lg:block print:hidden">
         {sidebar}
       </aside>
       <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
@@ -161,8 +161,8 @@ export function OwnerLayout() {
         </SheetContent>
       </Sheet>
 
-      <div className="flex min-h-screen flex-col lg:pl-60">
-        <header className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur">
+      <div className="flex min-h-screen flex-col lg:pl-60 print:pl-0">
+        <header className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur print:hidden">
           <div className="flex h-14 items-center gap-2 px-3 sm:px-6">
             <button
               type="button"
@@ -218,7 +218,7 @@ export function OwnerLayout() {
         <div className="flex-1">
           <Outlet />
         </div>
-        <footer className="py-4 text-center text-xs text-muted-foreground">
+        <footer className="py-4 text-center text-xs text-muted-foreground print:hidden">
           Powered by Elite Visions
         </footer>
       </div>
