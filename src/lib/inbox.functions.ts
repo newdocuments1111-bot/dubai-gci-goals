@@ -93,7 +93,7 @@ export const getRouting = createServerFn({ method: "POST" })
           .in("role", ["owner", "agent"]),
         context.supabase
           .from("app_settings")
-          .select("pool_after_minutes,pool_daily_limit")
+          .select("pool_after_minutes,pool_daily_limit,nurture_days")
           .eq("agency_id", access.agencyId)
           .maybeSingle(),
         context.supabase
@@ -108,6 +108,7 @@ export const getRouting = createServerFn({ method: "POST" })
       members: members ?? [],
       poolAfterMinutes: settings?.pool_after_minutes ?? 15,
       poolDailyLimit: settings?.pool_daily_limit ?? 5,
+      nurtureDays: settings?.nurture_days ?? 30,
       intake: intake ?? null,
     };
   });
@@ -168,6 +169,7 @@ export const savePoolSettings = createServerFn({ method: "POST" })
     z.object({
       pool_after_minutes: z.number().int().min(5).max(1440),
       pool_daily_limit: z.number().int().min(1).max(100),
+      nurture_days: z.number().int().min(0).max(365),
     }),
   )
   .handler(async ({ data, context }) => {

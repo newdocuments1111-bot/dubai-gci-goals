@@ -39,7 +39,7 @@ async function inviteLogin(context: Ctx, input: { agencyId: string; email: strin
 export const getTeam = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const access = await getAccess(context.supabase, context.userId);
   const [{ data: members, error }, { data: agency }] = await Promise.all([
-    context.supabase.from('agency_members').select('id,user_id,email,role,display_name,split_percent,annual_gci_goal_aed,created_at').eq('agency_id', access.agencyId).in('role', ['owner', 'agent']).order('created_at'),
+    context.supabase.from('agency_members').select('id,user_id,email,role,display_name,split_percent,annual_gci_goal_aed,created_at,team_leader_id,target_gci_month_aed,target_viewings_month,target_calls_month').eq('agency_id', access.agencyId).in('role', ['owner', 'agent']).order('created_at'),
     context.supabase.from('agencies').select('name,plan_logins,goal_setting_mode').eq('id', access.agencyId).single(),
   ]);
   if (error || !agency) throw new Error('Could not load your team.');
@@ -130,3 +130,42 @@ export const hqUpdateAgency = createServerFn({ method: 'POST' }).middleware([req
     if (error) throw new Error('Could not save the agency.');
     return { success: true as const };
   });
+
+/** Owner: who an agent reports to, and their monthly targets. A team leader sees and works their team's leads. */
+export const updateMemberTeam = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
+  .inputValidator(z.object({
+    id: z.string().uuid(), teamLeaderId: z.string().uuid().nullable(),
+    targetGci: z.number().min(0).max(1_000_000_000).nullable(), targetViewings: z.number().int().min(0).max(10_000).nullable(), targetCalls: z.number().int().min(0).max(100_000).nullable(),
+  }))
+  .handler(async ({ data, context }) => {
+    const access = await requireOwner(context.supabase, context.userId);
+    const { data: members } = await context.supabase.from('agency_members').select('id,user_id').eq('agency_id', access.agencyId).in('role', ['owner', 'agent']);
+    const member = (members ?? []).find(m => m.id === data.id);
+    if (!member) throw new Error('Member not found.');
+    if (data.teamLeaderId && (data.teamLeaderId === member.user_id || !(members ?? []).some(m => m.user_id === data.teamLeaderId))) throw new Error('Choose a team leader from your team.');
+    const { error } = await context.supabase.from('agency_members').update({ team_leader_id: data.teamLeaderId, target_gci_month_aed: data.targetGci, target_viewings_month: data.targetViewings, target_calls_month: data.targetCalls }).eq('id', data.id).eq('agency_id', access.agencyId);
+    if (error) throw new Error('Could not save targets.');
+    return { success: true };
+  });
+
+/** This month's GCI, viewings done and calls per person, against their targets. Owners see everyone; others see themselves and their team. */
+export const getTargets = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
+  const access = await getAccess(context.supabase, context.userId);
+  const { dubaiMonthStart } = await import('./sellers');
+  const { dealMath } = await import('./agency');
+  const since = dubaiMonthStart();
+  const [{ data: members }, { data: deals }, { data: viewings }, { data: calls }] = await Promise.all([
+    context.supabase.from('agency_members').select('user_id,display_name,email,split_percent,team_leader_id,target_gci_month_aed,target_viewings_month,target_calls_month').eq('agency_id', access.agencyId).in('role', ['owner', 'agent']),
+    context.supabase.from('deals').select('agent_id,price_aed,commission_percent,status,closed_at').eq('agency_id', access.agencyId).eq('status', 'closed').gte('closed_at', since),
+    context.supabase.from('viewings').select('status,done_at,leads(assigned_agent_id)').eq('agency_id', access.agencyId).eq('status', 'done').gte('done_at', since),
+    context.supabase.from('lead_calls').select('user_id').eq('agency_id', access.agencyId).gte('created_at', since).limit(20000),
+  ]);
+  const mine = (members ?? []).filter(m => access.isOwner || m.user_id === context.userId || m.team_leader_id === context.userId);
+  return mine.map(m => ({
+    userId: m.user_id, name: m.display_name || m.email || 'Agent', isMe: m.user_id === context.userId,
+    gci: (deals ?? []).filter(d => d.agent_id === m.user_id).reduce((s, d) => s + dealMath({ price: Number(d.price_aed), commissionPercent: Number(d.commission_percent), splitPercent: Number(m.split_percent) }).gci, 0),
+    viewings: (viewings ?? []).filter(v => (v.leads as { assigned_agent_id?: string | null } | null)?.assigned_agent_id === m.user_id).length,
+    calls: (calls ?? []).filter(c => c.user_id === m.user_id).length,
+    targetGci: m.target_gci_month_aed === null ? null : Number(m.target_gci_month_aed), targetViewings: m.target_viewings_month, targetCalls: m.target_calls_month,
+  }));
+});
