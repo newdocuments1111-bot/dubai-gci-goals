@@ -23,14 +23,17 @@ import { Route as AuthenticatedCampaignsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDealsRouteImport } from './routes/_authenticated/deals'
 import { Route as AuthenticatedFollowUpsRouteImport } from './routes/_authenticated/follow-ups'
+import { Route as AuthenticatedHolidayHomesRouteImport } from './routes/_authenticated/holiday-homes'
 import { Route as AuthenticatedHqRouteImport } from './routes/_authenticated/hq'
 import { Route as AuthenticatedInboxRouteImport } from './routes/_authenticated/inbox'
 import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
 import { Route as AuthenticatedListingsRouteImport } from './routes/_authenticated/listings'
+import { Route as AuthenticatedManagedRouteImport } from './routes/_authenticated/managed'
 import { Route as AuthenticatedMarketDataRouteImport } from './routes/_authenticated/market-data'
 import { Route as AuthenticatedMarketInsightsRouteImport } from './routes/_authenticated/market-insights'
 import { Route as AuthenticatedOwnersRouteImport } from './routes/_authenticated/owners'
 import { Route as AuthenticatedPipelineRouteImport } from './routes/_authenticated/pipeline'
+import { Route as AuthenticatedProjectsRouteImport } from './routes/_authenticated/projects'
 import { Route as AuthenticatedQueueRouteImport } from './routes/_authenticated/queue'
 import { Route as AuthenticatedReplySpeedRouteImport } from './routes/_authenticated/reply-speed'
 import { Route as AuthenticatedStatsRouteImport } from './routes/_authenticated/stats'
@@ -46,6 +49,7 @@ import { Route as AuthenticatedLeadLeadIdRouteImport } from './routes/_authentic
 import { Route as AuthenticatedLeadsImportRouteImport } from './routes/_authenticated/leads_.import'
 import { Route as AuthenticatedListingListingIdRouteImport } from './routes/_authenticated/listing.$listingId'
 import { Route as AuthenticatedOwnerWeeklyReportRouteImport } from './routes/_authenticated/owner.weekly-report'
+import { Route as AuthenticatedProjectProjectIdRouteImport } from './routes/_authenticated/project.$projectId'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
 import { Route as AuthenticatedSettingsAlertsRouteImport } from './routes/_authenticated/settings.alerts'
 import { Route as AuthenticatedSettingsDealsRouteImport } from './routes/_authenticated/settings.deals'
@@ -56,6 +60,8 @@ import { Route as ApiPublicAlertsDispatchRouteImport } from './routes/api/public
 import { Route as ApiPublicLeadsIntakeRouteImport } from './routes/api/public/leads/intake'
 import { Route as ApiPublicWhatsappOutboxRouteImport } from './routes/api/public/whatsapp/outbox'
 import { Route as ApiPublicWhatsappWebhookRouteImport } from './routes/api/public/whatsapp/webhook'
+import { Route as AuthenticatedHolidayHomesPayoutHomeIdMonthRouteImport } from './routes/_authenticated/holiday-homes_.payout.$homeId.$month'
+import { Route as AuthenticatedManagedStatementOwnerIdMonthRouteImport } from './routes/_authenticated/managed_.statement.$ownerId.$month'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -127,6 +133,12 @@ const AuthenticatedFollowUpsRoute = AuthenticatedFollowUpsRouteImport.update({
   path: '/follow-ups',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedHolidayHomesRoute =
+  AuthenticatedHolidayHomesRouteImport.update({
+    id: '/holiday-homes',
+    path: '/holiday-homes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedHqRoute = AuthenticatedHqRouteImport.update({
   id: '/hq',
   path: '/hq',
@@ -145,6 +157,11 @@ const AuthenticatedLeadsRoute = AuthenticatedLeadsRouteImport.update({
 const AuthenticatedListingsRoute = AuthenticatedListingsRouteImport.update({
   id: '/listings',
   path: '/listings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedManagedRoute = AuthenticatedManagedRouteImport.update({
+  id: '/managed',
+  path: '/managed',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedMarketDataRoute = AuthenticatedMarketDataRouteImport.update({
@@ -166,6 +183,11 @@ const AuthenticatedOwnersRoute = AuthenticatedOwnersRouteImport.update({
 const AuthenticatedPipelineRoute = AuthenticatedPipelineRouteImport.update({
   id: '/pipeline',
   path: '/pipeline',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedProjectsRoute = AuthenticatedProjectsRouteImport.update({
+  id: '/projects',
+  path: '/projects',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedQueueRoute = AuthenticatedQueueRouteImport.update({
@@ -249,6 +271,12 @@ const AuthenticatedOwnerWeeklyReportRoute =
     path: '/owner/weekly-report',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedProjectProjectIdRoute =
+  AuthenticatedProjectProjectIdRouteImport.update({
+    id: '/project/$projectId',
+    path: '/project/$projectId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSettingsIndexRoute =
   AuthenticatedSettingsIndexRouteImport.update({
     id: '/settings/',
@@ -306,6 +334,18 @@ const ApiPublicWhatsappWebhookRoute =
     path: '/api/public/whatsapp/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AuthenticatedHolidayHomesPayoutHomeIdMonthRoute =
+  AuthenticatedHolidayHomesPayoutHomeIdMonthRouteImport.update({
+    id: '/holiday-homes_/payout/$homeId/$month',
+    path: '/holiday-homes/payout/$homeId/$month',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedManagedStatementOwnerIdMonthRoute =
+  AuthenticatedManagedStatementOwnerIdMonthRouteImport.update({
+    id: '/managed_/statement/$ownerId/$month',
+    path: '/managed/statement/$ownerId/$month',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -321,14 +361,17 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/deals': typeof AuthenticatedDealsRoute
   '/follow-ups': typeof AuthenticatedFollowUpsRoute
+  '/holiday-homes': typeof AuthenticatedHolidayHomesRoute
   '/hq': typeof AuthenticatedHqRoute
   '/inbox': typeof AuthenticatedInboxRoute
   '/leads': typeof AuthenticatedLeadsRoute
   '/listings': typeof AuthenticatedListingsRoute
+  '/managed': typeof AuthenticatedManagedRoute
   '/market-data': typeof AuthenticatedMarketDataRoute
   '/market-insights': typeof AuthenticatedMarketInsightsRoute
   '/owners': typeof AuthenticatedOwnersRoute
   '/pipeline': typeof AuthenticatedPipelineRoute
+  '/projects': typeof AuthenticatedProjectsRoute
   '/queue': typeof AuthenticatedQueueRoute
   '/reply-speed': typeof AuthenticatedReplySpeedRoute
   '/stats': typeof AuthenticatedStatsRoute
@@ -344,6 +387,7 @@ export interface FileRoutesByFullPath {
   '/leads/import': typeof AuthenticatedLeadsImportRoute
   '/listing/$listingId': typeof AuthenticatedListingListingIdRoute
   '/owner/weekly-report': typeof AuthenticatedOwnerWeeklyReportRoute
+  '/project/$projectId': typeof AuthenticatedProjectProjectIdRoute
   '/settings/alerts': typeof AuthenticatedSettingsAlertsRoute
   '/settings/deals': typeof AuthenticatedSettingsDealsRoute
   '/settings/records': typeof AuthenticatedSettingsRecordsRoute
@@ -354,6 +398,8 @@ export interface FileRoutesByFullPath {
   '/api/public/leads/intake': typeof ApiPublicLeadsIntakeRoute
   '/api/public/whatsapp/outbox': typeof ApiPublicWhatsappOutboxRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
+  '/holiday-homes/payout/$homeId/$month': typeof AuthenticatedHolidayHomesPayoutHomeIdMonthRoute
+  '/managed/statement/$ownerId/$month': typeof AuthenticatedManagedStatementOwnerIdMonthRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -369,14 +415,17 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/deals': typeof AuthenticatedDealsRoute
   '/follow-ups': typeof AuthenticatedFollowUpsRoute
+  '/holiday-homes': typeof AuthenticatedHolidayHomesRoute
   '/hq': typeof AuthenticatedHqRoute
   '/inbox': typeof AuthenticatedInboxRoute
   '/leads': typeof AuthenticatedLeadsRoute
   '/listings': typeof AuthenticatedListingsRoute
+  '/managed': typeof AuthenticatedManagedRoute
   '/market-data': typeof AuthenticatedMarketDataRoute
   '/market-insights': typeof AuthenticatedMarketInsightsRoute
   '/owners': typeof AuthenticatedOwnersRoute
   '/pipeline': typeof AuthenticatedPipelineRoute
+  '/projects': typeof AuthenticatedProjectsRoute
   '/queue': typeof AuthenticatedQueueRoute
   '/reply-speed': typeof AuthenticatedReplySpeedRoute
   '/stats': typeof AuthenticatedStatsRoute
@@ -392,6 +441,7 @@ export interface FileRoutesByTo {
   '/leads/import': typeof AuthenticatedLeadsImportRoute
   '/listing/$listingId': typeof AuthenticatedListingListingIdRoute
   '/owner/weekly-report': typeof AuthenticatedOwnerWeeklyReportRoute
+  '/project/$projectId': typeof AuthenticatedProjectProjectIdRoute
   '/settings/alerts': typeof AuthenticatedSettingsAlertsRoute
   '/settings/deals': typeof AuthenticatedSettingsDealsRoute
   '/settings/records': typeof AuthenticatedSettingsRecordsRoute
@@ -402,6 +452,8 @@ export interface FileRoutesByTo {
   '/api/public/leads/intake': typeof ApiPublicLeadsIntakeRoute
   '/api/public/whatsapp/outbox': typeof ApiPublicWhatsappOutboxRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
+  '/holiday-homes/payout/$homeId/$month': typeof AuthenticatedHolidayHomesPayoutHomeIdMonthRoute
+  '/managed/statement/$ownerId/$month': typeof AuthenticatedManagedStatementOwnerIdMonthRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -419,14 +471,17 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/deals': typeof AuthenticatedDealsRoute
   '/_authenticated/follow-ups': typeof AuthenticatedFollowUpsRoute
+  '/_authenticated/holiday-homes': typeof AuthenticatedHolidayHomesRoute
   '/_authenticated/hq': typeof AuthenticatedHqRoute
   '/_authenticated/inbox': typeof AuthenticatedInboxRoute
   '/_authenticated/leads': typeof AuthenticatedLeadsRoute
   '/_authenticated/listings': typeof AuthenticatedListingsRoute
+  '/_authenticated/managed': typeof AuthenticatedManagedRoute
   '/_authenticated/market-data': typeof AuthenticatedMarketDataRoute
   '/_authenticated/market-insights': typeof AuthenticatedMarketInsightsRoute
   '/_authenticated/owners': typeof AuthenticatedOwnersRoute
   '/_authenticated/pipeline': typeof AuthenticatedPipelineRoute
+  '/_authenticated/projects': typeof AuthenticatedProjectsRoute
   '/_authenticated/queue': typeof AuthenticatedQueueRoute
   '/_authenticated/reply-speed': typeof AuthenticatedReplySpeedRoute
   '/_authenticated/stats': typeof AuthenticatedStatsRoute
@@ -442,6 +497,7 @@ export interface FileRoutesById {
   '/_authenticated/leads_/import': typeof AuthenticatedLeadsImportRoute
   '/_authenticated/listing/$listingId': typeof AuthenticatedListingListingIdRoute
   '/_authenticated/owner/weekly-report': typeof AuthenticatedOwnerWeeklyReportRoute
+  '/_authenticated/project/$projectId': typeof AuthenticatedProjectProjectIdRoute
   '/_authenticated/settings/alerts': typeof AuthenticatedSettingsAlertsRoute
   '/_authenticated/settings/deals': typeof AuthenticatedSettingsDealsRoute
   '/_authenticated/settings/records': typeof AuthenticatedSettingsRecordsRoute
@@ -452,6 +508,8 @@ export interface FileRoutesById {
   '/api/public/leads/intake': typeof ApiPublicLeadsIntakeRoute
   '/api/public/whatsapp/outbox': typeof ApiPublicWhatsappOutboxRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
+  '/_authenticated/holiday-homes_/payout/$homeId/$month': typeof AuthenticatedHolidayHomesPayoutHomeIdMonthRoute
+  '/_authenticated/managed_/statement/$ownerId/$month': typeof AuthenticatedManagedStatementOwnerIdMonthRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -469,14 +527,17 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/deals'
     | '/follow-ups'
+    | '/holiday-homes'
     | '/hq'
     | '/inbox'
     | '/leads'
     | '/listings'
+    | '/managed'
     | '/market-data'
     | '/market-insights'
     | '/owners'
     | '/pipeline'
+    | '/projects'
     | '/queue'
     | '/reply-speed'
     | '/stats'
@@ -492,6 +553,7 @@ export interface FileRouteTypes {
     | '/leads/import'
     | '/listing/$listingId'
     | '/owner/weekly-report'
+    | '/project/$projectId'
     | '/settings/alerts'
     | '/settings/deals'
     | '/settings/records'
@@ -502,6 +564,8 @@ export interface FileRouteTypes {
     | '/api/public/leads/intake'
     | '/api/public/whatsapp/outbox'
     | '/api/public/whatsapp/webhook'
+    | '/holiday-homes/payout/$homeId/$month'
+    | '/managed/statement/$ownerId/$month'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -517,14 +581,17 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/deals'
     | '/follow-ups'
+    | '/holiday-homes'
     | '/hq'
     | '/inbox'
     | '/leads'
     | '/listings'
+    | '/managed'
     | '/market-data'
     | '/market-insights'
     | '/owners'
     | '/pipeline'
+    | '/projects'
     | '/queue'
     | '/reply-speed'
     | '/stats'
@@ -540,6 +607,7 @@ export interface FileRouteTypes {
     | '/leads/import'
     | '/listing/$listingId'
     | '/owner/weekly-report'
+    | '/project/$projectId'
     | '/settings/alerts'
     | '/settings/deals'
     | '/settings/records'
@@ -550,6 +618,8 @@ export interface FileRouteTypes {
     | '/api/public/leads/intake'
     | '/api/public/whatsapp/outbox'
     | '/api/public/whatsapp/webhook'
+    | '/holiday-homes/payout/$homeId/$month'
+    | '/managed/statement/$ownerId/$month'
   id:
     | '__root__'
     | '/'
@@ -566,14 +636,17 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/deals'
     | '/_authenticated/follow-ups'
+    | '/_authenticated/holiday-homes'
     | '/_authenticated/hq'
     | '/_authenticated/inbox'
     | '/_authenticated/leads'
     | '/_authenticated/listings'
+    | '/_authenticated/managed'
     | '/_authenticated/market-data'
     | '/_authenticated/market-insights'
     | '/_authenticated/owners'
     | '/_authenticated/pipeline'
+    | '/_authenticated/projects'
     | '/_authenticated/queue'
     | '/_authenticated/reply-speed'
     | '/_authenticated/stats'
@@ -589,6 +662,7 @@ export interface FileRouteTypes {
     | '/_authenticated/leads_/import'
     | '/_authenticated/listing/$listingId'
     | '/_authenticated/owner/weekly-report'
+    | '/_authenticated/project/$projectId'
     | '/_authenticated/settings/alerts'
     | '/_authenticated/settings/deals'
     | '/_authenticated/settings/records'
@@ -599,6 +673,8 @@ export interface FileRouteTypes {
     | '/api/public/leads/intake'
     | '/api/public/whatsapp/outbox'
     | '/api/public/whatsapp/webhook'
+    | '/_authenticated/holiday-homes_/payout/$homeId/$month'
+    | '/_authenticated/managed_/statement/$ownerId/$month'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -716,6 +792,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFollowUpsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/holiday-homes': {
+      id: '/_authenticated/holiday-homes'
+      path: '/holiday-homes'
+      fullPath: '/holiday-homes'
+      preLoaderRoute: typeof AuthenticatedHolidayHomesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/hq': {
       id: '/_authenticated/hq'
       path: '/hq'
@@ -744,6 +827,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedListingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/managed': {
+      id: '/_authenticated/managed'
+      path: '/managed'
+      fullPath: '/managed'
+      preLoaderRoute: typeof AuthenticatedManagedRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/market-data': {
       id: '/_authenticated/market-data'
       path: '/market-data'
@@ -770,6 +860,13 @@ declare module '@tanstack/react-router' {
       path: '/pipeline'
       fullPath: '/pipeline'
       preLoaderRoute: typeof AuthenticatedPipelineRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/projects': {
+      id: '/_authenticated/projects'
+      path: '/projects'
+      fullPath: '/projects'
+      preLoaderRoute: typeof AuthenticatedProjectsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/queue': {
@@ -877,6 +974,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOwnerWeeklyReportRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/project/$projectId': {
+      id: '/_authenticated/project/$projectId'
+      path: '/project/$projectId'
+      fullPath: '/project/$projectId'
+      preLoaderRoute: typeof AuthenticatedProjectProjectIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/settings/': {
       id: '/_authenticated/settings/'
       path: '/settings'
@@ -947,6 +1051,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWhatsappWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/holiday-homes_/payout/$homeId/$month': {
+      id: '/_authenticated/holiday-homes_/payout/$homeId/$month'
+      path: '/holiday-homes/payout/$homeId/$month'
+      fullPath: '/holiday-homes/payout/$homeId/$month'
+      preLoaderRoute: typeof AuthenticatedHolidayHomesPayoutHomeIdMonthRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/managed_/statement/$ownerId/$month': {
+      id: '/_authenticated/managed_/statement/$ownerId/$month'
+      path: '/managed/statement/$ownerId/$month'
+      fullPath: '/managed/statement/$ownerId/$month'
+      preLoaderRoute: typeof AuthenticatedManagedStatementOwnerIdMonthRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -957,14 +1075,17 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDealsRoute: typeof AuthenticatedDealsRoute
   AuthenticatedFollowUpsRoute: typeof AuthenticatedFollowUpsRoute
+  AuthenticatedHolidayHomesRoute: typeof AuthenticatedHolidayHomesRoute
   AuthenticatedHqRoute: typeof AuthenticatedHqRoute
   AuthenticatedInboxRoute: typeof AuthenticatedInboxRoute
   AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
   AuthenticatedListingsRoute: typeof AuthenticatedListingsRoute
+  AuthenticatedManagedRoute: typeof AuthenticatedManagedRoute
   AuthenticatedMarketDataRoute: typeof AuthenticatedMarketDataRoute
   AuthenticatedMarketInsightsRoute: typeof AuthenticatedMarketInsightsRoute
   AuthenticatedOwnersRoute: typeof AuthenticatedOwnersRoute
   AuthenticatedPipelineRoute: typeof AuthenticatedPipelineRoute
+  AuthenticatedProjectsRoute: typeof AuthenticatedProjectsRoute
   AuthenticatedQueueRoute: typeof AuthenticatedQueueRoute
   AuthenticatedReplySpeedRoute: typeof AuthenticatedReplySpeedRoute
   AuthenticatedStatsRoute: typeof AuthenticatedStatsRoute
@@ -980,12 +1101,15 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedLeadsImportRoute: typeof AuthenticatedLeadsImportRoute
   AuthenticatedListingListingIdRoute: typeof AuthenticatedListingListingIdRoute
   AuthenticatedOwnerWeeklyReportRoute: typeof AuthenticatedOwnerWeeklyReportRoute
+  AuthenticatedProjectProjectIdRoute: typeof AuthenticatedProjectProjectIdRoute
   AuthenticatedSettingsAlertsRoute: typeof AuthenticatedSettingsAlertsRoute
   AuthenticatedSettingsDealsRoute: typeof AuthenticatedSettingsDealsRoute
   AuthenticatedSettingsRecordsRoute: typeof AuthenticatedSettingsRecordsRoute
   AuthenticatedSettingsRoutingRoute: typeof AuthenticatedSettingsRoutingRoute
   AuthenticatedSettingsWhatsappRoute: typeof AuthenticatedSettingsWhatsappRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
+  AuthenticatedHolidayHomesPayoutHomeIdMonthRoute: typeof AuthenticatedHolidayHomesPayoutHomeIdMonthRoute
+  AuthenticatedManagedStatementOwnerIdMonthRoute: typeof AuthenticatedManagedStatementOwnerIdMonthRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -995,14 +1119,17 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDealsRoute: AuthenticatedDealsRoute,
   AuthenticatedFollowUpsRoute: AuthenticatedFollowUpsRoute,
+  AuthenticatedHolidayHomesRoute: AuthenticatedHolidayHomesRoute,
   AuthenticatedHqRoute: AuthenticatedHqRoute,
   AuthenticatedInboxRoute: AuthenticatedInboxRoute,
   AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
   AuthenticatedListingsRoute: AuthenticatedListingsRoute,
+  AuthenticatedManagedRoute: AuthenticatedManagedRoute,
   AuthenticatedMarketDataRoute: AuthenticatedMarketDataRoute,
   AuthenticatedMarketInsightsRoute: AuthenticatedMarketInsightsRoute,
   AuthenticatedOwnersRoute: AuthenticatedOwnersRoute,
   AuthenticatedPipelineRoute: AuthenticatedPipelineRoute,
+  AuthenticatedProjectsRoute: AuthenticatedProjectsRoute,
   AuthenticatedQueueRoute: AuthenticatedQueueRoute,
   AuthenticatedReplySpeedRoute: AuthenticatedReplySpeedRoute,
   AuthenticatedStatsRoute: AuthenticatedStatsRoute,
@@ -1018,12 +1145,17 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedLeadsImportRoute: AuthenticatedLeadsImportRoute,
   AuthenticatedListingListingIdRoute: AuthenticatedListingListingIdRoute,
   AuthenticatedOwnerWeeklyReportRoute: AuthenticatedOwnerWeeklyReportRoute,
+  AuthenticatedProjectProjectIdRoute: AuthenticatedProjectProjectIdRoute,
   AuthenticatedSettingsAlertsRoute: AuthenticatedSettingsAlertsRoute,
   AuthenticatedSettingsDealsRoute: AuthenticatedSettingsDealsRoute,
   AuthenticatedSettingsRecordsRoute: AuthenticatedSettingsRecordsRoute,
   AuthenticatedSettingsRoutingRoute: AuthenticatedSettingsRoutingRoute,
   AuthenticatedSettingsWhatsappRoute: AuthenticatedSettingsWhatsappRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
+  AuthenticatedHolidayHomesPayoutHomeIdMonthRoute:
+    AuthenticatedHolidayHomesPayoutHomeIdMonthRoute,
+  AuthenticatedManagedStatementOwnerIdMonthRoute:
+    AuthenticatedManagedStatementOwnerIdMonthRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
