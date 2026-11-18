@@ -2,18 +2,21 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { Copy } from "lucide-react";
+import { CheckCircle2, Circle, Copy, FileText } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { listLeadEvents, updateLeadPipeline } from "@/lib/pipeline.functions";
+import { getPaperwork } from "@/lib/deals.functions";
+import { PaperworkDialog } from "@/components/PaperworkDialog";
 import {
   OUTCOMES,
   STAGES,
   TRACKS,
   checklistOf,
   describeEvent,
+  documentForItem,
   doneItems,
   fillTemplate,
   lostNeedsReason,
@@ -61,6 +64,15 @@ export function LeadStepDialog({
     queryKey: ["lead-events", lead.id],
     queryFn: () => listLeadEvents({ data: lead.id }),
   });
+  // From step 9 the checklist asks for documents: check them against the client's Document Vault.
+  const paperworkStep = stage >= 9;
+  const vault = useQuery({
+    queryKey: ["paperwork", lead.id, ""],
+    queryFn: () => getPaperwork({ data: { leadId: lead.id } }),
+    enabled: paperworkStep,
+  });
+  const vaultFiles = vault.data?.vaultFiles ?? [];
+  const [paperworkOpen, setPaperworkOpen] = useState(false);
 
   const rule = ruleFor(rules, stage, track);
   const stageChanged = stage !== lead.stage;
@@ -226,16 +238,46 @@ export function LeadStepDialog({
                   The checklist resets when the step changes.
                 </p>
               )}
-              {checklistOf(rule).map((item) => (
-                <label key={item} className="flex items-center gap-2 text-sm">
-                  <Checkbox
-                    checked={!stageChanged && done.includes(item)}
-                    disabled={stageChanged}
-                    onCheckedChange={() => setDone(toggleItem(done, item))}
-                  />
-                  {item}
-                </label>
-              ))}
+              {checklistOf(rule).map((item) => {
+                const inVault = paperworkStep ? documentForItem(item, vaultFiles) : null;
+                return (
+                  <label key={item} className="flex items-center gap-2 text-sm">
+                    <Checkbox
+                      checked={!stageChanged && done.includes(item)}
+                      disabled={stageChanged}
+                      onCheckedChange={() => setDone(toggleItem(done, item))}
+                    />
+                    <span className="min-w-0 flex-1">{item}</span>
+                    {inVault === true && (
+                      <span className="flex items-center gap-1 text-xs text-primary">
+                        <CheckCircle2 className="size-3.5" aria-hidden /> in vault
+                      </span>
+                    )}
+                    {inVault === false && (
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Circle className="size-3.5" aria-hidden /> not in vault
+                      </span>
+                    )}
+                  </label>
+                );
+              })}
+            </div>
+          )}
+          {paperworkStep && (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setPaperworkOpen(true)}
+              >
+                <FileText className="size-4" />
+                Prepare paperwork (Form F / DLD checklist)
+              </Button>
+              <span className="text-xs text-muted-foreground">
+                Documents are checked against this client&apos;s Document Vault.
+                {vault.data && !vault.data.lead && " No client linked."}
+              </span>
             </div>
           )}
         </section>
@@ -302,6 +344,9 @@ export function LeadStepDialog({
           </Button>
         </div>
       </DialogContent>
+      {paperworkOpen && (
+        <PaperworkDialog leadId={lead.id} onClose={() => setPaperworkOpen(false)} />
+      )}
     </Dialog>
   );
 }
