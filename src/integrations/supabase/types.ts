@@ -1688,6 +1688,78 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          agency_id: string
+          at: string
+          detail: string
+          entity: string
+          entity_id: string | null
+          id: number
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          agency_id: string
+          at?: string
+          detail?: string
+          entity: string
+          entity_id?: string | null
+          id?: never
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          agency_id?: string
+          at?: string
+          detail?: string
+          entity?: string
+          entity_id?: string | null
+          id?: never
+        }
+        Relationships: []
+      }
+      campaigns: {
+        Row: {
+          agency_id: string
+          audience: string
+          created_at: string
+          created_by: string | null
+          id: string
+          lead_count: number
+          name: string
+          skipped_count: number
+          status: string
+          steps: Json
+        }
+        Insert: {
+          agency_id: string
+          audience?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          lead_count?: number
+          name: string
+          skipped_count?: number
+          status?: string
+          steps?: Json
+        }
+        Update: {
+          agency_id?: string
+          audience?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          lead_count?: number
+          name?: string
+          skipped_count?: number
+          status?: string
+          steps?: Json
+        }
+        Relationships: []
+      }
       saved_lists: {
         Row: {
           agency_id: string
@@ -1877,6 +1949,8 @@ export type Database = {
           approved_by: string | null
           attempts: number
           block_reason: string | null
+          campaign_id: string | null
+          campaign_step: number | null
           category: string
           chat_message_id: string | null
           claimed_until: string | null
@@ -1902,6 +1976,8 @@ export type Database = {
           approved_by?: string | null
           attempts?: number
           block_reason?: string | null
+          campaign_id?: string | null
+          campaign_step?: number | null
           category?: string
           chat_message_id?: string | null
           claimed_until?: string | null
@@ -1927,6 +2003,8 @@ export type Database = {
           approved_by?: string | null
           attempts?: number
           block_reason?: string | null
+          campaign_id?: string | null
+          campaign_step?: number | null
           category?: string
           chat_message_id?: string | null
           claimed_until?: string | null
@@ -2210,6 +2288,8 @@ export type Database = {
           approved_by: string | null
           attempts: number
           block_reason: string | null
+          campaign_id: string | null
+          campaign_step: number | null
           category: string
           chat_message_id: string | null
           claimed_until: string | null
