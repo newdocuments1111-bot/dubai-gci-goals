@@ -19,6 +19,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as AuthenticatedAdsRouteImport } from './routes/_authenticated/ads'
 import { Route as AuthenticatedAiReplyRulesRouteImport } from './routes/_authenticated/ai-reply-rules'
+import { Route as AuthenticatedCampaignsRouteImport } from './routes/_authenticated/campaigns'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDealsRouteImport } from './routes/_authenticated/deals'
 import { Route as AuthenticatedFollowUpsRouteImport } from './routes/_authenticated/follow-ups'
@@ -37,6 +38,7 @@ import { Route as AuthenticatedTemplatesRouteImport } from './routes/_authentica
 import { Route as AuthenticatedTestChatRouteImport } from './routes/_authenticated/test-chat'
 import { Route as AuthenticatedUaeKnowledgeRouteImport } from './routes/_authenticated/uae-knowledge'
 import { Route as AuthenticatedViewingsRouteImport } from './routes/_authenticated/viewings'
+import { Route as AuthenticatedBrochureListingIdRouteImport } from './routes/_authenticated/brochure.$listingId'
 import { Route as AuthenticatedDealDealIdRouteImport } from './routes/_authenticated/deal.$dealId'
 import { Route as AuthenticatedInvoiceInvoiceIdRouteImport } from './routes/_authenticated/invoice.$invoiceId'
 import { Route as AuthenticatedLeadLeadIdRouteImport } from './routes/_authenticated/lead.$leadId'
@@ -46,6 +48,7 @@ import { Route as AuthenticatedOwnerWeeklyReportRouteImport } from './routes/_au
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
 import { Route as AuthenticatedSettingsAlertsRouteImport } from './routes/_authenticated/settings.alerts'
 import { Route as AuthenticatedSettingsDealsRouteImport } from './routes/_authenticated/settings.deals'
+import { Route as AuthenticatedSettingsRecordsRouteImport } from './routes/_authenticated/settings.records'
 import { Route as AuthenticatedSettingsRoutingRouteImport } from './routes/_authenticated/settings.routing'
 import { Route as AuthenticatedSettingsWhatsappRouteImport } from './routes/_authenticated/settings.whatsapp'
 import { Route as ApiPublicAlertsDispatchRouteImport } from './routes/api/public/alerts/dispatch'
@@ -103,6 +106,11 @@ const AuthenticatedAiReplyRulesRoute =
     path: '/ai-reply-rules',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedCampaignsRoute = AuthenticatedCampaignsRouteImport.update({
+  id: '/campaigns',
+  path: '/campaigns',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -195,6 +203,12 @@ const AuthenticatedViewingsRoute = AuthenticatedViewingsRouteImport.update({
   path: '/viewings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedBrochureListingIdRoute =
+  AuthenticatedBrochureListingIdRouteImport.update({
+    id: '/brochure/$listingId',
+    path: '/brochure/$listingId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDealDealIdRoute = AuthenticatedDealDealIdRouteImport.update({
   id: '/deal/$dealId',
   path: '/deal/$dealId',
@@ -247,6 +261,12 @@ const AuthenticatedSettingsDealsRoute =
     path: '/settings/deals',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSettingsRecordsRoute =
+  AuthenticatedSettingsRecordsRouteImport.update({
+    id: '/settings/records',
+    path: '/settings/records',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSettingsRoutingRoute =
   AuthenticatedSettingsRoutingRouteImport.update({
     id: '/settings/routing',
@@ -291,6 +311,7 @@ export interface FileRoutesByFullPath {
   '/welcome': typeof WelcomeRoute
   '/ads': typeof AuthenticatedAdsRoute
   '/ai-reply-rules': typeof AuthenticatedAiReplyRulesRoute
+  '/campaigns': typeof AuthenticatedCampaignsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/deals': typeof AuthenticatedDealsRoute
   '/follow-ups': typeof AuthenticatedFollowUpsRoute
@@ -309,6 +330,7 @@ export interface FileRoutesByFullPath {
   '/test-chat': typeof AuthenticatedTestChatRoute
   '/uae-knowledge': typeof AuthenticatedUaeKnowledgeRoute
   '/viewings': typeof AuthenticatedViewingsRoute
+  '/brochure/$listingId': typeof AuthenticatedBrochureListingIdRoute
   '/deal/$dealId': typeof AuthenticatedDealDealIdRoute
   '/invoice/$invoiceId': typeof AuthenticatedInvoiceInvoiceIdRoute
   '/lead/$leadId': typeof AuthenticatedLeadLeadIdRoute
@@ -317,6 +339,7 @@ export interface FileRoutesByFullPath {
   '/owner/weekly-report': typeof AuthenticatedOwnerWeeklyReportRoute
   '/settings/alerts': typeof AuthenticatedSettingsAlertsRoute
   '/settings/deals': typeof AuthenticatedSettingsDealsRoute
+  '/settings/records': typeof AuthenticatedSettingsRecordsRoute
   '/settings/routing': typeof AuthenticatedSettingsRoutingRoute
   '/settings/whatsapp': typeof AuthenticatedSettingsWhatsappRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
@@ -335,6 +358,7 @@ export interface FileRoutesByTo {
   '/welcome': typeof WelcomeRoute
   '/ads': typeof AuthenticatedAdsRoute
   '/ai-reply-rules': typeof AuthenticatedAiReplyRulesRoute
+  '/campaigns': typeof AuthenticatedCampaignsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/deals': typeof AuthenticatedDealsRoute
   '/follow-ups': typeof AuthenticatedFollowUpsRoute
@@ -353,6 +377,7 @@ export interface FileRoutesByTo {
   '/test-chat': typeof AuthenticatedTestChatRoute
   '/uae-knowledge': typeof AuthenticatedUaeKnowledgeRoute
   '/viewings': typeof AuthenticatedViewingsRoute
+  '/brochure/$listingId': typeof AuthenticatedBrochureListingIdRoute
   '/deal/$dealId': typeof AuthenticatedDealDealIdRoute
   '/invoice/$invoiceId': typeof AuthenticatedInvoiceInvoiceIdRoute
   '/lead/$leadId': typeof AuthenticatedLeadLeadIdRoute
@@ -361,6 +386,7 @@ export interface FileRoutesByTo {
   '/owner/weekly-report': typeof AuthenticatedOwnerWeeklyReportRoute
   '/settings/alerts': typeof AuthenticatedSettingsAlertsRoute
   '/settings/deals': typeof AuthenticatedSettingsDealsRoute
+  '/settings/records': typeof AuthenticatedSettingsRecordsRoute
   '/settings/routing': typeof AuthenticatedSettingsRoutingRoute
   '/settings/whatsapp': typeof AuthenticatedSettingsWhatsappRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
@@ -381,6 +407,7 @@ export interface FileRoutesById {
   '/welcome': typeof WelcomeRoute
   '/_authenticated/ads': typeof AuthenticatedAdsRoute
   '/_authenticated/ai-reply-rules': typeof AuthenticatedAiReplyRulesRoute
+  '/_authenticated/campaigns': typeof AuthenticatedCampaignsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/deals': typeof AuthenticatedDealsRoute
   '/_authenticated/follow-ups': typeof AuthenticatedFollowUpsRoute
@@ -399,6 +426,7 @@ export interface FileRoutesById {
   '/_authenticated/test-chat': typeof AuthenticatedTestChatRoute
   '/_authenticated/uae-knowledge': typeof AuthenticatedUaeKnowledgeRoute
   '/_authenticated/viewings': typeof AuthenticatedViewingsRoute
+  '/_authenticated/brochure/$listingId': typeof AuthenticatedBrochureListingIdRoute
   '/_authenticated/deal/$dealId': typeof AuthenticatedDealDealIdRoute
   '/_authenticated/invoice/$invoiceId': typeof AuthenticatedInvoiceInvoiceIdRoute
   '/_authenticated/lead/$leadId': typeof AuthenticatedLeadLeadIdRoute
@@ -407,6 +435,7 @@ export interface FileRoutesById {
   '/_authenticated/owner/weekly-report': typeof AuthenticatedOwnerWeeklyReportRoute
   '/_authenticated/settings/alerts': typeof AuthenticatedSettingsAlertsRoute
   '/_authenticated/settings/deals': typeof AuthenticatedSettingsDealsRoute
+  '/_authenticated/settings/records': typeof AuthenticatedSettingsRecordsRoute
   '/_authenticated/settings/routing': typeof AuthenticatedSettingsRoutingRoute
   '/_authenticated/settings/whatsapp': typeof AuthenticatedSettingsWhatsappRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
@@ -427,6 +456,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/ads'
     | '/ai-reply-rules'
+    | '/campaigns'
     | '/dashboard'
     | '/deals'
     | '/follow-ups'
@@ -445,6 +475,7 @@ export interface FileRouteTypes {
     | '/test-chat'
     | '/uae-knowledge'
     | '/viewings'
+    | '/brochure/$listingId'
     | '/deal/$dealId'
     | '/invoice/$invoiceId'
     | '/lead/$leadId'
@@ -453,6 +484,7 @@ export interface FileRouteTypes {
     | '/owner/weekly-report'
     | '/settings/alerts'
     | '/settings/deals'
+    | '/settings/records'
     | '/settings/routing'
     | '/settings/whatsapp'
     | '/settings/'
@@ -471,6 +503,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/ads'
     | '/ai-reply-rules'
+    | '/campaigns'
     | '/dashboard'
     | '/deals'
     | '/follow-ups'
@@ -489,6 +522,7 @@ export interface FileRouteTypes {
     | '/test-chat'
     | '/uae-knowledge'
     | '/viewings'
+    | '/brochure/$listingId'
     | '/deal/$dealId'
     | '/invoice/$invoiceId'
     | '/lead/$leadId'
@@ -497,6 +531,7 @@ export interface FileRouteTypes {
     | '/owner/weekly-report'
     | '/settings/alerts'
     | '/settings/deals'
+    | '/settings/records'
     | '/settings/routing'
     | '/settings/whatsapp'
     | '/settings'
@@ -516,6 +551,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/_authenticated/ads'
     | '/_authenticated/ai-reply-rules'
+    | '/_authenticated/campaigns'
     | '/_authenticated/dashboard'
     | '/_authenticated/deals'
     | '/_authenticated/follow-ups'
@@ -534,6 +570,7 @@ export interface FileRouteTypes {
     | '/_authenticated/test-chat'
     | '/_authenticated/uae-knowledge'
     | '/_authenticated/viewings'
+    | '/_authenticated/brochure/$listingId'
     | '/_authenticated/deal/$dealId'
     | '/_authenticated/invoice/$invoiceId'
     | '/_authenticated/lead/$leadId'
@@ -542,6 +579,7 @@ export interface FileRouteTypes {
     | '/_authenticated/owner/weekly-report'
     | '/_authenticated/settings/alerts'
     | '/_authenticated/settings/deals'
+    | '/_authenticated/settings/records'
     | '/_authenticated/settings/routing'
     | '/_authenticated/settings/whatsapp'
     | '/_authenticated/settings/'
@@ -636,6 +674,13 @@ declare module '@tanstack/react-router' {
       path: '/ai-reply-rules'
       fullPath: '/ai-reply-rules'
       preLoaderRoute: typeof AuthenticatedAiReplyRulesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/campaigns': {
+      id: '/_authenticated/campaigns'
+      path: '/campaigns'
+      fullPath: '/campaigns'
+      preLoaderRoute: typeof AuthenticatedCampaignsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -764,6 +809,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedViewingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/brochure/$listingId': {
+      id: '/_authenticated/brochure/$listingId'
+      path: '/brochure/$listingId'
+      fullPath: '/brochure/$listingId'
+      preLoaderRoute: typeof AuthenticatedBrochureListingIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/deal/$dealId': {
       id: '/_authenticated/deal/$dealId'
       path: '/deal/$dealId'
@@ -827,6 +879,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsDealsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/settings/records': {
+      id: '/_authenticated/settings/records'
+      path: '/settings/records'
+      fullPath: '/settings/records'
+      preLoaderRoute: typeof AuthenticatedSettingsRecordsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/settings/routing': {
       id: '/_authenticated/settings/routing'
       path: '/settings/routing'
@@ -875,6 +934,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdsRoute: typeof AuthenticatedAdsRoute
   AuthenticatedAiReplyRulesRoute: typeof AuthenticatedAiReplyRulesRoute
+  AuthenticatedCampaignsRoute: typeof AuthenticatedCampaignsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDealsRoute: typeof AuthenticatedDealsRoute
   AuthenticatedFollowUpsRoute: typeof AuthenticatedFollowUpsRoute
@@ -893,6 +953,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedTestChatRoute: typeof AuthenticatedTestChatRoute
   AuthenticatedUaeKnowledgeRoute: typeof AuthenticatedUaeKnowledgeRoute
   AuthenticatedViewingsRoute: typeof AuthenticatedViewingsRoute
+  AuthenticatedBrochureListingIdRoute: typeof AuthenticatedBrochureListingIdRoute
   AuthenticatedDealDealIdRoute: typeof AuthenticatedDealDealIdRoute
   AuthenticatedInvoiceInvoiceIdRoute: typeof AuthenticatedInvoiceInvoiceIdRoute
   AuthenticatedLeadLeadIdRoute: typeof AuthenticatedLeadLeadIdRoute
@@ -901,6 +962,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOwnerWeeklyReportRoute: typeof AuthenticatedOwnerWeeklyReportRoute
   AuthenticatedSettingsAlertsRoute: typeof AuthenticatedSettingsAlertsRoute
   AuthenticatedSettingsDealsRoute: typeof AuthenticatedSettingsDealsRoute
+  AuthenticatedSettingsRecordsRoute: typeof AuthenticatedSettingsRecordsRoute
   AuthenticatedSettingsRoutingRoute: typeof AuthenticatedSettingsRoutingRoute
   AuthenticatedSettingsWhatsappRoute: typeof AuthenticatedSettingsWhatsappRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
@@ -909,6 +971,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdsRoute: AuthenticatedAdsRoute,
   AuthenticatedAiReplyRulesRoute: AuthenticatedAiReplyRulesRoute,
+  AuthenticatedCampaignsRoute: AuthenticatedCampaignsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDealsRoute: AuthenticatedDealsRoute,
   AuthenticatedFollowUpsRoute: AuthenticatedFollowUpsRoute,
@@ -927,6 +990,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedTestChatRoute: AuthenticatedTestChatRoute,
   AuthenticatedUaeKnowledgeRoute: AuthenticatedUaeKnowledgeRoute,
   AuthenticatedViewingsRoute: AuthenticatedViewingsRoute,
+  AuthenticatedBrochureListingIdRoute: AuthenticatedBrochureListingIdRoute,
   AuthenticatedDealDealIdRoute: AuthenticatedDealDealIdRoute,
   AuthenticatedInvoiceInvoiceIdRoute: AuthenticatedInvoiceInvoiceIdRoute,
   AuthenticatedLeadLeadIdRoute: AuthenticatedLeadLeadIdRoute,
@@ -935,6 +999,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOwnerWeeklyReportRoute: AuthenticatedOwnerWeeklyReportRoute,
   AuthenticatedSettingsAlertsRoute: AuthenticatedSettingsAlertsRoute,
   AuthenticatedSettingsDealsRoute: AuthenticatedSettingsDealsRoute,
+  AuthenticatedSettingsRecordsRoute: AuthenticatedSettingsRecordsRoute,
   AuthenticatedSettingsRoutingRoute: AuthenticatedSettingsRoutingRoute,
   AuthenticatedSettingsWhatsappRoute: AuthenticatedSettingsWhatsappRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
