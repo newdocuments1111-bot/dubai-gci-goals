@@ -7,9 +7,11 @@ import {
   Calculator,
   CalendarCheck,
   Handshake,
+  Inbox,
   Languages,
   LogOut,
   Menu,
+  MoreHorizontal,
   Plus,
   Search,
   Settings,
@@ -58,6 +60,18 @@ const ICONS: Record<NavSectionId, ComponentType<{ className?: string }>> = {
 
 const SOURCES = LEAD_SOURCES;
 
+/** The four pages an agent opens most on a phone; "More" is the fifth button of the bottom bar. */
+const PHONE_BAR: readonly {
+  to: string;
+  label: string;
+  icon: ComponentType<{ className?: string }>;
+}[] = [
+  { to: "/dashboard", label: "Today", icon: CalendarCheck },
+  { to: "/inbox", label: "Inbox", icon: Inbox },
+  { to: "/leads", label: "Leads", icon: Users },
+  { to: "/deals", label: "Deals", icon: Handshake },
+];
+
 const initials = (name: string) =>
   name
     .split(/\s+/)
@@ -66,7 +80,11 @@ const initials = (name: string) =>
     .map((w) => w[0]?.toUpperCase())
     .join("") || "?";
 
-/** Private app shell: five-section sidebar, section tabs, Ctrl+K search and one "New lead" button. */
+/**
+ * Private app shell: five-section sidebar, section tabs, Ctrl+K search and one "New lead" button.
+ * Below `md` the sidebar gives way to a fixed bottom bar (Today, Inbox, Leads, Deals, More) and
+ * "New lead" becomes a round button floating above it.
+ */
 export function OwnerLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const membership = useMembership();
@@ -80,8 +98,25 @@ export function OwnerLayout() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [newLeadOpen, setNewLeadOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const page = activePage(pathname)?.to ?? null;
+  const allowed = new Set(searchablePages(membership).map((p) => p.to));
+  const phoneBar = PHONE_BAR.filter((b) => allowed.has(b.to));
+  // Inbox has its own button, so "Leads" is lit for the rest of the Leads section.
+  const barActive = (to: string) =>
+    to === "/dashboard"
+      ? current === "today"
+      : to === "/inbox"
+        ? page === "/inbox"
+        : to === "/leads"
+          ? current === "leads" && page !== "/inbox"
+          : current === "deals";
+  const moreActive = moreOpen || !phoneBar.some((b) => barActive(b.to));
 
-  useEffect(() => setMenuOpen(false), [pathname]);
+  useEffect(() => {
+    setMenuOpen(false);
+    setMoreOpen(false);
+  }, [pathname]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
@@ -178,12 +213,12 @@ export function OwnerLayout() {
         </SheetContent>
       </Sheet>
 
-      <div className="flex min-h-screen flex-col lg:ps-60 print:ps-0">
+      <div className="flex min-h-screen flex-col pb-[calc(8.5rem+env(safe-area-inset-bottom))] md:pb-0 lg:ps-60 print:pb-0 print:ps-0">
         <header className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur print:hidden">
           <div className="flex h-14 items-center gap-2 px-3 sm:px-6">
             <button
               type="button"
-              className="rounded-md p-2 text-muted-foreground hover:bg-muted lg:hidden"
+              className="hidden rounded-md p-2 text-muted-foreground hover:bg-muted md:block lg:hidden"
               aria-label={t("Open menu")}
               onClick={() => setMenuOpen(true)}
             >
@@ -197,7 +232,8 @@ export function OwnerLayout() {
               <button
                 type="button"
                 onClick={() => setSearchOpen(true)}
-                className="flex h-9 items-center gap-2 rounded-md border border-input bg-background px-3 text-sm text-muted-foreground hover:text-foreground sm:w-64"
+                aria-label={t("Search leads, pages…")}
+                className="flex h-11 min-w-11 items-center justify-center gap-2 rounded-md border border-input bg-background px-3 text-sm text-muted-foreground hover:text-foreground sm:w-64 sm:justify-start md:h-9"
               >
                 <Search className="size-4" />
                 <span className="hidden sm:inline">{t("Search leads, pages…")}</span>
@@ -205,9 +241,13 @@ export function OwnerLayout() {
                   Ctrl K
                 </kbd>
               </button>
-              <Button size="sm" className="h-9" onClick={() => setNewLeadOpen(true)}>
+              <Button
+                size="sm"
+                className="hidden h-9 md:inline-flex"
+                onClick={() => setNewLeadOpen(true)}
+              >
                 <Plus className="size-4" />
-                <span className="hidden sm:inline">{t("New lead")}</span>
+                {t("New lead")}
               </Button>
             </div>
           </div>
@@ -222,7 +262,7 @@ export function OwnerLayout() {
                   <Link
                     key={p.to}
                     to={p.to}
-                    className={`shrink-0 border-b-2 px-3 pb-2.5 pt-1 text-sm ${on ? "border-primary font-medium text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                    className={`flex min-h-11 shrink-0 items-center border-b-2 px-3 text-sm md:block md:min-h-0 md:pb-2.5 md:pt-1 ${on ? "border-primary font-medium text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
                   >
                     {t(p.label)}
                   </Link>
@@ -239,6 +279,126 @@ export function OwnerLayout() {
           {t("Powered by Elite Visions")}
         </footer>
       </div>
+
+      <button
+        type="button"
+        onClick={() => setNewLeadOpen(true)}
+        aria-label={t("New lead")}
+        title={t("New lead")}
+        className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] end-4 z-20 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:bg-primary/90 md:hidden print:hidden"
+      >
+        <Plus className="size-6" />
+      </button>
+
+      <nav
+        aria-label={t("Quick menu")}
+        className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden print:hidden"
+      >
+        <div className="flex">
+          {phoneBar.map((b) => {
+            const on = !moreOpen && barActive(b.to);
+            return (
+              <Link
+                key={b.to}
+                to={b.to}
+                aria-current={on ? "page" : undefined}
+                className={`flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1 text-[11px] ${on ? "font-semibold text-primary" : "text-muted-foreground"}`}
+              >
+                <span
+                  className={`flex h-7 w-12 items-center justify-center rounded-full ${on ? "bg-primary/10" : ""}`}
+                >
+                  <b.icon className="size-5" />
+                </span>
+                <span className="max-w-full truncate">{t(b.label)}</span>
+              </Link>
+            );
+          })}
+          <button
+            type="button"
+            onClick={() => setMoreOpen(true)}
+            aria-haspopup="dialog"
+            aria-expanded={moreOpen}
+            className={`flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1 text-[11px] ${moreActive ? "font-semibold text-primary" : "text-muted-foreground"}`}
+          >
+            <span
+              className={`flex h-7 w-12 items-center justify-center rounded-full ${moreActive ? "bg-primary/10" : ""}`}
+            >
+              <MoreHorizontal className="size-5" />
+            </span>
+            <span className="max-w-full truncate">{t("More")}</span>
+          </button>
+        </div>
+      </nav>
+
+      <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
+        <SheetContent
+          side="bottom"
+          className="max-h-[85dvh] overflow-y-auto rounded-t-2xl p-0 pb-[env(safe-area-inset-bottom)] md:hidden"
+        >
+          <div className="px-4 pb-2 pe-12 pt-4">
+            <SheetTitle className="text-base">{t("More")}</SheetTitle>
+            <p className="truncate text-xs text-muted-foreground">{membership.agencyName}</p>
+          </div>
+          <nav aria-label={t("More")} className="space-y-3 px-2 pb-2">
+            {[...sections.main, sections.tools, sections.settings]
+              .filter((s): s is NavSection => !!s)
+              .map((s) => {
+                const Icon = ICONS[s.id];
+                return (
+                  <section key={s.id} aria-label={t(s.label)}>
+                    <h3 className="flex items-center gap-2 px-2 pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      <Icon className="size-3.5" />
+                      {t(s.label)}
+                    </h3>
+                    <div className="grid grid-cols-2 gap-1">
+                      {s.pages.map((p) => (
+                        <Link
+                          key={p.to}
+                          to={p.to}
+                          onClick={() => setMoreOpen(false)}
+                          className={`flex min-h-11 items-center rounded-md px-3 py-2 text-sm ${page === p.to ? "bg-primary font-medium text-primary-foreground" : "bg-muted/50 text-foreground active:bg-muted"}`}
+                        >
+                          <span className="min-w-0 break-words">{t(p.label)}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  </section>
+                );
+              })}
+          </nav>
+          <div className="border-t border-border px-2 py-2">
+            <button
+              type="button"
+              onClick={() => setLang(lang === "ar" ? "en" : "ar")}
+              aria-label={t("Language")}
+              className="flex min-h-11 w-full items-center gap-3 rounded-md px-3 text-sm text-muted-foreground active:bg-muted"
+            >
+              <Languages className="size-4" />
+              {lang === "ar" ? "English" : "العربية"}
+            </button>
+            <div className="flex items-center gap-3 px-3 py-2">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+                {initials(membership.displayName || membership.agencyName)}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium">{membership.displayName || "You"}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t(membership.isOwner ? "Owner" : "Agent")}
+                  {membership.isHq ? " · HQ" : ""}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => void signOut()}
+                className="flex min-h-11 shrink-0 items-center gap-2 rounded-md border border-input px-3 text-sm active:bg-muted"
+              >
+                <LogOut className="size-4" />
+                {t("Sign out")}
+              </button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       <SearchMenu
         open={searchOpen}

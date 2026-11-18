@@ -41,7 +41,7 @@ export function AlertsBell() {
         <button
           type="button"
           aria-label={unread.length ? `${unread.length} new alerts` : "Alerts"}
-          className="relative flex size-9 items-center justify-center rounded-md border border-input bg-background text-muted-foreground hover:text-foreground"
+          className="relative flex size-11 items-center justify-center rounded-md border border-input bg-background text-muted-foreground hover:text-foreground md:size-9"
         >
           <Bell className="size-4" />
           {unread.length > 0 && (
@@ -51,7 +51,7 @@ export function AlertsBell() {
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-[22rem] p-0">
+      <PopoverContent align="end" className="w-[min(22rem,calc(100vw-1.5rem))] p-0">
         <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
           <p className="text-sm font-semibold">Alerts</p>
           {unread.length > 0 && (
