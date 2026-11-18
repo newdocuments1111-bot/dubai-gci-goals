@@ -41,8 +41,10 @@ import { Route as AuthenticatedLeadLeadIdRouteImport } from './routes/_authentic
 import { Route as AuthenticatedListingListingIdRouteImport } from './routes/_authenticated/listing.$listingId'
 import { Route as AuthenticatedOwnerWeeklyReportRouteImport } from './routes/_authenticated/owner.weekly-report'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
+import { Route as AuthenticatedSettingsAlertsRouteImport } from './routes/_authenticated/settings.alerts'
 import { Route as AuthenticatedSettingsRoutingRouteImport } from './routes/_authenticated/settings.routing'
 import { Route as AuthenticatedSettingsWhatsappRouteImport } from './routes/_authenticated/settings.whatsapp'
+import { Route as ApiPublicAlertsDispatchRouteImport } from './routes/api/public/alerts/dispatch'
 import { Route as ApiPublicLeadsIntakeRouteImport } from './routes/api/public/leads/intake'
 import { Route as ApiPublicWhatsappOutboxRouteImport } from './routes/api/public/whatsapp/outbox'
 import { Route as ApiPublicWhatsappWebhookRouteImport } from './routes/api/public/whatsapp/webhook'
@@ -212,6 +214,12 @@ const AuthenticatedSettingsIndexRoute =
     path: '/settings/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSettingsAlertsRoute =
+  AuthenticatedSettingsAlertsRouteImport.update({
+    id: '/settings/alerts',
+    path: '/settings/alerts',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSettingsRoutingRoute =
   AuthenticatedSettingsRoutingRouteImport.update({
     id: '/settings/routing',
@@ -224,6 +232,11 @@ const AuthenticatedSettingsWhatsappRoute =
     path: '/settings/whatsapp',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicAlertsDispatchRoute = ApiPublicAlertsDispatchRouteImport.update({
+  id: '/api/public/alerts/dispatch',
+  path: '/api/public/alerts/dispatch',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicLeadsIntakeRoute = ApiPublicLeadsIntakeRouteImport.update({
   id: '/api/public/leads/intake',
   path: '/api/public/leads/intake',
@@ -272,9 +285,11 @@ export interface FileRoutesByFullPath {
   '/lead/$leadId': typeof AuthenticatedLeadLeadIdRoute
   '/listing/$listingId': typeof AuthenticatedListingListingIdRoute
   '/owner/weekly-report': typeof AuthenticatedOwnerWeeklyReportRoute
+  '/settings/alerts': typeof AuthenticatedSettingsAlertsRoute
   '/settings/routing': typeof AuthenticatedSettingsRoutingRoute
   '/settings/whatsapp': typeof AuthenticatedSettingsWhatsappRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/api/public/alerts/dispatch': typeof ApiPublicAlertsDispatchRoute
   '/api/public/leads/intake': typeof ApiPublicLeadsIntakeRoute
   '/api/public/whatsapp/outbox': typeof ApiPublicWhatsappOutboxRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
@@ -310,9 +325,11 @@ export interface FileRoutesByTo {
   '/lead/$leadId': typeof AuthenticatedLeadLeadIdRoute
   '/listing/$listingId': typeof AuthenticatedListingListingIdRoute
   '/owner/weekly-report': typeof AuthenticatedOwnerWeeklyReportRoute
+  '/settings/alerts': typeof AuthenticatedSettingsAlertsRoute
   '/settings/routing': typeof AuthenticatedSettingsRoutingRoute
   '/settings/whatsapp': typeof AuthenticatedSettingsWhatsappRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
+  '/api/public/alerts/dispatch': typeof ApiPublicAlertsDispatchRoute
   '/api/public/leads/intake': typeof ApiPublicLeadsIntakeRoute
   '/api/public/whatsapp/outbox': typeof ApiPublicWhatsappOutboxRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
@@ -350,9 +367,11 @@ export interface FileRoutesById {
   '/_authenticated/lead/$leadId': typeof AuthenticatedLeadLeadIdRoute
   '/_authenticated/listing/$listingId': typeof AuthenticatedListingListingIdRoute
   '/_authenticated/owner/weekly-report': typeof AuthenticatedOwnerWeeklyReportRoute
+  '/_authenticated/settings/alerts': typeof AuthenticatedSettingsAlertsRoute
   '/_authenticated/settings/routing': typeof AuthenticatedSettingsRoutingRoute
   '/_authenticated/settings/whatsapp': typeof AuthenticatedSettingsWhatsappRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/api/public/alerts/dispatch': typeof ApiPublicAlertsDispatchRoute
   '/api/public/leads/intake': typeof ApiPublicLeadsIntakeRoute
   '/api/public/whatsapp/outbox': typeof ApiPublicWhatsappOutboxRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
@@ -390,9 +409,11 @@ export interface FileRouteTypes {
     | '/lead/$leadId'
     | '/listing/$listingId'
     | '/owner/weekly-report'
+    | '/settings/alerts'
     | '/settings/routing'
     | '/settings/whatsapp'
     | '/settings/'
+    | '/api/public/alerts/dispatch'
     | '/api/public/leads/intake'
     | '/api/public/whatsapp/outbox'
     | '/api/public/whatsapp/webhook'
@@ -428,9 +449,11 @@ export interface FileRouteTypes {
     | '/lead/$leadId'
     | '/listing/$listingId'
     | '/owner/weekly-report'
+    | '/settings/alerts'
     | '/settings/routing'
     | '/settings/whatsapp'
     | '/settings'
+    | '/api/public/alerts/dispatch'
     | '/api/public/leads/intake'
     | '/api/public/whatsapp/outbox'
     | '/api/public/whatsapp/webhook'
@@ -467,9 +490,11 @@ export interface FileRouteTypes {
     | '/_authenticated/lead/$leadId'
     | '/_authenticated/listing/$listingId'
     | '/_authenticated/owner/weekly-report'
+    | '/_authenticated/settings/alerts'
     | '/_authenticated/settings/routing'
     | '/_authenticated/settings/whatsapp'
     | '/_authenticated/settings/'
+    | '/api/public/alerts/dispatch'
     | '/api/public/leads/intake'
     | '/api/public/whatsapp/outbox'
     | '/api/public/whatsapp/webhook'
@@ -484,6 +509,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   WelcomeRoute: typeof WelcomeRoute
+  ApiPublicAlertsDispatchRoute: typeof ApiPublicAlertsDispatchRoute
   ApiPublicLeadsIntakeRoute: typeof ApiPublicLeadsIntakeRoute
   ApiPublicWhatsappOutboxRoute: typeof ApiPublicWhatsappOutboxRoute
   ApiPublicWhatsappWebhookRoute: typeof ApiPublicWhatsappWebhookRoute
@@ -715,6 +741,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/settings/alerts': {
+      id: '/_authenticated/settings/alerts'
+      path: '/settings/alerts'
+      fullPath: '/settings/alerts'
+      preLoaderRoute: typeof AuthenticatedSettingsAlertsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/settings/routing': {
       id: '/_authenticated/settings/routing'
       path: '/settings/routing'
@@ -728,6 +761,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/settings/whatsapp'
       preLoaderRoute: typeof AuthenticatedSettingsWhatsappRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/alerts/dispatch': {
+      id: '/api/public/alerts/dispatch'
+      path: '/api/public/alerts/dispatch'
+      fullPath: '/api/public/alerts/dispatch'
+      preLoaderRoute: typeof ApiPublicAlertsDispatchRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/leads/intake': {
       id: '/api/public/leads/intake'
@@ -777,6 +817,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedLeadLeadIdRoute: typeof AuthenticatedLeadLeadIdRoute
   AuthenticatedListingListingIdRoute: typeof AuthenticatedListingListingIdRoute
   AuthenticatedOwnerWeeklyReportRoute: typeof AuthenticatedOwnerWeeklyReportRoute
+  AuthenticatedSettingsAlertsRoute: typeof AuthenticatedSettingsAlertsRoute
   AuthenticatedSettingsRoutingRoute: typeof AuthenticatedSettingsRoutingRoute
   AuthenticatedSettingsWhatsappRoute: typeof AuthenticatedSettingsWhatsappRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
@@ -806,6 +847,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedLeadLeadIdRoute: AuthenticatedLeadLeadIdRoute,
   AuthenticatedListingListingIdRoute: AuthenticatedListingListingIdRoute,
   AuthenticatedOwnerWeeklyReportRoute: AuthenticatedOwnerWeeklyReportRoute,
+  AuthenticatedSettingsAlertsRoute: AuthenticatedSettingsAlertsRoute,
   AuthenticatedSettingsRoutingRoute: AuthenticatedSettingsRoutingRoute,
   AuthenticatedSettingsWhatsappRoute: AuthenticatedSettingsWhatsappRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
@@ -823,6 +865,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   WelcomeRoute: WelcomeRoute,
+  ApiPublicAlertsDispatchRoute: ApiPublicAlertsDispatchRoute,
   ApiPublicLeadsIntakeRoute: ApiPublicLeadsIntakeRoute,
   ApiPublicWhatsappOutboxRoute: ApiPublicWhatsappOutboxRoute,
   ApiPublicWhatsappWebhookRoute: ApiPublicWhatsappWebhookRoute,
