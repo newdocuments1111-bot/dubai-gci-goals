@@ -54,6 +54,7 @@ export const SETTINGS_SECTION: NavSection = {
     { to: "/team", label: "Team", show: "owner" },
     { to: "/settings/alerts", label: "My alerts" },
     { to: "/settings/routing", label: "Lead routing", show: "owner" },
+    { to: "/settings/deals", label: "Deals and fees", show: "owner" },
     { to: "/settings/whatsapp", label: "WhatsApp", show: "owner" },
     { to: "/templates", label: "Templates", show: "manager" },
     { to: "/queue", label: "Send queue" },
@@ -78,6 +79,8 @@ const ALL_SECTIONS: readonly NavSection[] = [...MAIN_SECTIONS, SETTINGS_SECTION,
 const DETAIL_PREFIXES: readonly { prefix: string; section: NavSectionId }[] = [
   { prefix: "/lead/", section: "leads" },
   { prefix: "/listing/", section: "listings" },
+  { prefix: "/deal/", section: "deals" },
+  { prefix: "/invoice/", section: "deals" },
 ];
 
 export function canSee(page: NavPage, role: NavRole): boolean {

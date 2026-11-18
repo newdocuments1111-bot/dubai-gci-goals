@@ -3,15 +3,17 @@ import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 import { getAccess } from './agency-access';
 import { dealMath, DEFAULT_SPLIT_PERCENT } from './agency';
 import { leadFolder } from './documents';
+import { currentStep } from './dealroom';
 import { z } from 'zod';
 
 const dealStatus = z.enum(['under offer', 'closed', 'fell through']);
 
 export const listDeals = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const access = await getAccess(context.supabase, context.userId);
-  const [{ data: deals, error }, { data: members }] = await Promise.all([
+  const [{ data: deals, error }, { data: members }, { data: steps }] = await Promise.all([
     context.supabase.from('deals').select('*, leads(name), listings(title)').eq('agency_id', access.agencyId).order('created_at', { ascending: false }),
     context.supabase.from('agency_members').select('user_id,display_name,email,split_percent').eq('agency_id', access.agencyId).in('role', ['owner', 'agent']),
+    context.supabase.from('deal_steps').select('deal_id,key,label,who,position,due_at,done_at,skipped').eq('agency_id', access.agencyId),
   ]);
   if (error) throw new Error('Could not load deals.');
   const byUser = new Map((members ?? []).map(m => [m.user_id, m]));
@@ -21,7 +23,9 @@ export const listDeals = createServerFn({ method: 'POST' }).middleware([requireS
     deals: (deals ?? []).map(d => {
       const m = byUser.get(d.agent_id);
       const split = m ? Number(m.split_percent) : DEFAULT_SPLIT_PERCENT;
-      return { ...d, price_aed: Number(d.price_aed), commission_percent: Number(d.commission_percent), agentName: m ? (m.display_name || m.email) : 'Former agent', splitPercent: split, ...dealMath({ price: Number(d.price_aed), commissionPercent: Number(d.commission_percent), splitPercent: split }) };
+      const own = (steps ?? []).filter(st => st.deal_id === d.id);
+      const next = currentStep(own);
+      return { ...d, nextStep: next ? { label: next.label, due_at: next.due_at } : null, stepsDone: own.filter(st => st.done_at).length, stepsTotal: own.filter(st => !st.skipped).length, price_aed: Number(d.price_aed), commission_percent: Number(d.commission_percent), agentName: m ? (m.display_name || m.email) : 'Former agent', splitPercent: split, ...dealMath({ price: Number(d.price_aed), commissionPercent: Number(d.commission_percent), splitPercent: split }) };
     }),
   };
 });
