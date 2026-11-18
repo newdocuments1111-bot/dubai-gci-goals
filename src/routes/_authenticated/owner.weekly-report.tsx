@@ -5,8 +5,11 @@ import { Copy,Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { getWeeklyReport } from '@/lib/weekly-report.functions';
+import { getPipeline } from '@/lib/pipeline.functions';
+import { adDecisions, aed as aedPipe, isOverdue, minutes, ruleFor, totals } from '@/lib/pipeline';
 import { reportWhatsApp,shiftWeek,type WeeklyReport } from '@/lib/weekly-report';
 const initial=queryOptions({queryKey:['weekly-report','last'],queryFn:()=>getWeeklyReport({data:{}})});
+const pipelineQuery=queryOptions({queryKey:['pipeline'],queryFn:()=>getPipeline()});
 export const Route=createFileRoute('/_authenticated/owner/weekly-report')({
   head:()=>({meta:[{title:'Monday report — Dubai AI GCI'},{name:'description',content:'Agency and agent weekly activity measured against saved GCI goals.'},{property:'og:title',content:'Monday report — Dubai AI GCI'},{property:'og:description',content:'Private weekly enquiries, viewings and closed-deal GCI report.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary'},{name:'robots',content:'noindex'}]}),
   loader:({context})=>context.queryClient.ensureQueryData(initial),component:WeeklyReportPage,
@@ -33,8 +36,27 @@ function WeeklyReportPage() {
     {error&&<p role="alert" className="text-destructive">{error.message}</p>}{note&&<p role="status">{note}</p>}
     <p className="mb-4 text-sm text-muted-foreground">{result.agencyName} · {result.week} – {new Date(Date.parse(`${shiftWeek(result.week,1)}T00:00:00Z`)-86400000).toISOString().slice(0,10)} · Dubai time · {result.snapshot?'Saved Monday snapshot':'Live recorded rows — no saved snapshot for this week'}{isFetching?' · Loading…':''}</p>
     <section className="space-y-3"><h2 className="text-xl font-semibold">Agency</h2><ReportNumbers r={result.report}/><p className="text-sm">Listings available and checked within 24h: {result.report.listings.fresh} · AI cannot offer: {result.report.listings.unavailableToAi}</p>{result.report.usage&&<p className="text-sm">AI replies: {result.report.usage.aiReplies} · WhatsApp messages: {result.report.usage.whatsappMessages}</p>}</section>
+    <PipelineSection/>
     <p className="my-4 text-xs text-muted-foreground">Offers are recorded deal entries. Completion and follow-up totals exclude records without completion or send timestamps. Current assignments and commission splits apply. First-reply percentage includes unanswered enquiries. Listings freshness is as of report generation.</p>
     {result.agents.map(agent=><section key={agent.id} className="mt-8 border-t border-border pt-5"><h2 className="mb-4 text-xl font-semibold">{agent.name}</h2><ReportNumbers r={agent.report}/></section>)}
     {result.pastWeeks.length>0&&<div className="report-controls mt-6"><h2 className="font-semibold">Saved weeks</h2><div className="flex flex-wrap gap-2">{result.pastWeeks.map(w=><Button key={w} variant="outline" size="sm" onClick={()=>setWeek(w)}>{w}</Button>)}</div></div>}
   </main>;
+}
+/** The plan's numbers: where leads come from, which ads to keep, and what is overdue today. Live rows, not a snapshot. */
+function PipelineSection() {
+  const {data}=useQuery(pipelineQuery);
+  if(!data) return null;
+  const t=totals(data.report);
+  const decisions=adDecisions(data.ads,data.report);
+  const overdue=data.leads.filter(l=>isOverdue(l)).sort((a,b)=>(a.next_action_at??'').localeCompare(b.next_action_at??''));
+  const open=data.leads.filter(l=>l.outcome==='open');
+  const byStage=new Map<number,number>(); for(const l of open) byStage.set(l.stage,(byStage.get(l.stage)??0)+1);
+  return <section className="mt-8 space-y-4 border-t border-border pt-5">
+    <h2 className="text-xl font-semibold">Pipeline and sources <span className="text-sm font-normal text-muted-foreground">(live, all time)</span></h2>
+    <dl className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4">{[['Leads',t.leads],['Replied',`${t.repliedPct}%`],['Average first reply',minutes(t.avgReplyMinutes)],['Nights and weekends',t.outOfHours],['Qualified',t.qualified],['Viewings attended',`${t.attended} / ${t.booked} booked`],['Ad spend',aedPipe(t.spend)],['Cost per attended viewing',aedPipe(t.costPerViewing)]].map(([label,value])=><div key={String(label)} className="border-b border-border pb-2"><dt className="text-xs text-muted-foreground">{label}</dt><dd className="font-semibold">{value}</dd></div>)}</dl>
+    <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="text-left"><th>Source</th><th>Leads</th><th>Replied</th><th>Reply time</th><th>Qualified</th><th>Attended</th><th>Won</th><th>Spend</th><th>Cost / viewing</th></tr></thead><tbody>{[...data.report].sort((a,b)=>Number(b.leads??0)-Number(a.leads??0)).map(r=><tr key={`${r.source}-${r.source_type}`} className="border-t border-border"><td className="py-1">{r.source}</td><td>{r.leads}</td><td>{r.replied_pct}%</td><td>{minutes(r.avg_first_reply_minutes)}</td><td>{r.qualified}</td><td>{r.viewings_attended}</td><td>{r.won}</td><td>{r.spend==null?'—':aedPipe(r.spend)}</td><td>{r.cost_per_attended_viewing==null?'—':aedPipe(r.cost_per_attended_viewing)}</td></tr>)}</tbody></table></div>
+    {decisions.length>0&&<div><h3 className="text-sm font-semibold">Ads: what to decide (day-14 rule)</h3>{decisions.map(d=><p key={d.name} className="text-sm"><strong className="uppercase">{d.action}</strong> {d.name}: <span className="text-muted-foreground">{d.reason}</span></p>)}</div>}
+    <div><h3 className="text-sm font-semibold">Needs a decision today</h3>{overdue.length===0?<p className="text-sm text-muted-foreground">Nothing overdue. Every open lead has its next action in the future.</p>:<table className="w-full text-sm"><thead><tr className="text-left"><th>Lead</th><th>Step</th><th>Next action</th><th>Was due</th><th>Who</th></tr></thead><tbody>{overdue.map(l=><tr key={l.id} className="border-t border-border"><td className="py-1">{l.name||'Unnamed lead'}</td><td>{l.stage}. {ruleFor(data.rules,l.stage,l.track).name}</td><td>{l.next_action}</td><td>{l.next_action_at?new Date(l.next_action_at).toLocaleString('en-GB',{timeZone:'Asia/Dubai'}):'—'}</td><td>{l.who}</td></tr>)}</tbody></table>}</div>
+    <div><h3 className="text-sm font-semibold">Where every open lead sits</h3><p className="text-sm">{Array.from({length:15},(_,i)=>i+1).filter(s=>(byStage.get(s)??0)>0).map(s=>`${s}. ${ruleFor(data.rules,s,'ready').name}: ${byStage.get(s)}`).join(' · ')||'No open leads.'}</p></div>
+  </section>;
 }
