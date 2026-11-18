@@ -884,6 +884,36 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_calls: {
+        Row: {
+          agency_id: string
+          created_at: string
+          id: string
+          lead_id: string
+          note: string
+          outcome: string
+          user_id: string
+        }
+        Insert: {
+          agency_id: string
+          created_at?: string
+          id?: string
+          lead_id: string
+          note?: string
+          outcome: string
+          user_id?: string
+        }
+        Update: {
+          agency_id?: string
+          created_at?: string
+          id?: string
+          lead_id?: string
+          note?: string
+          outcome?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       lead_claims: {
         Row: {
           agency_id: string
@@ -1577,6 +1607,33 @@ export type Database = {
           kind?: string
           position?: number
           value?: string
+        }
+        Relationships: []
+      }
+      saved_lists: {
+        Row: {
+          agency_id: string
+          created_at: string
+          filters: Json
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          agency_id?: string
+          created_at?: string
+          filters: Json
+          id?: string
+          name: string
+          user_id?: string
+        }
+        Update: {
+          agency_id?: string
+          created_at?: string
+          filters?: Json
+          id?: string
+          name?: string
+          user_id?: string
         }
         Relationships: []
       }
