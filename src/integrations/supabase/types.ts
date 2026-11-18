@@ -46,6 +46,9 @@ export type Database = {
       }
       agency_members: {
         Row: {
+          alert_push: boolean
+          alert_whatsapp: boolean
+          mobile: string
           in_rotation: boolean
           last_routed_at: string | null
           agency_id: string
@@ -59,6 +62,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          alert_push?: boolean
+          alert_whatsapp?: boolean
+          mobile?: string
           in_rotation?: boolean
           last_routed_at?: string | null
           agency_id: string
@@ -72,6 +78,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          alert_push?: boolean
+          alert_whatsapp?: boolean
+          mobile?: string
           in_rotation?: boolean
           last_routed_at?: string | null
           agency_id?: string
@@ -129,8 +138,39 @@ export type Database = {
           },
         ]
       }
+      agent_alert_template: {
+        Row: {
+          agency_id: string
+          detail: string | null
+          language: string
+          meta_template_id: string | null
+          name: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          agency_id: string
+          detail?: string | null
+          language?: string
+          meta_template_id?: string | null
+          name?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          agency_id?: string
+          detail?: string | null
+          language?: string
+          meta_template_id?: string | null
+          name?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       alerts: {
         Row: {
+          pushed_at: string | null
           agency_id: string
           created_at: string
           id: string
@@ -140,6 +180,7 @@ export type Database = {
           read: boolean
         }
         Insert: {
+          pushed_at?: string | null
           agency_id?: string
           created_at?: string
           id?: string
@@ -149,6 +190,7 @@ export type Database = {
           read?: boolean
         }
         Update: {
+          pushed_at?: string | null
           agency_id?: string
           created_at?: string
           id?: string
@@ -763,6 +805,7 @@ export type Database = {
       }
       leads: {
         Row: {
+          reminded_at: string | null
           assigned_at: string | null
           email: string
           enquiry: string
@@ -809,6 +852,7 @@ export type Database = {
           whatsapp_last_inbound_at: string | null
         }
         Insert: {
+          reminded_at?: string | null
           assigned_at?: string | null
           email?: string
           enquiry?: string
@@ -855,6 +899,7 @@ export type Database = {
           whatsapp_last_inbound_at?: string | null
         }
         Update: {
+          reminded_at?: string | null
           assigned_at?: string | null
           email?: string
           enquiry?: string
@@ -1288,6 +1333,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      push_keys: {
+        Row: {
+          id: number
+          subject: string
+          vapid_private: Json
+          vapid_public: string
+        }
+        Insert: {
+          id?: number
+          subject?: string
+          vapid_private: Json
+          vapid_public: string
+        }
+        Update: {
+          id?: number
+          subject?: string
+          vapid_private?: Json
+          vapid_public?: string
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          last_ok_at: string | null
+          p256dh: string
+          user_agent: string
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          last_ok_at?: string | null
+          p256dh: string
+          user_agent?: string
+          user_id?: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          last_ok_at?: string | null
+          p256dh?: string
+          user_agent?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       routing_rules: {
         Row: {
@@ -1723,6 +1822,19 @@ export type Database = {
       }
     }
     Functions: {
+      claim_alert_deliveries: {
+        Args: { _limit: number }
+        Returns: {
+          agency_id: string
+          alert_id: string
+          kind: string
+          lead_id: string | null
+          message: string
+          recipients: string[]
+        }[]
+      }
+      push_public_key: { Args: never; Returns: string }
+      set_my_alerts: { Args: { _mobile: string; _push: boolean; _whatsapp: boolean }; Returns: undefined }
       claim_pool_lead: { Args: { _lead: string }; Returns: string }
       intake_lead: { Args: { _lead: Json; _token: string }; Returns: Json }
       pool_leads: {
