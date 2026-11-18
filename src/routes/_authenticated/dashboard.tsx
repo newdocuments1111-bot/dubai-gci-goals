@@ -105,11 +105,23 @@ function Alerts() {
         <div
           key={a.id}
           role="alert"
-          className={`flex items-center gap-3 rounded-lg border p-3 text-sm ${a.kind === "aml" ? "border-warning bg-warning/10" : "border-destructive bg-destructive/10"}`}
+          className={`flex items-center gap-3 rounded-lg border p-3 text-sm ${a.kind === "assigned" ? "border-primary/30 bg-primary/5" : a.kind === "aml" || a.kind === "pool" ? "border-warning bg-warning/10" : "border-destructive bg-destructive/10"}`}
         >
           <span className="flex-1">
-            {a.kind === "hot" ? "🔥 " : "⚠️ "}
-            {a.message}
+            {a.kind === "hot"
+              ? "🔥 "
+              : a.kind === "assigned"
+                ? "📥 "
+                : a.kind === "pool"
+                  ? "↩️ "
+                  : "⚠️ "}
+            {a.lead_id && (a.kind === "assigned" || a.kind === "pool") ? (
+              <Link className="underline" to="/lead/$leadId" params={{ leadId: a.lead_id }}>
+                {a.message}
+              </Link>
+            ) : (
+              a.message
+            )}
           </span>
           <Button
             variant="ghost"

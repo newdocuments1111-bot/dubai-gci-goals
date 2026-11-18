@@ -1,3 +1,4 @@
+import { LEAD_SOURCES } from '@/lib/inbox';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { queryOptions, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
@@ -49,7 +50,7 @@ function LeadPage() {
       <label className="text-sm">Name<Input className="mt-1" maxLength={200} value={name} onChange={e => setName(e.target.value)} /></label>
       <label className="text-sm">Phone<Input className="mt-1" maxLength={50} value={phone} onChange={e => setPhone(e.target.value)} /></label>
       <label className="text-sm">Source<select aria-label="Source" className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={source} onChange={e => setSource(e.target.value)}>
-        {['Bayut', 'Property Finder', 'Instagram', 'WhatsApp', 'Website', 'Referral', 'Other'].map(s => <option key={s}>{s}</option>)}
+        {LEAD_SOURCES.map(s => <option key={s}>{s}</option>)}
       </select></label>
       <div className="flex items-end gap-2">
         <Button variant="outline" disabled={busy} onClick={async () => { setBusy(true);
