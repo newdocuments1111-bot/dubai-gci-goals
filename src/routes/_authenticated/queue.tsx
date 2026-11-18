@@ -23,7 +23,7 @@ export const Route = createFileRoute('/_authenticated/queue')({
 });
 
 const when = (iso: string | null | undefined) => iso ? new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Dubai', dateStyle: 'medium', timeStyle: 'short' }).format(new Date(iso)) : '—';
-const PURPOSE_LABEL: Record<string, string> = { manual: 'Sent by hand', listing_match: 'Listing match', launch: 'New launch', renewal: 'Renewal', referral: 'Referral' };
+const PURPOSE_LABEL: Record<string, string> = { manual: 'Sent by hand', listing_match: 'Listing match', launch: 'New launch', renewal: 'Renewal', referral: 'Referral', campaign: 'Campaign' };
 const chip = (s: string) => s === 'sent' ? 'bg-primary text-primary-foreground' : s === 'failed' || s === 'blocked' ? 'bg-destructive text-destructive-foreground' : s === 'cancelled' ? 'bg-muted text-muted-foreground' : 'bg-secondary text-secondary-foreground';
 
 function QueuePage() {

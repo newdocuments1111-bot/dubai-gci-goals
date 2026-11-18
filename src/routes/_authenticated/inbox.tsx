@@ -8,6 +8,7 @@ import { assignLead } from "@/lib/leads-app.functions";
 import { PORTAL_SOURCES, matchListings, replyState, elapsed, whatsappLink } from "@/lib/inbox";
 import { aed } from "@/lib/pipeline";
 import { Button } from "@/components/ui/button";
+import { useLang } from "@/hooks/use-lang";
 
 const inboxQuery = queryOptions({ queryKey: ["inbox"], queryFn: () => getInbox() });
 
@@ -44,6 +45,7 @@ function SourceBadge({ source }: { source: string }) {
 
 function InboxPage() {
   const { data } = useSuspenseQuery(inboxQuery);
+  const { t } = useLang();
   const client = useQueryClient();
   const claim = useServerFn(claimLead);
   const assign = useServerFn(assignLead);
@@ -69,7 +71,7 @@ function InboxPage() {
       await fn();
       refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong.");
+      setError(e instanceof Error ? e.message : t("Something went wrong."));
     } finally {
       setBusy(null);
     }
@@ -95,20 +97,20 @@ function InboxPage() {
     <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Inbox</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{t("Inbox")}</h1>
           <p className="text-sm text-muted-foreground">
-            New leads from portals, ads and your website, newest first. Last 30 days.
+            {t("New leads from portals, ads and your website, newest first. Last 30 days.")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          <Stat label="New" value={data.leads.length} />
-          <Stat label="Waiting for reply" value={waiting} alert={waiting > 0} />
-          <Stat label="In pool" value={data.pool.length} alert={data.pool.length > 0} />
+          <Stat label={t("New")} value={data.leads.length} />
+          <Stat label={t("Waiting for reply")} value={waiting} alert={waiting > 0} />
+          <Stat label={t("In pool")} value={data.pool.length} alert={data.pool.length > 0} />
           {isOwner && (
             <Button asChild variant="outline" size="sm">
               <Link to="/settings/routing">
                 <Settings2 className="size-4" />
-                Routing and portals
+                {t("Routing and portals")}
               </Link>
             </Button>
           )}
@@ -118,13 +120,13 @@ function InboxPage() {
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <div
           role="tablist"
-          aria-label="Inbox view"
+          aria-label={t("Inbox view")}
           className="flex rounded-lg border border-border p-1 text-sm"
         >
           {(
             [
-              ["assigned", `Assigned (${data.leads.length})`],
-              ["pool", `Pool (${data.pool.length})`],
+              ["assigned", t("Assigned ({n})", { n: data.leads.length })],
+              ["pool", t("Pool ({n})", { n: data.pool.length })],
             ] as const
           ).map(([v, label]) => (
             <button
@@ -141,24 +143,24 @@ function InboxPage() {
         {tab === "assigned" && (
           <>
             <select
-              aria-label="Source"
+              aria-label={t("Source")}
               className={selectCls}
               value={source}
               onChange={(e) => setSource(e.target.value)}
             >
-              <option value="all">All sources</option>
+              <option value="all">{t("All sources")}</option>
               {sources.map((s) => (
                 <option key={s}>{s}</option>
               ))}
             </select>
             {isOwner && (
               <select
-                aria-label="Agent"
+                aria-label={t("Agent")}
                 className={selectCls}
                 value={agent}
                 onChange={(e) => setAgent(e.target.value)}
               >
-                <option value="all">All agents</option>
+                <option value="all">{t("All agents")}</option>
                 {data.members.map((m) => (
                   <option key={m.user_id} value={m.user_id}>
                     {memberName(m)}
@@ -167,14 +169,14 @@ function InboxPage() {
               </select>
             )}
             <select
-              aria-label="Reply"
+              aria-label={t("Reply")}
               className={selectCls}
               value={reply}
               onChange={(e) => setReply(e.target.value as typeof reply)}
             >
-              <option value="all">Replied or waiting</option>
-              <option value="waiting">Waiting for reply</option>
-              <option value="replied">Replied</option>
+              <option value="all">{t("Replied or waiting")}</option>
+              <option value="waiting">{t("Waiting for reply")}</option>
+              <option value="replied">{t("Replied")}</option>
             </select>
           </>
         )}
@@ -207,22 +209,28 @@ function InboxPage() {
                           params={{ leadId: l.id }}
                           className="truncate font-medium hover:underline"
                         >
-                          {l.name || "Unnamed lead"}
+                          {l.name || t("Unnamed lead")}
                         </Link>
                         {l.portal_ref && (
-                          <span className="text-xs text-muted-foreground">Ref {l.portal_ref}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {t("Ref {ref}", { ref: l.portal_ref })}
+                          </span>
                         )}
                       </div>
                       <p className="mt-0.5 truncate text-sm text-muted-foreground">
                         {[l.area, l.budget, l.stage_name].filter(Boolean).join(" · ") ||
-                          "No details yet"}
+                          t("No details yet")}
                         {l.enquiry && <> · “{l.enquiry}”</>}
                       </p>
                     </div>
                     <span
                       className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${r.replied ? "bg-primary/10 text-primary" : r.late ? "bg-destructive/10 text-destructive" : "bg-warning/15 text-warning-foreground"}`}
                     >
-                      {r.label}
+                      {r.replied
+                        ? t("Replied in {time}", {
+                            time: elapsed(l.created_at, l.first_reply_at ?? now),
+                          })
+                        : t("Waiting {time}", { time: elapsed(l.created_at, now) })}
                     </span>
                     <div className="w-40 shrink-0 text-sm">
                       {isOwner ? (
@@ -245,8 +253,8 @@ function InboxPage() {
                         </select>
                       ) : (
                         <span className="text-muted-foreground">
-                          {l.routed ? "Routed to you" : "Yours"} ·{" "}
-                          {elapsed(l.assigned_at ?? l.created_at, now)} ago
+                          {l.routed ? t("Routed to you") : t("Yours")} ·{" "}
+                          {t("{time} ago", { time: elapsed(l.assigned_at ?? l.created_at, now) })}
                         </span>
                       )}
                     </div>
@@ -257,7 +265,9 @@ function InboxPage() {
                         className="rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
                         aria-expanded={expanded}
                       >
-                        {matches.length} match{matches.length === 1 ? "" : "es"}
+                        {matches.length === 1
+                          ? t("1 match")
+                          : t("{n} matches", { n: matches.length })}
                       </button>
                       {l.phone && (
                         <Button
@@ -289,7 +299,7 @@ function InboxPage() {
                     <div className="mt-2 rounded-lg bg-muted/50 p-3 text-sm">
                       {matches.length === 0 ? (
                         <p className="text-muted-foreground">
-                          No available listing fits this area and budget yet.
+                          {t("No available listing fits this area and budget yet.")}
                         </p>
                       ) : (
                         <ul className="grid gap-1">
@@ -308,7 +318,7 @@ function InboxPage() {
                                   .join(" · ")}
                               </span>
                               <span className="text-xs text-muted-foreground">
-                                {[m.areaFit && "area fits", m.budgetFit && "budget fits"]
+                                {[m.areaFit && t("area fits"), m.budgetFit && t("budget fits")]
                                   .filter(Boolean)
                                   .join(", ")}
                               </span>
@@ -325,15 +335,19 @@ function InboxPage() {
         )
       ) : data.pool.length === 0 ? (
         <p className="rounded-xl border border-border bg-background p-6 text-sm text-muted-foreground">
-          The pool is empty. Leads land here when no agent is free, or when the agent doesn&apos;t
-          reply within {data.poolAfterMinutes} minutes.
+          {t(
+            "The pool is empty. Leads land here when no agent is free, or when the agent doesn't reply within {n} minutes.",
+            { n: data.poolAfterMinutes },
+          )}
         </p>
       ) : (
         <>
           <p className="mb-2 text-xs text-muted-foreground">
             {isOwner
-              ? "Assign a pool lead to an agent, or take it yourself."
-              : `Take up to ${data.poolDailyLimit} pool leads a day. Phone numbers show once the lead is yours.`}
+              ? t("Assign a pool lead to an agent, or take it yourself.")
+              : t("Take up to {n} pool leads a day. Phone numbers show once the lead is yours.", {
+                  n: data.poolDailyLimit,
+                })}
           </p>
           <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-background">
             {data.pool.map((p) => (
@@ -341,15 +355,15 @@ function InboxPage() {
                 <div className="min-w-0 flex-1 basis-64">
                   <div className="flex items-center gap-2">
                     <SourceBadge source={p.source} />
-                    <span className="truncate font-medium">{p.name || "Unnamed lead"}</span>
+                    <span className="truncate font-medium">{p.name || t("Unnamed lead")}</span>
                   </div>
                   <p className="mt-0.5 truncate text-sm text-muted-foreground">
-                    {[p.area, p.budget].filter(Boolean).join(" · ") || "No details yet"}
+                    {[p.area, p.budget].filter(Boolean).join(" · ") || t("No details yet")}
                     {p.enquiry && <> · “{p.enquiry}”</>}
                   </p>
                 </div>
                 <span className="shrink-0 text-xs text-muted-foreground">
-                  In pool {elapsed(p.pooled_at ?? p.created_at, now)}
+                  {t("In pool {time}", { time: elapsed(p.pooled_at ?? p.created_at, now) })}
                 </span>
                 {isOwner && (
                   <select
@@ -362,7 +376,7 @@ function InboxPage() {
                     }
                   >
                     <option value="" disabled>
-                      Assign to…
+                      {t("Assign to…")}
                     </option>
                     {data.members.map((m) => (
                       <option key={m.user_id} value={m.user_id}>
@@ -376,7 +390,7 @@ function InboxPage() {
                   disabled={busy === p.id}
                   onClick={() => void run(p.id, () => claim({ data: p.id }))}
                 >
-                  Take lead
+                  {t("Take lead")}
                 </Button>
               </li>
             ))}
@@ -392,27 +406,28 @@ function Stat({ label, value, alert }: { label: string; value: number; alert?: b
     <span
       className={`rounded-lg border px-3 py-1.5 ${alert ? "border-destructive/30 bg-destructive/5 text-destructive" : "border-border bg-background"}`}
     >
-      <strong className="mr-1 font-semibold">{value}</strong>
+      <strong className="me-1 font-semibold">{value}</strong>
       <span className={alert ? "" : "text-muted-foreground"}>{label}</span>
     </span>
   );
 }
 
 function Empty({ isOwner }: { isOwner: boolean }) {
+  const { t } = useLang();
   return (
     <div className="rounded-xl border border-dashed border-border bg-background p-8 text-center">
-      <p className="font-medium">No new leads here yet.</p>
+      <p className="font-medium">{t("No new leads here yet.")}</p>
       <p className="mt-1 text-sm text-muted-foreground">
         {isOwner ? (
           <>
-            Connect Property Finder, Bayut, Dubizzle, Meta forms or your website in{" "}
+            {t("Connect Property Finder, Bayut, Dubizzle, Meta forms or your website in")}{" "}
             <Link to="/settings/routing" className="underline">
-              Routing and portals
+              {t("Routing and portals")}
             </Link>
-            . Leads then arrive here by themselves.
+            {t(". Leads then arrive here by themselves.")}
           </>
         ) : (
-          "Leads routed to you appear here. Check the Pool tab for leads you can take."
+          t("Leads routed to you appear here. Check the Pool tab for leads you can take.")
         )}
       </p>
     </div>

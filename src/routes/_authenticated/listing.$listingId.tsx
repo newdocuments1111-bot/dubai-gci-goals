@@ -3,7 +3,7 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useSuspenseQuery, useQueryClient } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
 import { useState } from 'react';
-import { ArrowLeft, Pencil, Trash2, MapPin, Copy } from 'lucide-react';
+import { ArrowLeft, Pencil, Trash2, MapPin, Copy, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ListingEditor } from '@/components/ListingEditor';
@@ -54,6 +54,7 @@ function ListingDetails() {
       <div className="min-w-0"><h2 className="mb-4 text-lg font-semibold">Property details</h2><dl className="grid grid-cols-2 gap-x-4 gap-y-5 text-sm">{details.map(([label,value]) => <div key={label} className="min-w-0"><dt className="text-muted-foreground">{label}</dt><dd className="mt-1 break-words">{value || 'Not provided'}</dd></div>)}</dl>
         <section className="mt-7 border-t border-border pt-5"><h2 className="font-semibold">Description</h2><p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed">{listing.description || 'No description provided.'}</p></section>
         <div className="mt-6 grid gap-3"><Button asChild variant="outline"><a href={mapsLink(listing)} target="_blank" rel="noopener noreferrer"><MapPin className="size-4" />Open in Google Maps</a></Button><ListingShareButton listing={listing} photo={photos[0]} />
+          <Button asChild variant="outline"><Link to="/brochure/$listingId" params={{ listingId: listing.id }}><FileText className="size-4" />Brochure (print or PDF)</Link></Button>
           <div className="grid grid-cols-2 gap-2"><Button onClick={() => setEditing(true)}><Pencil className="size-4" />Edit</Button><Button variant="destructive" onClick={() => setDeleting(true)}><Trash2 className="size-4" />Delete</Button></div>
           <Button variant="outline" disabled={busy} onClick={async () => { setBusy(true); setError(''); try { const result = await duplicate({ data: listing.id }); await reload(); await navigate({ to: '/listing/$listingId', params: { listingId: result.id } }); setEditing(true); } catch { setError('Could not duplicate listing. Please try again.'); } finally { setBusy(false); } }}><Copy className="size-4" />Duplicate listing</Button>
         </div>{error && <p role="alert" className="mt-3 text-sm text-destructive">{error}</p>}

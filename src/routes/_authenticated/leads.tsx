@@ -7,6 +7,7 @@ import { leadsCsv, downloadCsv } from "@/lib/chat-extras";
 import { listLeads } from "@/lib/leads-app.functions";
 import { getDealOptions } from "@/lib/deals.functions";
 import { deleteList, getSavedLists, saveList } from "@/lib/leadtools.functions";
+import { logListExport } from "@/lib/records.functions";
 import { memberName } from "@/lib/agency";
 import { LEAD_SOURCES } from "@/lib/inbox";
 import {
@@ -18,6 +19,7 @@ import {
   type LeadFilter,
 } from "@/lib/lists";
 import { useMembership } from "@/hooks/use-membership";
+import { useLang } from "@/hooks/use-lang";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -50,9 +52,11 @@ function LeadsPage() {
   const { data: leads } = useSuspenseQuery(leadsQuery);
   const { data: lists } = useQuery(listsQuery);
   const membership = useMembership();
+  const { t } = useLang();
   const client = useQueryClient();
   const save = useServerFn(saveList);
   const remove = useServerFn(deleteList);
+  const logExport = useServerFn(logListExport);
   const { data: options } = useQuery({
     queryKey: ["deal-options"],
     queryFn: () => getDealOptions(),
@@ -67,35 +71,48 @@ function LeadsPage() {
   };
   const shown = useMemo(() => applyFilter(leads, filter), [leads, filter]);
   const agentName = (id: string | null) =>
-    id ? memberName(options?.members.find((m) => m.user_id === id)) : "Pool";
+    id ? memberName(options?.members.find((m) => m.user_id === id)) : t("Pool");
   const refreshLists = () => client.invalidateQueries({ queryKey: ["saved-lists"] });
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Leads</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{t("Leads")}</h1>
           <p className="text-sm text-muted-foreground">
-            {membership.isOwner ? "All leads in your agency." : "Leads assigned to you."} Hot first.
+            {membership.isOwner ? t("All leads in your agency.") : t("Leads assigned to you.")}{" "}
+            {t("Hot first.")}
           </p>
         </div>
         <div className="flex gap-2">
           <Button asChild variant="outline" size="sm">
             <Link to="/leads/import">
               <Upload className="size-4" />
-              Import
+              {t("Import")}
             </Link>
           </Button>
           {membership.isOwner && (
-            <Button variant="outline" size="sm" onClick={() => downloadCsv(leadsCsv(shown))}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                setError("");
+                try {
+                  await logExport({ data: shown.length });
+                  downloadCsv(leadsCsv(shown));
+                } catch (e) {
+                  setError(e instanceof Error ? e.message : t("Something went wrong."));
+                }
+              }}
+            >
               <Download className="size-4" />
-              Export {shown.length}
+              {t("Export {n}", { n: shown.length })}
             </Button>
           )}
         </div>
       </div>
 
-      <div className="mb-3 flex flex-wrap items-center gap-2" aria-label="My lists">
+      <div className="mb-3 flex flex-wrap items-center gap-2" aria-label={t("My lists")}>
         <button
           type="button"
           onClick={() => {
@@ -104,7 +121,7 @@ function LeadsPage() {
           }}
           className={`rounded-full border px-3 py-1 text-sm ${!activeList && !isFiltered(filter) ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary"}`}
         >
-          All open ({applyFilter(leads, EMPTY_FILTER).length})
+          {t("All open ({n})", { n: applyFilter(leads, EMPTY_FILTER).length })}
         </button>
         {(lists ?? []).map((l) => (
           <span
@@ -113,7 +130,7 @@ function LeadsPage() {
           >
             <button
               type="button"
-              className="py-1 pl-3 pr-1"
+              className="py-1 pe-1 ps-3"
               onClick={() => {
                 setFilter(l.filters);
                 setActiveList(l.id);
@@ -123,10 +140,13 @@ function LeadsPage() {
             </button>
             <button
               type="button"
-              aria-label={`Remove list ${l.name}`}
-              className="py-1 pl-1 pr-2 opacity-60 hover:opacity-100"
+              aria-label={t("Remove list {name}", { name: l.name })}
+              className="py-1 pe-2 ps-1 opacity-60 hover:opacity-100"
               onClick={async () => {
-                if (!window.confirm(`Remove the list "${l.name}"? The leads stay.`)) return;
+                if (
+                  !window.confirm(t('Remove the list "{name}"? The leads stay.', { name: l.name }))
+                )
+                  return;
                 await remove({ data: l.id });
                 if (activeList === l.id) setActiveList(null);
                 void refreshLists();
@@ -140,70 +160,70 @@ function LeadsPage() {
 
       <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-background p-3">
         <div className="relative min-w-48 flex-1">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="pointer-events-none absolute start-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            aria-label="Search leads"
-            className="h-9 pl-8"
-            placeholder="Name, phone, area or budget"
+            aria-label={t("Search leads")}
+            className="h-9 ps-8"
+            placeholder={t("Name, phone, area or budget")}
             maxLength={100}
             value={filter.q}
             onChange={(e) => set({ q: e.target.value })}
           />
         </div>
         <select
-          aria-label="Score"
+          aria-label={t("Score")}
           className={selectCls}
           value={filter.score}
           onChange={(e) => set({ score: e.target.value as LeadFilter["score"] })}
         >
-          <option value="">Any score</option>
-          <option>Hot</option>
-          <option>Warm</option>
-          <option>Cold</option>
+          <option value="">{t("Any score")}</option>
+          <option value="Hot">{t("Hot")}</option>
+          <option value="Warm">{t("Warm")}</option>
+          <option value="Cold">{t("Cold")}</option>
         </select>
         <select
-          aria-label="Source"
+          aria-label={t("Source")}
           className={selectCls}
           value={filter.source}
           onChange={(e) => set({ source: e.target.value })}
         >
-          <option value="">Any source</option>
+          <option value="">{t("Any source")}</option>
           {LEAD_SOURCES.map((s) => (
             <option key={s}>{s}</option>
           ))}
         </select>
         <select
-          aria-label="Step"
+          aria-label={t("Step")}
           className={selectCls}
           value={filter.step}
           onChange={(e) => set({ step: e.target.value as LeadFilter["step"] })}
         >
-          <option value="">Any step</option>
+          <option value="">{t("Any step")}</option>
           {Object.entries(STEP_RANGES).map(([k, v]) => (
             <option key={k} value={k}>
-              {v.label}
+              {t(v.label)}
             </option>
           ))}
         </select>
         <select
-          aria-label="Reply"
+          aria-label={t("Reply")}
           className={selectCls}
           value={filter.reply}
           onChange={(e) => set({ reply: e.target.value as LeadFilter["reply"] })}
         >
-          <option value="">Replied or not</option>
-          <option value="waiting">Not replied</option>
-          <option value="replied">Replied</option>
+          <option value="">{t("Replied or not")}</option>
+          <option value="waiting">{t("Not replied")}</option>
+          <option value="replied">{t("Replied")}</option>
         </select>
         {membership.isOwner && (
           <select
-            aria-label="Agent"
+            aria-label={t("Agent")}
             className={selectCls}
             value={filter.agent}
             onChange={(e) => set({ agent: e.target.value })}
           >
-            <option value="">Any agent</option>
-            <option value="pool">Pool (no agent)</option>
+            <option value="">{t("Any agent")}</option>
+            <option value="pool">{t("Pool (no agent)")}</option>
             {(options?.members ?? []).map((m) => (
               <option key={m.user_id} value={m.user_id}>
                 {memberName(m)}
@@ -212,16 +232,16 @@ function LeadsPage() {
           </select>
         )}
         <select
-          aria-label="Outcome"
+          aria-label={t("Outcome")}
           className={selectCls}
           value={filter.outcome}
           onChange={(e) => set({ outcome: e.target.value as LeadFilter["outcome"] })}
         >
-          <option value="open">Open</option>
-          <option value="not_now">Not now</option>
-          <option value="won">Won</option>
-          <option value="lost">Lost</option>
-          <option value="all">All</option>
+          <option value="open">{t("Open")}</option>
+          <option value="not_now">{t("Not now")}</option>
+          <option value="won">{t("Won")}</option>
+          <option value="lost">{t("Lost")}</option>
+          <option value="all">{t("All")}</option>
         </select>
         {isFiltered(filter) && !activeList && (
           <Button
@@ -229,19 +249,19 @@ function LeadsPage() {
             size="sm"
             className="h-9"
             onClick={async () => {
-              const name = window.prompt("Name this list", suggestName(filter));
+              const name = window.prompt(t("Name this list"), suggestName(filter));
               if (!name?.trim()) return;
               setError("");
               try {
                 await save({ data: { name: name.trim().slice(0, 60), filters: filter } });
                 void refreshLists();
               } catch (e) {
-                setError(e instanceof Error ? e.message : "Could not save the list.");
+                setError(e instanceof Error ? e.message : t("Could not save the list."));
               }
             }}
           >
             <Bookmark className="size-4" />
-            Save as list
+            {t("Save as list")}
           </Button>
         )}
       </div>
@@ -253,18 +273,18 @@ function LeadsPage() {
 
       {leads.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border bg-background p-8 text-center">
-          <p className="font-medium">No leads yet.</p>
+          <p className="font-medium">{t("No leads yet.")}</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Add one with New lead at the top, or{" "}
+            {t("Add one with New lead at the top, or")}{" "}
             <Link to="/leads/import" className="underline">
-              import your list from Excel
+              {t("import your list from Excel")}
             </Link>
             .
           </p>
         </div>
       ) : shown.length === 0 ? (
         <p className="rounded-xl border border-border bg-background p-6 text-sm text-muted-foreground">
-          No leads match these filters.
+          {t("No leads match these filters.")}
         </p>
       ) : (
         <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-background">
@@ -277,31 +297,33 @@ function LeadsPage() {
               >
                 <div className="min-w-0 flex-1 basis-64">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="truncate font-medium">{lead.name || "Unnamed lead"}</span>
+                    <span className="truncate font-medium">{lead.name || t("Unnamed lead")}</span>
                     <span
                       className={`rounded-full px-2 py-0.5 text-xs font-medium ${SCORE_STYLE[lead.score as keyof typeof SCORE_STYLE] ?? SCORE_STYLE.Cold}`}
                     >
-                      {lead.score}
+                      {t(lead.score)}
                     </span>
                     {lead.flagged && (
                       <span className="rounded-full bg-warning/15 px-2 py-0.5 text-xs text-warning-foreground">
-                        Needs your confirmation
+                        {t("Needs your confirmation")}
                       </span>
                     )}
                     {lead.stopped && (
-                      <span className="rounded-full bg-muted px-2 py-0.5 text-xs">Stopped</span>
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-xs">
+                        {t("Stopped")}
+                      </span>
                     )}
                   </div>
                   <p className="mt-0.5 truncate text-sm text-muted-foreground">
                     {[lead.area, lead.budget, lead.timing].filter(Boolean).join(" · ") ||
-                      "Nothing learned yet"}
+                      t("Nothing learned yet")}
                   </p>
                 </div>
                 <span className="w-28 shrink-0 text-xs text-muted-foreground">
                   {lead.source} · {lead.type}
                 </span>
                 <span className="w-36 shrink-0 truncate text-xs">
-                  {lead.stage_name ?? `Step ${lead.stage}`}
+                  {lead.stage_name ?? t("Step {n}", { n: lead.stage })}
                 </span>
                 {membership.isOwner && (
                   <span className="w-28 shrink-0 truncate text-xs text-muted-foreground">
@@ -315,7 +337,9 @@ function LeadsPage() {
       )}
       {shown.length > 300 && (
         <p className="mt-2 text-xs text-muted-foreground">
-          Showing the first 300 of {shown.length}. Narrow the filters to see the rest.
+          {t("Showing the first 300 of {n}. Narrow the filters to see the rest.", {
+            n: shown.length,
+          })}
         </p>
       )}
     </main>
