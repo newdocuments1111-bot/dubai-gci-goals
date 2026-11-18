@@ -17,6 +17,7 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as WelcomeRouteImport } from './routes/welcome'
+import { Route as AuthenticatedAdsRouteImport } from './routes/_authenticated/ads'
 import { Route as AuthenticatedAiReplyRulesRouteImport } from './routes/_authenticated/ai-reply-rules'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDealsRouteImport } from './routes/_authenticated/deals'
@@ -27,6 +28,7 @@ import { Route as AuthenticatedListingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedMarketDataRouteImport } from './routes/_authenticated/market-data'
 import { Route as AuthenticatedMarketInsightsRouteImport } from './routes/_authenticated/market-insights'
 import { Route as AuthenticatedOwnersRouteImport } from './routes/_authenticated/owners'
+import { Route as AuthenticatedPipelineRouteImport } from './routes/_authenticated/pipeline'
 import { Route as AuthenticatedQueueRouteImport } from './routes/_authenticated/queue'
 import { Route as AuthenticatedStatsRouteImport } from './routes/_authenticated/stats'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
@@ -81,6 +83,11 @@ const WelcomeRoute = WelcomeRouteImport.update({
   path: '/welcome',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdsRoute = AuthenticatedAdsRouteImport.update({
+  id: '/ads',
+  path: '/ads',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAiReplyRulesRoute =
   AuthenticatedAiReplyRulesRouteImport.update({
     id: '/ai-reply-rules',
@@ -131,6 +138,11 @@ const AuthenticatedMarketInsightsRoute =
 const AuthenticatedOwnersRoute = AuthenticatedOwnersRouteImport.update({
   id: '/owners',
   path: '/owners',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPipelineRoute = AuthenticatedPipelineRouteImport.update({
+  id: '/pipeline',
+  path: '/pipeline',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedQueueRoute = AuthenticatedQueueRouteImport.update({
@@ -218,6 +230,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/welcome': typeof WelcomeRoute
+  '/ads': typeof AuthenticatedAdsRoute
   '/ai-reply-rules': typeof AuthenticatedAiReplyRulesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/deals': typeof AuthenticatedDealsRoute
@@ -228,6 +241,7 @@ export interface FileRoutesByFullPath {
   '/market-data': typeof AuthenticatedMarketDataRoute
   '/market-insights': typeof AuthenticatedMarketInsightsRoute
   '/owners': typeof AuthenticatedOwnersRoute
+  '/pipeline': typeof AuthenticatedPipelineRoute
   '/queue': typeof AuthenticatedQueueRoute
   '/stats': typeof AuthenticatedStatsRoute
   '/team': typeof AuthenticatedTeamRoute
@@ -251,6 +265,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/welcome': typeof WelcomeRoute
+  '/ads': typeof AuthenticatedAdsRoute
   '/ai-reply-rules': typeof AuthenticatedAiReplyRulesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/deals': typeof AuthenticatedDealsRoute
@@ -261,6 +276,7 @@ export interface FileRoutesByTo {
   '/market-data': typeof AuthenticatedMarketDataRoute
   '/market-insights': typeof AuthenticatedMarketInsightsRoute
   '/owners': typeof AuthenticatedOwnersRoute
+  '/pipeline': typeof AuthenticatedPipelineRoute
   '/queue': typeof AuthenticatedQueueRoute
   '/stats': typeof AuthenticatedStatsRoute
   '/team': typeof AuthenticatedTeamRoute
@@ -286,6 +302,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/welcome': typeof WelcomeRoute
+  '/_authenticated/ads': typeof AuthenticatedAdsRoute
   '/_authenticated/ai-reply-rules': typeof AuthenticatedAiReplyRulesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/deals': typeof AuthenticatedDealsRoute
@@ -296,6 +313,7 @@ export interface FileRoutesById {
   '/_authenticated/market-data': typeof AuthenticatedMarketDataRoute
   '/_authenticated/market-insights': typeof AuthenticatedMarketInsightsRoute
   '/_authenticated/owners': typeof AuthenticatedOwnersRoute
+  '/_authenticated/pipeline': typeof AuthenticatedPipelineRoute
   '/_authenticated/queue': typeof AuthenticatedQueueRoute
   '/_authenticated/stats': typeof AuthenticatedStatsRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
@@ -321,6 +339,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/welcome'
+    | '/ads'
     | '/ai-reply-rules'
     | '/dashboard'
     | '/deals'
@@ -331,6 +350,7 @@ export interface FileRouteTypes {
     | '/market-data'
     | '/market-insights'
     | '/owners'
+    | '/pipeline'
     | '/queue'
     | '/stats'
     | '/team'
@@ -354,6 +374,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/welcome'
+    | '/ads'
     | '/ai-reply-rules'
     | '/dashboard'
     | '/deals'
@@ -364,6 +385,7 @@ export interface FileRouteTypes {
     | '/market-data'
     | '/market-insights'
     | '/owners'
+    | '/pipeline'
     | '/queue'
     | '/stats'
     | '/team'
@@ -388,6 +410,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/welcome'
+    | '/_authenticated/ads'
     | '/_authenticated/ai-reply-rules'
     | '/_authenticated/dashboard'
     | '/_authenticated/deals'
@@ -398,6 +421,7 @@ export interface FileRouteTypes {
     | '/_authenticated/market-data'
     | '/_authenticated/market-insights'
     | '/_authenticated/owners'
+    | '/_authenticated/pipeline'
     | '/_authenticated/queue'
     | '/_authenticated/stats'
     | '/_authenticated/team'
@@ -485,6 +509,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WelcomeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/ads': {
+      id: '/_authenticated/ads'
+      path: '/ads'
+      fullPath: '/ads'
+      preLoaderRoute: typeof AuthenticatedAdsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ai-reply-rules': {
       id: '/_authenticated/ai-reply-rules'
       path: '/ai-reply-rules'
@@ -553,6 +584,13 @@ declare module '@tanstack/react-router' {
       path: '/owners'
       fullPath: '/owners'
       preLoaderRoute: typeof AuthenticatedOwnersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pipeline': {
+      id: '/_authenticated/pipeline'
+      path: '/pipeline'
+      fullPath: '/pipeline'
+      preLoaderRoute: typeof AuthenticatedPipelineRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/queue': {
@@ -657,6 +695,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdsRoute: typeof AuthenticatedAdsRoute
   AuthenticatedAiReplyRulesRoute: typeof AuthenticatedAiReplyRulesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDealsRoute: typeof AuthenticatedDealsRoute
@@ -667,6 +706,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMarketDataRoute: typeof AuthenticatedMarketDataRoute
   AuthenticatedMarketInsightsRoute: typeof AuthenticatedMarketInsightsRoute
   AuthenticatedOwnersRoute: typeof AuthenticatedOwnersRoute
+  AuthenticatedPipelineRoute: typeof AuthenticatedPipelineRoute
   AuthenticatedQueueRoute: typeof AuthenticatedQueueRoute
   AuthenticatedStatsRoute: typeof AuthenticatedStatsRoute
   AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
@@ -682,6 +722,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdsRoute: AuthenticatedAdsRoute,
   AuthenticatedAiReplyRulesRoute: AuthenticatedAiReplyRulesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDealsRoute: AuthenticatedDealsRoute,
@@ -692,6 +733,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMarketDataRoute: AuthenticatedMarketDataRoute,
   AuthenticatedMarketInsightsRoute: AuthenticatedMarketInsightsRoute,
   AuthenticatedOwnersRoute: AuthenticatedOwnersRoute,
+  AuthenticatedPipelineRoute: AuthenticatedPipelineRoute,
   AuthenticatedQueueRoute: AuthenticatedQueueRoute,
   AuthenticatedStatsRoute: AuthenticatedStatsRoute,
   AuthenticatedTeamRoute: AuthenticatedTeamRoute,
