@@ -19,6 +19,7 @@ import {
   setOwnerStage,
   type OwnerInput,
 } from "@/lib/owners.functions";
+import { useLang } from "@/hooks/use-lang";
 import {
   SELLER_STAGES,
   chequeState,
@@ -54,9 +55,30 @@ const TONE = {
   soon: "bg-warning/15 text-warning-foreground",
   ok: "bg-muted text-muted-foreground",
 } as const;
+type T = ReturnType<typeof useLang>["t"];
+/** The lease line in the app language (same wording as leaseStatus in English). */
+const leaseText = (days: number, t: T) =>
+  days < 0
+    ? days === -1
+      ? t("Lease ended 1 day ago")
+      : t("Lease ended {n} days ago", { n: -days })
+    : days <= 90
+      ? days === 1
+        ? t("Lease ends in 1 day: talk renewal now")
+        : t("Lease ends in {n} days: talk renewal now", { n: days })
+      : t("Lease ends in {n} days", { n: days });
+/** The cheque badge in the app language: "Overdue 3 d", "Due in 5 d", or a fixed status. */
+const chequeText = (label: string, t: T) => {
+  const overdue = /^Overdue (\d+) d$/.exec(label);
+  if (overdue) return t("Overdue {n} d", { n: overdue[1] ?? "" });
+  const dueIn = /^Due in (\d+) d$/.exec(label);
+  if (dueIn) return t("Due in {n} d", { n: dueIn[1] ?? "" });
+  return t(label);
+};
 const todayIso = () => new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Dubai" });
 
 function OwnersPage() {
+  const { t } = useLang();
   const { data } = useSuspenseQuery(boardQuery);
   const client = useQueryClient();
   const stage = useServerFn(setOwnerStage);
@@ -71,7 +93,7 @@ function OwnersPage() {
       await fn();
       await refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong.");
+      setError(e instanceof Error ? e.message : t("Something went wrong."));
     }
   };
   const due = chequesNeedingAction(data.cheques);
@@ -86,29 +108,32 @@ function OwnersPage() {
     <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Owners</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{t("Owners")}</h1>
           <p className="text-sm text-muted-foreground">
-            Sellers and landlords. Win the listing, keep the owner updated, and track rent cheques
-            and renewals.
+            {t(
+              "Sellers and landlords. Win the listing, keep the owner updated, and track rent cheques and renewals.",
+            )}
           </p>
         </div>
         <Button onClick={() => setEditing(emptyOwner())}>
           <Plus className="size-4" />
-          Add owner
+          {t("Add owner")}
         </Button>
       </div>
 
       <div
         role="tablist"
-        aria-label="Owners view"
+        aria-label={t("Owners view")}
         className="mb-4 inline-flex rounded-lg border border-border p-1 text-sm"
       >
         {(
           [
-            ["pipeline", `Listing pipeline (${data.owners.length})`],
+            ["pipeline", t("Listing pipeline ({n})", { n: data.owners.length })],
             [
               "rentals",
-              `Rentals${due.length + renewals.length ? ` · ${due.length + renewals.length} need you` : ""}`,
+              due.length + renewals.length
+                ? t("Rentals · {n} need you", { n: due.length + renewals.length })
+                : t("Rentals"),
             ],
           ] as const
         ).map(([k, label]) => (
@@ -131,18 +156,18 @@ function OwnersPage() {
 
       {tab === "pipeline" ? (
         data.owners.length === 0 ? (
-          <Empty text="No owners yet. Add the owners you want to win listings from." />
+          <Empty text={t("No owners yet. Add the owners you want to win listings from.")} />
         ) : (
           <div className="space-y-5">
             {SELLER_STAGES.map((s) => {
               const owners = data.owners.filter((o) => o.stage === s.id);
               if (owners.length === 0) return null;
               return (
-                <section key={s.id} aria-label={s.label}>
+                <section key={s.id} aria-label={t(s.label)}>
                   <h2 className="mb-2 text-sm font-semibold">
-                    {s.label}{" "}
+                    {t(s.label)}{" "}
                     <span className="font-normal text-muted-foreground">
-                      ({owners.length}) · {s.hint}
+                      ({owners.length}) · {t(s.hint)}
                     </span>
                   </h2>
                   <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-background">
@@ -151,16 +176,16 @@ function OwnersPage() {
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                           <button
                             type="button"
-                            className="min-w-0 flex-1 basis-56 text-left"
+                            className="min-w-0 flex-1 basis-56 text-start"
                             onClick={() => setOpen(open === o.id ? null : o.id)}
                           >
                             <span className="font-medium">{o.name}</span>
-                            <span className="ml-2 text-xs text-muted-foreground">
+                            <span className="ms-2 text-xs text-muted-foreground">
                               {o.intent === "sell"
-                                ? "Selling"
+                                ? t("Selling")
                                 : o.intent === "rent"
-                                  ? "Renting out"
-                                  : o.kind}
+                                  ? t("Renting out")
+                                  : t(o.kind)}
                             </span>
                             <span className="block truncate text-sm text-muted-foreground">
                               {[
@@ -169,21 +194,23 @@ function OwnersPage() {
                                 o.asking_price_aed ? aed(o.asking_price_aed) : null,
                               ]
                                 .filter(Boolean)
-                                .join(" · ") || "No property details yet"}
+                                .join(" · ") || t("No property details yet")}
                             </span>
                           </button>
                           {o.next_action_on && (
                             <span
                               className={`rounded-full px-2 py-0.5 text-xs ${o.next_action_on < todayIso() ? TONE.late : TONE.ok}`}
                             >
-                              Next: {o.next_action_on}
+                              {t("Next: {date}", { date: o.next_action_on })}
                             </span>
                           )}
                           <span className="text-xs text-muted-foreground">
-                            {data.listings.filter((l) => l.owner_id === o.id).length} listing(s)
+                            {t("{n} listing(s)", {
+                              n: data.listings.filter((l) => l.owner_id === o.id).length,
+                            })}
                           </span>
                           <select
-                            aria-label={`Stage for ${o.name}`}
+                            aria-label={t("Stage for {name}", { name: o.name })}
                             className={selectCls}
                             value={o.stage}
                             onChange={(e) =>
@@ -194,7 +221,7 @@ function OwnersPage() {
                           >
                             {SELLER_STAGES.map((x) => (
                               <option key={x.id} value={x.id}>
-                                {x.label}
+                                {t(x.label)}
                               </option>
                             ))}
                           </select>
@@ -203,7 +230,7 @@ function OwnersPage() {
                             size="sm"
                             onClick={() => setEditing(toInput(o))}
                           >
-                            Edit
+                            {t("Edit")}
                           </Button>
                         </div>
                         {open === o.id && <OwnerDetail owner={o} data={data} run={run} />}
@@ -255,6 +282,7 @@ function Empty({ text }: { text: string }) {
 type Run = (fn: () => Promise<unknown>) => Promise<void>;
 
 function OwnerDetail({ owner, data, run }: { owner: Owner; data: Board; run: Run }) {
+  const { t } = useLang();
   const link = useServerFn(linkListingOwner);
   const mine = data.listings.filter((l) => l.owner_id === owner.id);
   const free = data.listings.filter((l) => !l.owner_id);
@@ -263,7 +291,7 @@ function OwnerDetail({ owner, data, run }: { owner: Owner; data: Board; run: Run
     <div className="mt-3 space-y-3 rounded-lg bg-muted/40 p-3 text-sm">
       {owner.notes && <p className="whitespace-pre-wrap text-muted-foreground">{owner.notes}</p>}
       {mine.length === 0 && (
-        <p className="text-muted-foreground">No listing linked to this owner yet.</p>
+        <p className="text-muted-foreground">{t("No listing linked to this owner yet.")}</p>
       )}
       {mine.map((l) => {
         const text = ownerUpdate(owner.name, l, data.agentName);
@@ -278,19 +306,29 @@ function OwnerDetail({ owner, data, run }: { owner: Owner; data: Board; run: Run
                 {l.title}
               </Link>
               <span className="text-xs text-muted-foreground">
-                {l.status} · {aed(l.price_aed)} · {l.viewingsDone} viewings done ·{" "}
-                {l.viewingsBooked} booked · {l.matchingBuyers} matching buyers
+                {t(
+                  "{status} · {price} · {done} viewings done · {booked} booked · {buyers} matching buyers",
+                  {
+                    status: t(l.status),
+                    price: aed(l.price_aed),
+                    done: l.viewingsDone,
+                    booked: l.viewingsBooked,
+                    buyers: l.matchingBuyers,
+                  },
+                )}
               </span>
               <button
                 type="button"
-                className="ml-auto text-xs text-muted-foreground underline"
+                className="ms-auto text-xs text-muted-foreground underline"
                 onClick={() => void run(() => link({ data: { listingId: l.id, ownerId: null } }))}
               >
-                Unlink
+                {t("Unlink")}
               </button>
             </div>
             <details className="mt-2">
-              <summary className="cursor-pointer text-xs font-medium">Owner update to copy</summary>
+              <summary className="cursor-pointer text-xs font-medium">
+                {t("Owner update to copy")}
+              </summary>
               <pre className="mt-2 whitespace-pre-wrap rounded-md bg-muted p-3 text-xs">{text}</pre>
               <Button
                 variant="outline"
@@ -302,10 +340,10 @@ function OwnerDetail({ owner, data, run }: { owner: Owner; data: Board; run: Run
                 }}
               >
                 <Copy className="size-4" />
-                {copied === l.id ? "Copied" : "Copy update"}
+                {copied === l.id ? t("Copied") : t("Copy update")}
               </Button>
-              <span className="ml-2 text-xs text-muted-foreground">
-                Nothing is sent from here. Paste it into WhatsApp or email.
+              <span className="ms-2 text-xs text-muted-foreground">
+                {t("Nothing is sent from here. Paste it into WhatsApp or email.")}
               </span>
             </details>
           </div>
@@ -313,7 +351,7 @@ function OwnerDetail({ owner, data, run }: { owner: Owner; data: Board; run: Run
       })}
       {free.length > 0 && (
         <label className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          Link a listing
+          {t("Link a listing")}
           <select
             className={selectCls}
             value=""
@@ -322,7 +360,7 @@ function OwnerDetail({ owner, data, run }: { owner: Owner; data: Board; run: Run
               void run(() => link({ data: { listingId: e.target.value, ownerId: owner.id } }))
             }
           >
-            <option value="">Choose…</option>
+            <option value="">{t("Choose…")}</option>
             {free.map((l) => (
               <option key={l.id} value={l.id}>
                 {l.title}
@@ -346,6 +384,7 @@ function Rentals({
   due: Board["cheques"];
   run: Run;
 }) {
+  const { t } = useLang();
   const add = useServerFn(addCheque);
   const status = useServerFn(setChequeStatus);
   const remove = useServerFn(deleteCheque);
@@ -355,16 +394,18 @@ function Rentals({
   const [count, setCount] = useState("4");
   const [every, setEvery] = useState("3");
   const [no, setNo] = useState("");
-  const ownerName = (id: string) => data.owners.find((o) => o.id === id)?.name ?? "Owner";
+  const ownerName = (id: string) => data.owners.find((o) => o.id === id)?.name ?? t("Owner");
   if (data.owners.length === 0)
-    return <Empty text="Add a landlord first, then track their lease and rent cheques here." />;
+    return (
+      <Empty text={t("Add a landlord first, then track their lease and rent cheques here.")} />
+    );
   return (
     <div className="space-y-5">
       <section className="rounded-xl border border-border bg-background p-4">
-        <h2 className="mb-2 font-semibold">Needs you ({due.length})</h2>
+        <h2 className="mb-2 font-semibold">{t("Needs you ({n})", { n: due.length })}</h2>
         {due.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No cheque is bounced, overdue or due this week.
+            {t("No cheque is bounced, overdue or due this week.")}
           </p>
         ) : (
           <ul className="divide-y divide-border text-sm">
@@ -381,9 +422,11 @@ function Rentals({
       </section>
 
       <section>
-        <h2 className="mb-2 font-semibold">Leases</h2>
+        <h2 className="mb-2 font-semibold">{t("Leases")}</h2>
         {landlords.length === 0 ? (
-          <Empty text='No landlords yet. Edit an owner and set "Renting out" or a lease end date.' />
+          <Empty
+            text={t('No landlords yet. Edit an owner and set "Renting out" or a lease end date.')}
+          />
         ) : (
           <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-background">
             {landlords.map((o) => {
@@ -398,21 +441,25 @@ function Rentals({
                         {[
                           o.building,
                           o.area,
-                          o.tenant_name && `Tenant: ${o.tenant_name}`,
-                          o.annual_rent_aed ? `${aed(o.annual_rent_aed)} a year` : null,
+                          o.tenant_name && t("Tenant: {name}", { name: o.tenant_name }),
+                          o.annual_rent_aed
+                            ? t("{amount} a year", { amount: aed(o.annual_rent_aed) })
+                            : null,
                         ]
                           .filter(Boolean)
-                          .join(" · ") || "No details yet"}
+                          .join(" · ") || t("No details yet")}
                       </span>
                     </span>
                     {lease ? (
                       <span
                         className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${TONE[lease.tone]}`}
                       >
-                        {lease.label}
+                        {leaseText(lease.days, t)}
                       </span>
                     ) : (
-                      <span className="text-xs text-muted-foreground">No lease end date</span>
+                      <span className="text-xs text-muted-foreground">
+                        {t("No lease end date")}
+                      </span>
                     )}
                   </div>
                   {cheques.length > 0 && (
@@ -425,7 +472,7 @@ function Rentals({
                             void run(() => status({ data: { id: c.id, status: s } }))
                           }
                           onDelete={() =>
-                            window.confirm("Remove this cheque?") &&
+                            window.confirm(t("Remove this cheque?")) &&
                             void run(() => remove({ data: c.id }))
                           }
                         />
@@ -440,7 +487,7 @@ function Rentals({
       </section>
 
       <section className="rounded-xl border border-border bg-background p-4">
-        <h2 className="mb-2 font-semibold">Add rent cheques</h2>
+        <h2 className="mb-2 font-semibold">{t("Add rent cheques")}</h2>
         <form
           className="flex flex-wrap items-end gap-3"
           onSubmit={(e) => {
@@ -464,7 +511,7 @@ function Rentals({
           }}
         >
           <label className="text-sm">
-            Landlord
+            {t("Landlord")}
             <select
               className={`${selectCls} mt-1 block w-48`}
               value={ownerId}
@@ -478,7 +525,7 @@ function Rentals({
             </select>
           </label>
           <label className="text-sm">
-            Each cheque (AED)
+            {t("Each cheque (AED)")}
             <Input
               className="mt-1 h-9 w-32"
               inputMode="decimal"
@@ -487,7 +534,7 @@ function Rentals({
             />
           </label>
           <label className="text-sm">
-            First due
+            {t("First due")}
             <Input
               className="mt-1 h-9 w-40"
               type="date"
@@ -496,7 +543,7 @@ function Rentals({
             />
           </label>
           <label className="text-sm">
-            How many
+            {t("How many")}
             <select
               className={`${selectCls} mt-1 block`}
               value={count}
@@ -508,7 +555,7 @@ function Rentals({
             </select>
           </label>
           <label className="text-sm">
-            Every
+            {t("Every")}
             <select
               className={`${selectCls} mt-1 block`}
               value={every}
@@ -516,13 +563,13 @@ function Rentals({
             >
               {[1, 2, 3, 4, 6, 12].map((n) => (
                 <option key={n} value={n}>
-                  {n} month{n === 1 ? "" : "s"}
+                  {n === 1 ? t("1 month") : t("{n} months", { n })}
                 </option>
               ))}
             </select>
           </label>
           <label className="text-sm">
-            First cheque no.
+            {t("First cheque no.")}
             <Input
               className="mt-1 h-9 w-32"
               maxLength={60}
@@ -531,12 +578,13 @@ function Rentals({
             />
           </label>
           <Button type="submit" size="sm" className="h-9" disabled={!amount.trim() || !ownerId}>
-            Add
+            {t("Add")}
           </Button>
         </form>
         <p className="mt-2 text-xs text-muted-foreground">
-          You get an alert in the bell 3 days before each cheque is due. Lease renewals show here 90
-          days before the end date.
+          {t(
+            "You get an alert in the bell 3 days before each cheque is due. Lease renewals show here 90 days before the end date.",
+          )}
         </p>
       </section>
     </div>
@@ -554,6 +602,7 @@ function ChequeRow({
   onStatus: (s: "pending" | "deposited" | "cleared" | "bounced") => void;
   onDelete?: () => void;
 }) {
+  const { t } = useLang();
   const st = chequeState(c);
   return (
     <li className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2">
@@ -562,29 +611,29 @@ function ChequeRow({
         {aed(c.amount_aed)}{" "}
         <span className="text-muted-foreground">
           · {c.due_date}
-          {c.cheque_no && ` · no. ${c.cheque_no}`}
+          {c.cheque_no && ` · ${t("no. {no}", { no: c.cheque_no })}`}
         </span>
       </span>
       <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${TONE[st.tone]}`}>
-        {st.label}
+        {chequeText(st.label, t)}
       </span>
       <select
-        aria-label="Cheque status"
+        aria-label={t("Cheque status")}
         className={selectCls}
         value={c.status}
         onChange={(e) => onStatus(e.target.value as "pending")}
       >
-        <option value="pending">Pending</option>
-        <option value="deposited">Deposited</option>
-        <option value="cleared">Cleared</option>
-        <option value="bounced">Bounced</option>
+        <option value="pending">{t("Pending")}</option>
+        <option value="deposited">{t("Deposited")}</option>
+        <option value="cleared">{t("Cleared")}</option>
+        <option value="bounced">{t("Bounced")}</option>
       </select>
       {onDelete && (
         <Button
           variant="ghost"
           size="icon"
           className="size-8"
-          aria-label="Remove cheque"
+          aria-label={t("Remove cheque")}
           onClick={onDelete}
         >
           <Trash2 className="size-4" />
@@ -603,6 +652,7 @@ function OwnerDialog({
   setEditing: (v: (OwnerInput & { id?: string }) | null) => void;
   onSaved: () => void;
 }) {
+  const { t } = useLang();
   const save = useServerFn(saveOwner);
   const del = useServerFn(deleteOwner);
   const [busy, setBusy] = useState(false);
@@ -613,11 +663,13 @@ function OwnerDialog({
   return (
     <Dialog open onOpenChange={(o) => !o && setEditing(null)}>
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
-        <DialogTitle>{editing.id ? "Edit owner" : "Add owner"}</DialogTitle>
-        <DialogDescription>Only owners who agreed to updates receive messages.</DialogDescription>
+        <DialogTitle>{editing.id ? t("Edit owner") : t("Add owner")}</DialogTitle>
+        <DialogDescription>
+          {t("Only owners who agreed to updates receive messages.")}
+        </DialogDescription>
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="text-sm">
-            Name
+            {t("Name")}
             <Input
               className="mt-1"
               maxLength={200}
@@ -626,7 +678,7 @@ function OwnerDialog({
             />
           </label>
           <label className="text-sm">
-            Phone
+            {t("Phone")}
             <Input
               className="mt-1"
               maxLength={50}
@@ -635,7 +687,7 @@ function OwnerDialog({
             />
           </label>
           <label className="text-sm">
-            Area
+            {t("Area")}
             <Input
               className="mt-1"
               maxLength={200}
@@ -644,7 +696,7 @@ function OwnerDialog({
             />
           </label>
           <label className="text-sm">
-            Building
+            {t("Building")}
             <Input
               className="mt-1"
               maxLength={200}
@@ -653,19 +705,19 @@ function OwnerDialog({
             />
           </label>
           <label className="text-sm">
-            They want to
+            {t("They want to")}
             <select
               className={`${selectCls} mt-1 block w-full`}
               value={editing.intent}
               onChange={(e) => set("intent", e.target.value as OwnerInput["intent"])}
             >
-              <option value="unknown">Not sure yet</option>
-              <option value="sell">Sell</option>
-              <option value="rent">Rent out</option>
+              <option value="unknown">{t("Not sure yet")}</option>
+              <option value="sell">{t("Sell")}</option>
+              <option value="rent">{t("Rent out")}</option>
             </select>
           </label>
           <label className="text-sm">
-            Stage
+            {t("Stage")}
             <select
               className={`${selectCls} mt-1 block w-full`}
               value={editing.stage}
@@ -673,13 +725,13 @@ function OwnerDialog({
             >
               {SELLER_STAGES.map((s) => (
                 <option key={s.id} value={s.id}>
-                  {s.label}
+                  {t(s.label)}
                 </option>
               ))}
             </select>
           </label>
           <label className="text-sm">
-            Asking price (AED)
+            {t("Asking price (AED)")}
             <Input
               className="mt-1"
               inputMode="decimal"
@@ -688,7 +740,7 @@ function OwnerDialog({
             />
           </label>
           <label className="text-sm">
-            Next action date
+            {t("Next action date")}
             <Input
               className="mt-1"
               type="date"
@@ -697,7 +749,7 @@ function OwnerDialog({
             />
           </label>
           <label className="text-sm">
-            Tenant name (if rented)
+            {t("Tenant name (if rented)")}
             <Input
               className="mt-1"
               maxLength={200}
@@ -706,7 +758,7 @@ function OwnerDialog({
             />
           </label>
           <label className="text-sm">
-            Annual rent (AED)
+            {t("Annual rent (AED)")}
             <Input
               className="mt-1"
               inputMode="decimal"
@@ -715,7 +767,7 @@ function OwnerDialog({
             />
           </label>
           <label className="text-sm">
-            Lease end
+            {t("Lease end")}
             <Input
               className="mt-1"
               type="date"
@@ -724,7 +776,7 @@ function OwnerDialog({
             />
           </label>
           <label className="text-sm">
-            Handover date
+            {t("Handover date")}
             <Input
               className="mt-1"
               type="date"
@@ -733,29 +785,29 @@ function OwnerDialog({
             />
           </label>
           <label className="text-sm">
-            Type
+            {t("Type")}
             <select
               className={`${selectCls} mt-1 block w-full`}
               value={editing.kind}
               onChange={(e) => set("kind", e.target.value as "owner" | "investor")}
             >
-              <option value="owner">Owner-occupier</option>
-              <option value="investor">Investor</option>
+              <option value="owner">{t("Owner-occupier")}</option>
+              <option value="investor">{t("Investor")}</option>
             </select>
           </label>
           <label className="text-sm">
-            Update frequency
+            {t("Update frequency")}
             <select
               className={`${selectCls} mt-1 block w-full`}
               value={editing.update_frequency}
               onChange={(e) => set("update_frequency", e.target.value as "quarterly" | "monthly")}
             >
-              <option value="quarterly">Every 3 months</option>
-              <option value="monthly">Monthly</option>
+              <option value="quarterly">{t("Every 3 months")}</option>
+              <option value="monthly">{t("Monthly")}</option>
             </select>
           </label>
           <label className="text-sm sm:col-span-2">
-            Notes
+            {t("Notes")}
             <Textarea
               className="mt-1"
               rows={2}
@@ -770,7 +822,7 @@ function OwnerDialog({
               checked={editing.agreed_to_updates}
               onChange={(e) => set("agreed_to_updates", e.target.checked)}
             />
-            Agreed to updates
+            {t("Agreed to updates")}
           </label>
         </div>
         {error && (
@@ -784,7 +836,11 @@ function OwnerDialog({
               variant="ghost"
               size="sm"
               onClick={async () => {
-                if (!window.confirm(`Delete ${editing.name}? Their rent cheques are deleted too.`))
+                if (
+                  !window.confirm(
+                    t("Delete {name}? Their rent cheques are deleted too.", { name: editing.name }),
+                  )
+                )
                   return;
                 await del({ data: editing.id as string });
                 setEditing(null);
@@ -792,7 +848,7 @@ function OwnerDialog({
               }}
             >
               <Trash2 className="size-4" />
-              Delete
+              {t("Delete")}
             </Button>
           ) : (
             <span />
@@ -807,14 +863,14 @@ function OwnerDialog({
                 setEditing(null);
                 onSaved();
               } catch {
-                setError("Could not save the owner.");
+                setError(t("Could not save the owner."));
               } finally {
                 setBusy(false);
               }
             }}
           >
             <Save className="size-4" />
-            {busy ? "Saving…" : "Save owner"}
+            {busy ? t("Saving…") : t("Save owner")}
           </Button>
         </div>
       </DialogContent>
