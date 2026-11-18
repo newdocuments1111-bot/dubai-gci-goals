@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useMembership } from "@/hooks/use-membership";
 import { createLead, listLeads } from "@/lib/leads-app.functions";
 import { timezoneFromPhone } from "@/lib/leads-app";
+import { LEAD_SOURCES } from "@/lib/inbox";
 import {
   activePage,
   searchablePages,
@@ -51,15 +52,7 @@ const ICONS: Record<NavSectionId, ComponentType<{ className?: string }>> = {
   tools: Calculator,
 };
 
-const SOURCES = [
-  "Bayut",
-  "Property Finder",
-  "Instagram",
-  "WhatsApp",
-  "Website",
-  "Referral",
-  "Other",
-] as const;
+const SOURCES = LEAD_SOURCES;
 
 const initials = (name: string) =>
   name
