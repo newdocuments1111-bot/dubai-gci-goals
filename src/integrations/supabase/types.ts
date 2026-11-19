@@ -1618,6 +1618,9 @@ export type Database = {
           language: string
           last_message_at: string | null
           learned: Json
+          meta_ad_id: string | null
+          meta_adset_id: string | null
+          meta_campaign_id: string | null
           name: string
           next_step: string
           opted_in: boolean
@@ -1666,6 +1669,9 @@ export type Database = {
           language?: string
           last_message_at?: string | null
           learned?: Json
+          meta_ad_id?: string | null
+          meta_adset_id?: string | null
+          meta_campaign_id?: string | null
           name?: string
           next_step?: string
           opted_in?: boolean
@@ -1714,6 +1720,9 @@ export type Database = {
           language?: string
           last_message_at?: string | null
           learned?: Json
+          meta_ad_id?: string | null
+          meta_adset_id?: string | null
+          meta_campaign_id?: string | null
           name?: string
           next_step?: string
           opted_in?: boolean
@@ -2003,6 +2012,195 @@ export type Database = {
             columns: ["agency_id"]
             isOneToOne: false
             referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_ad_insights: {
+        Row: {
+          ad_account_id: string
+          ad_id: string
+          ad_name: string
+          adset_id: string
+          adset_name: string
+          agency_id: string
+          campaign_id: string
+          campaign_name: string
+          clicks: number
+          currency: string
+          date: string
+          id: number
+          impressions: number
+          meta_leads: number
+          spend: number
+          synced_at: string
+        }
+        Insert: {
+          ad_account_id: string
+          ad_id: string
+          ad_name?: string
+          adset_id?: string
+          adset_name?: string
+          agency_id: string
+          campaign_id?: string
+          campaign_name?: string
+          clicks?: number
+          currency?: string
+          date: string
+          id?: never
+          impressions?: number
+          meta_leads?: number
+          spend?: number
+          synced_at?: string
+        }
+        Update: {
+          ad_account_id?: string
+          ad_id?: string
+          ad_name?: string
+          adset_id?: string
+          adset_name?: string
+          agency_id?: string
+          campaign_id?: string
+          campaign_name?: string
+          clicks?: number
+          currency?: string
+          date?: string
+          id?: never
+          impressions?: number
+          meta_leads?: number
+          spend?: number
+          synced_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_ad_insights_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_ads_connections: {
+        Row: {
+          account_name: string
+          ad_account_id: string
+          agency_id: string
+          connected_at: string
+          connected_by: string | null
+          currency: string
+          last_sync_at: string | null
+          last_sync_message: string
+          last_sync_ok: boolean | null
+          last_sync_rows: number
+          sync_started_at: string | null
+        }
+        Insert: {
+          account_name?: string
+          ad_account_id: string
+          agency_id: string
+          connected_at?: string
+          connected_by?: string | null
+          currency?: string
+          last_sync_at?: string | null
+          last_sync_message?: string
+          last_sync_ok?: boolean | null
+          last_sync_rows?: number
+          sync_started_at?: string | null
+        }
+        Update: {
+          account_name?: string
+          ad_account_id?: string
+          agency_id?: string
+          connected_at?: string
+          connected_by?: string | null
+          currency?: string
+          last_sync_at?: string | null
+          last_sync_message?: string
+          last_sync_ok?: boolean | null
+          last_sync_rows?: number
+          sync_started_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_ads_connections_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: true
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_ads_tokens: {
+        Row: {
+          access_token: string
+          agency_id: string
+          updated_at: string
+        }
+        Insert: {
+          access_token: string
+          agency_id: string
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          agency_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_ads_tokens_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: true
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_lead_hits: {
+        Row: {
+          agency_id: string
+          created_at: string
+          duplicate: boolean
+          id: string
+          lead_id: string
+          meta_ad_id: string | null
+          meta_adset_id: string | null
+          meta_campaign_id: string | null
+        }
+        Insert: {
+          agency_id: string
+          created_at?: string
+          duplicate?: boolean
+          id?: string
+          lead_id: string
+          meta_ad_id?: string | null
+          meta_adset_id?: string | null
+          meta_campaign_id?: string | null
+        }
+        Update: {
+          agency_id?: string
+          created_at?: string
+          duplicate?: boolean
+          id?: string
+          lead_id?: string
+          meta_ad_id?: string | null
+          meta_adset_id?: string | null
+          meta_campaign_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_lead_hits_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meta_lead_hits_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
             referencedColumns: ["id"]
           },
         ]
