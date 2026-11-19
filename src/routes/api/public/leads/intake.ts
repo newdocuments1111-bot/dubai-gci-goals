@@ -49,6 +49,13 @@ export const Route = createFileRoute("/api/public/leads/intake")({
         }
         const result = data as { id?: string; duplicate?: boolean; error?: string } | null;
         if (!result || result.error) return json({ error: "Missing or invalid key." }, 401);
+        // Optional Meta ids (ad_id / adset_id / campaign_id, digits only). Never fails the intake.
+        const { parseMetaAdIds } = await import("@/lib/meta-ads");
+        const metaIds = parseMetaAdIds(body);
+        if (metaIds && result.id) {
+          const { recordMetaLeadAd } = await import("@/lib/meta-ads.server");
+          await recordMetaLeadAd(supabaseAdmin, result.id, metaIds, result.duplicate === true);
+        }
         return json(
           { id: result.id, duplicate: result.duplicate === true },
           result.duplicate ? 200 : 201,
