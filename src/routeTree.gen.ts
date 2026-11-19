@@ -58,6 +58,7 @@ import { Route as AuthenticatedSettingsRoutingRouteImport } from './routes/_auth
 import { Route as AuthenticatedSettingsWhatsappRouteImport } from './routes/_authenticated/settings.whatsapp'
 import { Route as ApiPublicAlertsDispatchRouteImport } from './routes/api/public/alerts/dispatch'
 import { Route as ApiPublicLeadsIntakeRouteImport } from './routes/api/public/leads/intake'
+import { Route as ApiPublicMetaAdsSyncRouteImport } from './routes/api/public/meta-ads.sync'
 import { Route as ApiPublicWhatsappOutboxRouteImport } from './routes/api/public/whatsapp/outbox'
 import { Route as ApiPublicWhatsappWebhookRouteImport } from './routes/api/public/whatsapp/webhook'
 import { Route as AuthenticatedHolidayHomesPayoutHomeIdMonthRouteImport } from './routes/_authenticated/holiday-homes_.payout.$homeId.$month'
@@ -323,6 +324,11 @@ const ApiPublicLeadsIntakeRoute = ApiPublicLeadsIntakeRouteImport.update({
   path: '/api/public/leads/intake',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicMetaAdsSyncRoute = ApiPublicMetaAdsSyncRouteImport.update({
+  id: '/api/public/meta-ads/sync',
+  path: '/api/public/meta-ads/sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicWhatsappOutboxRoute = ApiPublicWhatsappOutboxRouteImport.update({
   id: '/api/public/whatsapp/outbox',
   path: '/api/public/whatsapp/outbox',
@@ -396,6 +402,7 @@ export interface FileRoutesByFullPath {
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/api/public/alerts/dispatch': typeof ApiPublicAlertsDispatchRoute
   '/api/public/leads/intake': typeof ApiPublicLeadsIntakeRoute
+  '/api/public/meta-ads/sync': typeof ApiPublicMetaAdsSyncRoute
   '/api/public/whatsapp/outbox': typeof ApiPublicWhatsappOutboxRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
   '/holiday-homes/payout/$homeId/$month': typeof AuthenticatedHolidayHomesPayoutHomeIdMonthRoute
@@ -450,6 +457,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/api/public/alerts/dispatch': typeof ApiPublicAlertsDispatchRoute
   '/api/public/leads/intake': typeof ApiPublicLeadsIntakeRoute
+  '/api/public/meta-ads/sync': typeof ApiPublicMetaAdsSyncRoute
   '/api/public/whatsapp/outbox': typeof ApiPublicWhatsappOutboxRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
   '/holiday-homes/payout/$homeId/$month': typeof AuthenticatedHolidayHomesPayoutHomeIdMonthRoute
@@ -506,6 +514,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/api/public/alerts/dispatch': typeof ApiPublicAlertsDispatchRoute
   '/api/public/leads/intake': typeof ApiPublicLeadsIntakeRoute
+  '/api/public/meta-ads/sync': typeof ApiPublicMetaAdsSyncRoute
   '/api/public/whatsapp/outbox': typeof ApiPublicWhatsappOutboxRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
   '/_authenticated/holiday-homes_/payout/$homeId/$month': typeof AuthenticatedHolidayHomesPayoutHomeIdMonthRoute
@@ -562,6 +571,7 @@ export interface FileRouteTypes {
     | '/settings/'
     | '/api/public/alerts/dispatch'
     | '/api/public/leads/intake'
+    | '/api/public/meta-ads/sync'
     | '/api/public/whatsapp/outbox'
     | '/api/public/whatsapp/webhook'
     | '/holiday-homes/payout/$homeId/$month'
@@ -616,6 +626,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/api/public/alerts/dispatch'
     | '/api/public/leads/intake'
+    | '/api/public/meta-ads/sync'
     | '/api/public/whatsapp/outbox'
     | '/api/public/whatsapp/webhook'
     | '/holiday-homes/payout/$homeId/$month'
@@ -671,6 +682,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/'
     | '/api/public/alerts/dispatch'
     | '/api/public/leads/intake'
+    | '/api/public/meta-ads/sync'
     | '/api/public/whatsapp/outbox'
     | '/api/public/whatsapp/webhook'
     | '/_authenticated/holiday-homes_/payout/$homeId/$month'
@@ -688,6 +700,7 @@ export interface RootRouteChildren {
   WelcomeRoute: typeof WelcomeRoute
   ApiPublicAlertsDispatchRoute: typeof ApiPublicAlertsDispatchRoute
   ApiPublicLeadsIntakeRoute: typeof ApiPublicLeadsIntakeRoute
+  ApiPublicMetaAdsSyncRoute: typeof ApiPublicMetaAdsSyncRoute
   ApiPublicWhatsappOutboxRoute: typeof ApiPublicWhatsappOutboxRoute
   ApiPublicWhatsappWebhookRoute: typeof ApiPublicWhatsappWebhookRoute
 }
@@ -1037,6 +1050,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicLeadsIntakeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/meta-ads/sync': {
+      id: '/api/public/meta-ads/sync'
+      path: '/api/public/meta-ads/sync'
+      fullPath: '/api/public/meta-ads/sync'
+      preLoaderRoute: typeof ApiPublicMetaAdsSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/whatsapp/outbox': {
       id: '/api/public/whatsapp/outbox'
       path: '/api/public/whatsapp/outbox'
@@ -1172,6 +1192,7 @@ const rootRouteChildren: RootRouteChildren = {
   WelcomeRoute: WelcomeRoute,
   ApiPublicAlertsDispatchRoute: ApiPublicAlertsDispatchRoute,
   ApiPublicLeadsIntakeRoute: ApiPublicLeadsIntakeRoute,
+  ApiPublicMetaAdsSyncRoute: ApiPublicMetaAdsSyncRoute,
   ApiPublicWhatsappOutboxRoute: ApiPublicWhatsappOutboxRoute,
   ApiPublicWhatsappWebhookRoute: ApiPublicWhatsappWebhookRoute,
 }
