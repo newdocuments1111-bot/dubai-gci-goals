@@ -89,7 +89,7 @@ const fill = (text: string, vars: Record<string, string | number>) =>
   text.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m));
 const dubaiDay = (at: Date) => new Date(at.getTime() + 4 * 3600_000).toISOString().slice(0, 10);
 /** Phones match on their last nine digits, so +971 50… and 050… are the same person. */
-const phoneKey = (phone: string) => {
+export const phoneKey = (phone: string) => {
   const digits = phone.replace(/\D/g, "");
   return digits.length >= 7 ? digits.slice(-9) : "";
 };

@@ -6,6 +6,7 @@
 import { z } from "zod";
 import { filterSchema, type LeadFilter } from "./lists";
 import { dubaiSendWindow } from "./whatsapp-templates";
+import { phoneDigits } from "./whatsapp";
 
 export const MAX_CAMPAIGN_LEADS = 500;
 export const MAX_STEPS = 3;
@@ -16,15 +17,122 @@ export const stepSchema = z.object({
 });
 export type CampaignStep = z.infer<typeof stepSchema>;
 
-export const campaignSchema = z.object({
-  name: z.string().trim().min(1).max(100),
-  audienceLabel: z.string().trim().max(200),
-  filter: filterSchema,
-  steps: z.array(stepSchema).min(1).max(MAX_STEPS),
-  /** Typed once; used for every blank except the client's own name and area. */
-  defaults: z.record(z.string().max(30), z.string().max(200)),
-});
+/** Where an audience of picked leads came from. Only Seller Finder for now. */
+export const CAMPAIGN_SOURCES = ["seller_finder"] as const;
+export type CampaignSource = (typeof CAMPAIGN_SOURCES)[number];
+
+export const campaignSchema = z
+  .object({
+    name: z.string().trim().min(1).max(100),
+    audienceLabel: z.string().trim().max(200),
+    /** A lead filter (ready-made audience or saved list)… */
+    filter: filterSchema.optional(),
+    /** …or an explicit list of lead ids, e.g. picked in Seller Finder. The server re-checks every id. */
+    leadIds: z.array(z.string().uuid()).min(1).max(MAX_CAMPAIGN_LEADS).optional(),
+    source: z.enum(CAMPAIGN_SOURCES).optional(),
+    steps: z.array(stepSchema).min(1).max(MAX_STEPS),
+    /** Typed once; used for every blank except the client's own name and area. */
+    defaults: z.record(z.string().max(30), z.string().max(200)),
+  })
+  .refine((c) => (c.filter === undefined) !== (c.leadIds === undefined), {
+    message: "Choose either a list filter or picked clients, not both.",
+    path: ["leadIds"],
+  })
+  .refine((c) => !c.source || c.leadIds !== undefined, {
+    message: "A campaign from Seller Finder needs its picked clients.",
+    path: ["source"],
+  });
 export type CampaignInput = z.infer<typeof campaignSchema>;
+
+/**
+ * The rows for an explicit audience, in the order asked, each id once. `rows` must already be limited to
+ * the caller's agency; an id that is not among them (another agency's, deleted, or made up) is counted
+ * as not found and never messaged.
+ */
+export function explicitAudience<L extends { id: string }>(
+  ids: string[],
+  rows: L[],
+): { leads: L[]; notFound: number } {
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  const seen = new Set<string>();
+  const leads: L[] = [];
+  let notFound = 0;
+  for (const id of ids) {
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const lead = byId.get(id);
+    if (lead) leads.push(lead);
+    else notFound++;
+  }
+  return { leads, notFound };
+}
+
+export type CampaignSkipped = {
+  stopped: number;
+  noConsent: number;
+  noNumber: number;
+  missingDetails: number;
+  overLimit: number;
+  /** Only checked for picked audiences (Seller Finder); filter audiences keep their old rules. */
+  doNotCall: number;
+  /** Picked ids that are not a lead of this agency. */
+  notFound: number;
+};
+
+export type RecipientLead = {
+  name: string;
+  area: string;
+  phone: string;
+  opted_in: boolean;
+  stopped: boolean;
+  do_not_call?: boolean;
+};
+
+/**
+ * Who gets the campaign and who is left out and why: never STOP, only recorded consent (`opted_in`),
+ * a WhatsApp number, every blank filled, at most MAX_CAMPAIGN_LEADS. The send job checks all of it again.
+ */
+export function pickRecipients<L extends RecipientLead>(
+  matching: L[],
+  tokens: string[],
+  defaults: Record<string, string>,
+  opts: { checkDoNotCall?: boolean; notFound?: number } = {},
+): { recipients: { lead: L; values: Record<string, string> }[]; skipped: CampaignSkipped } {
+  const skipped: CampaignSkipped = {
+    stopped: 0,
+    noConsent: 0,
+    noNumber: 0,
+    missingDetails: 0,
+    overLimit: 0,
+    doNotCall: 0,
+    notFound: opts.notFound ?? 0,
+  };
+  const recipients: { lead: L; values: Record<string, string> }[] = [];
+  for (const lead of matching) {
+    if (lead.stopped) skipped.stopped++;
+    else if (opts.checkDoNotCall && lead.do_not_call) skipped.doNotCall++;
+    else if (!lead.opted_in) skipped.noConsent++;
+    else if (phoneDigits(lead.phone).length < 6) skipped.noNumber++;
+    else {
+      const { values, missing } = leadValues(lead, tokens, defaults);
+      if (missing.length) skipped.missingDetails++;
+      else if (recipients.length >= MAX_CAMPAIGN_LEADS) skipped.overLimit++;
+      else recipients.push({ lead, values });
+    }
+  }
+  return { recipients, skipped };
+}
+
+/**
+ * A lead queued by a Seller Finder campaign is marked as a seller so a reply shows up as a seller lead.
+ * Left alone: leads already seller or landlord, and open buyer/tenant files (someone still buying with
+ * us is not turned into a seller before they say so).
+ */
+export function shouldTagAsSeller(lead: { type: string; outcome: string }): boolean {
+  if (lead.type === "seller" || lead.type === "landlord") return false;
+  if (lead.outcome === "open" && (lead.type === "buyer" || lead.type === "tenant")) return false;
+  return true;
+}
 
 export type StepTemplate = { id: string; label: string; category: string; meta_status: string };
 

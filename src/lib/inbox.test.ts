@@ -65,6 +65,16 @@ describe("inbox intake", () => {
     });
   });
 
+  it("uses utm_campaign / utm_content only when campaign / ad are missing", () => {
+    const utm = { name: "Ali", utm_campaign: "Marina UTM", utm_content: "video-a" };
+    expect(parseIntake(utm)).toEqual({
+      lead: expect.objectContaining({ campaign: "Marina UTM", source_detail: "video-a" }),
+    });
+    expect(parseIntake({ ...utm, campaign: "Given", ad: "Ad B" })).toEqual({
+      lead: expect.objectContaining({ campaign: "Given", source_detail: "Ad B" }),
+    });
+  });
+
   it("rejects a lead with no name and no phone", () => {
     expect(parseIntake({ email: "a@b.c" })).toEqual({ error: expect.any(String) });
     expect(parseIntake("nope")).toEqual({ error: expect.any(String) });

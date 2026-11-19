@@ -579,6 +579,17 @@ const AR: Record<string, string> = {
   "Quick menu": "القائمة السريعة",
   Call: "اتصال",
   Filters: "الفلاتر",
+  // Owners page: Seller Finder "Send as campaign"
+  "All ({n})": "الكل ({n})",
+  "Only High ({n})": "العالي فقط ({n})",
+  Clear: "مسح",
+  "Send as campaign ({n})": "إرسال كحملة ({n})",
+  "Preparing…": "جارٍ التحضير…",
+  "Only people who agreed to WhatsApp messages will get it. You see the cost before sending.":
+    "لن يستلمها إلا من وافق على رسائل واتساب. سترى التكلفة قبل الإرسال.",
+  "Pick {name}": "اختيار {name}",
+  "No one you picked has WhatsApp consent on record, so there is no one to send to.":
+    "لا أحد ممن اخترتهم لديه موافقة مسجّلة على رسائل واتساب، لذلك لا يوجد من يُرسَل إليه.",
 };
 
 export const isLang = (v: unknown): v is Lang => v === "en" || v === "ar";

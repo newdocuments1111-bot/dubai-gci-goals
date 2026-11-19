@@ -19,7 +19,9 @@ import {
   truncateForWhatsApp,
 } from "./whatsapp";
 
-const GRAPH = "https://graph.facebook.com/v25.0";
+/** Meta Graph API version used everywhere the app calls Meta (WhatsApp and Meta Ads). */
+export const GRAPH_API_VERSION = "v25.0";
+const GRAPH = `https://graph.facebook.com/${GRAPH_API_VERSION}`;
 const MAX_MEDIA_BYTES = 8 * 1024 * 1024;
 type Admin = typeof supabaseAdmin;
 type Settings = Tables<"whatsapp_settings">;

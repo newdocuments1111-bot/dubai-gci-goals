@@ -3,15 +3,15 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { requireOwner } from "./agency-access";
 import {
-  MAX_CAMPAIGN_LEADS,
   campaignProblems,
   campaignSchema,
   countStatuses,
-  leadValues,
+  explicitAudience,
+  pickRecipients,
+  shouldTagAsSeller,
   type CampaignInput,
 } from "./campaigns";
-import { applyFilter } from "./lists";
-import { phoneDigits } from "./whatsapp";
+import { EMPTY_FILTER, applyFilter } from "./lists";
 import { DEFAULT_MARKETING_GAP_DAYS, renderTemplate, templateTokens } from "./whatsapp-templates";
 
 type Ctx = { supabase: Parameters<typeof requireOwner>[0]; userId: string };
@@ -73,15 +73,29 @@ export const getCampaigns = createServerFn({ method: "POST" })
 
 /** Who would get the campaign, and who is left out and why. Used for the preview and again when starting. */
 async function plan(context: Ctx, agencyId: string, input: CampaignInput) {
-  const [{ data: leads, error }, { data: templates }, { data: settings }] = await Promise.all([
+  const ids = input.leadIds ? [...new Set(input.leadIds)] : null;
+  const leadQuery = () =>
     context.supabase
       .from("leads")
       .select(
-        "id,agency_id,name,phone,area,budget,score,source,type,stage,outcome,first_reply_at,assigned_agent_id,opted_in,stopped",
+        "id,agency_id,name,phone,area,budget,score,source,type,stage,outcome,first_reply_at,assigned_agent_id,opted_in,stopped,do_not_call",
       )
-      .eq("agency_id", agencyId)
-      .order("created_at", { ascending: false })
-      .limit(5000),
+      .eq("agency_id", agencyId);
+  // Picked clients: only ids that are leads of the caller's own agency are read; anything else counts as not found.
+  const loadLeads = async () => {
+    if (!ids) return leadQuery().order("created_at", { ascending: false }).limit(5000);
+    const pages = await Promise.all(
+      Array.from({ length: Math.ceil(ids.length / 100) }, (_, i) =>
+        leadQuery().in("id", ids.slice(i * 100, i * 100 + 100)),
+      ),
+    );
+    return {
+      data: pages.flatMap((p) => p.data ?? []),
+      error: pages.find((p) => p.error)?.error ?? null,
+    };
+  };
+  const [{ data: leads, error }, { data: templates }, { data: settings }] = await Promise.all([
+    loadLeads(),
     context.supabase
       .from("message_templates")
       .select("id,label,name,category,body,variables,meta_status")
@@ -99,22 +113,21 @@ async function plan(context: Ctx, agencyId: string, input: CampaignInput) {
   if (error) throw new Error("Could not read your leads.");
   const gapDays = settings?.marketing_gap_days ?? DEFAULT_MARKETING_GAP_DAYS;
   const problems = campaignProblems(input.steps, templates ?? [], gapDays);
-  const matching = applyFilter(leads ?? [], input.filter);
+  const picked = ids ? explicitAudience(ids, leads ?? []) : null;
+  const matching = picked ? picked.leads : applyFilter(leads ?? [], input.filter ?? EMPTY_FILTER);
   const tokens = (templates ?? []).flatMap((t) => templateTokens(t.body));
-  const skipped = { stopped: 0, noConsent: 0, noNumber: 0, missingDetails: 0, overLimit: 0 };
-  const recipients: { lead: (typeof matching)[number]; values: Record<string, string> }[] = [];
-  for (const lead of matching) {
-    if (lead.stopped) skipped.stopped++;
-    else if (!lead.opted_in) skipped.noConsent++;
-    else if (phoneDigits(lead.phone).length < 6) skipped.noNumber++;
-    else {
-      const { values, missing } = leadValues(lead, tokens, input.defaults);
-      if (missing.length) skipped.missingDetails++;
-      else if (recipients.length >= MAX_CAMPAIGN_LEADS) skipped.overLimit++;
-      else recipients.push({ lead, values });
-    }
-  }
-  return { problems, matching: matching.length, recipients, skipped, templates: templates ?? [] };
+  // Same rules for both kinds of audience; picked clients are also left out when marked do-not-call.
+  const { recipients, skipped } = pickRecipients(matching, tokens, input.defaults, {
+    checkDoNotCall: Boolean(picked),
+    notFound: picked?.notFound ?? 0,
+  });
+  return {
+    problems,
+    matching: ids ? ids.length : matching.length,
+    recipients,
+    skipped,
+    templates: templates ?? [],
+  };
 }
 
 export const previewCampaign = createServerFn({ method: "POST" })
@@ -219,7 +232,24 @@ export const startCampaign = createServerFn({ method: "POST" })
         500,
       ),
     });
-    return { id: campaign.id, queued: p.recipients.length, skipped: skippedCount };
+    // From Seller Finder: mark the queued clients as sellers so a reply shows up as a seller lead.
+    // Only leads that were queued, under the owner's own access rules; never open buyer/tenant files.
+    let taggedSellers = 0;
+    if (data.source === "seller_finder") {
+      const tagIds = p.recipients
+        .filter(({ lead }) => shouldTagAsSeller(lead))
+        .map((r) => r.lead.id);
+      for (let i = 0; i < tagIds.length; i += 100) {
+        const { data: tagged } = await context.supabase
+          .from("leads")
+          .update({ type: "seller" })
+          .eq("agency_id", access.agencyId)
+          .in("id", tagIds.slice(i, i + 100))
+          .select("id");
+        taggedSellers += tagged?.length ?? 0;
+      }
+    }
+    return { id: campaign.id, queued: p.recipients.length, skipped: skippedCount, taggedSellers };
   });
 
 /** Stop a campaign: every message that has not started sending is cancelled. */
