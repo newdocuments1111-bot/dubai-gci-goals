@@ -20,6 +20,12 @@ import {
   type CampaignStep,
 } from "@/lib/campaigns";
 import { templateTokens } from "@/lib/whatsapp-templates";
+import {
+  SKIP_TEXT,
+  clearSellerHandoff,
+  readSellerHandoff,
+  type SkipReason,
+} from "@/lib/seller-campaign";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -52,7 +58,9 @@ function CampaignsPage() {
   const cancel = useServerFn(cancelCampaign);
 
   const audiences = useMemo(() => audienceOptions(data.lists), [data.lists]);
-  const [audienceKey, setAudienceKey] = useState("open");
+  // Picked in Seller Finder on the Owners page: lead ids held in this tab only, never in the URL.
+  const [seller, setSeller] = useState(() => readSellerHandoff());
+  const [audienceKey, setAudienceKey] = useState(seller ? "seller" : "open");
   const [name, setName] = useState("");
   const [steps, setSteps] = useState<CampaignStep[]>([
     { templateId: data.templates[0]?.id ?? "", afterDays: 0 },
@@ -62,7 +70,12 @@ function CampaignsPage() {
   const [busy, setBusy] = useState("");
   const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);
 
+  const fromSeller = audienceKey === "seller" && seller ? seller : null;
   const audience = audiences.find((a) => a.key === audienceKey) ?? audiences[0]!;
+  const audienceLabel = fromSeller ? fromSeller.label : audience.label;
+  const sellerSkips = fromSeller
+    ? (Object.entries(fromSeller.skipped) as [SkipReason, number][]).filter(([, n]) => n > 0)
+    : [];
   const problems = campaignProblems(steps, data.templates, data.gapDays);
   // Meta's fee for the clients who will actually be queued (never the ones left out).
   const cost = checked ? campaignCost(steps, data.templates, checked.willGet) : null;
@@ -75,9 +88,11 @@ function CampaignsPage() {
     ),
   ];
   const input = () => ({
-    name: name.trim() || `${audience.label} · ${when(new Date().toISOString())}`,
-    audienceLabel: audience.label,
-    filter: audience.filter,
+    name: name.trim() || `${audienceLabel} · ${when(new Date().toISOString())}`,
+    audienceLabel,
+    ...(fromSeller
+      ? { leadIds: fromSeller.leadIds, source: "seller_finder" as const }
+      : { filter: audience.filter }),
     steps,
     defaults,
   });
@@ -148,6 +163,7 @@ function CampaignsPage() {
                   changed();
                 }}
               >
+                {seller && <option value="seller">{seller.label} · from Seller Finder</option>}
                 {audiences.map((a) => (
                   <option key={a.key} value={a.key}>
                     {a.label}
@@ -169,6 +185,29 @@ function CampaignsPage() {
               />
             </label>
           </div>
+
+          {fromSeller && (
+            <div className="space-y-1 rounded-md bg-secondary px-3 py-2 text-sm">
+              <p>
+                From Seller Finder: you picked {fromSeller.picked}; {fromSeller.leadIds.length} have
+                WhatsApp consent on record and go to the check below. Replies come into the Inbox as
+                usual. Clients who get it are marked as sellers, except open buyer or tenant files.
+              </p>
+              {sellerSkips.length > 0 && (
+                <ul className="text-muted-foreground">
+                  {sellerSkips.map(([reason, n]) => (
+                    <li key={reason}>
+                      {n} left out: {SKIP_TEXT[reason]}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Owners only get it through a lead with the same phone that agreed to WhatsApp
+                messages. No one is added and no consent is recorded for them.
+              </p>
+            </div>
+          )}
 
           <div className="space-y-3">
             {steps.map((s, i) => (
@@ -289,6 +328,12 @@ function CampaignsPage() {
                 {checked.skipped.stopped > 0 && (
                   <li>{checked.skipped.stopped} left out: replied STOP</li>
                 )}
+                {checked.skipped.doNotCall > 0 && (
+                  <li>{checked.skipped.doNotCall} left out: marked do not contact</li>
+                )}
+                {checked.skipped.notFound > 0 && (
+                  <li>{checked.skipped.notFound} left out: no longer a lead in your CRM</li>
+                )}
                 {checked.skipped.noNumber > 0 && (
                   <li>{checked.skipped.noNumber} left out: no WhatsApp number</li>
                 )}
@@ -365,11 +410,16 @@ function CampaignsPage() {
                     }
                     setChecked(null);
                     setName("");
+                    if (fromSeller) {
+                      clearSellerHandoff();
+                      setSeller(null);
+                      setAudienceKey("open");
+                    }
                     await client.invalidateQueries({ queryKey: ["campaigns"] });
                     await client.invalidateQueries({ queryKey: ["queue"] });
                     setNote({
                       ok: true,
-                      text: `Started. ${"queued" in r ? r.queued : 0} clients are in the send queue; sending begins within 5 minutes, between 9am and 8pm Dubai time.`,
+                      text: `Started. ${"queued" in r ? r.queued : 0} clients are in the send queue; sending begins within 5 minutes, between 9am and 8pm Dubai time.${"taggedSellers" in r && r.taggedSellers ? ` ${r.taggedSellers} marked as sellers.` : ""}`,
                     });
                   })
                 }

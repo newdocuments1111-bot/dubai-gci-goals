@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { MetaAdsConnection } from '@/components/MetaAdsConnection';
 import { getSettings, saveSettings, saveGoalMode } from '@/lib/settings.functions';
 import { goalModeLabels, type GoalMode } from '@/lib/agency';
 import { WEEKDAYS, type AppSettings } from '@/lib/settings';
@@ -36,6 +37,7 @@ function SettingsPage() {
     {data.isOwner && <Link to="/settings/whatsapp" className="mb-6 flex items-center justify-between rounded-lg border border-border p-4 text-sm hover:bg-muted">
       <span><strong>WhatsApp</strong><br /><span className="text-muted-foreground">Connection, test mode, safety list and test message</span></span><span aria-hidden>→</span>
     </Link>}
+    {data.isOwner && <MetaAdsConnection />}
     <form className="space-y-6" onSubmit={async e => { e.preventDefault(); setBusy(true); setError(''); setMessage('');
       try { await save({ data: form }); if (goalMode !== data.goalMode) await saveMode({ data: goalMode }); await client.invalidateQueries({ queryKey: settingsQuery.queryKey }); setMessage('Settings saved.'); }
       catch { setError('Could not save settings. Your changes are still here.'); } finally { setBusy(false); } }}>

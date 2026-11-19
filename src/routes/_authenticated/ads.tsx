@@ -17,6 +17,7 @@ import {
   rankAds,
   type AdCampaign,
 } from "@/lib/pipeline";
+import { MetaAdsSection } from "@/components/MetaAdsSection";
 import { pipelineQuery } from "./pipeline";
 
 export const Route = createFileRoute("/_authenticated/ads")({
@@ -53,6 +54,9 @@ function AdsPage() {
   const client = useQueryClient();
   const [editing, setEditing] = useState<AdCampaign | null | "new">(null);
   const [error, setError] = useState("");
+  // Owners only: the Meta ads tab (spend read from Meta). Everyone else sees the page as before.
+  const [tab, setTab] = useState<"campaigns" | "meta">("campaigns");
+  const showMeta = data.access.isOwner && tab === "meta";
   const byName = new Map(data.report.map((r) => [r.source, r]));
   const best = rankAds(data.report)[0]?.source;
   const decisions = adDecisions(data.ads, data.report);
@@ -74,141 +78,174 @@ function AdsPage() {
           )}
         </div>
       </div>
-      <p className="mb-4 text-sm text-muted-foreground">
-        One row per campaign: one buyer type, one offer. Pick the ad on each lead so the numbers
-        below count it. Day-14 rule: stop the worst two, keep the winner, raise budget only if cost
-        per viewing holds.
-      </p>
-
-      {decisions.length > 0 && (
-        <section className="mb-4 rounded-lg border border-border p-3">
-          <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-            Day-14 rule: what to do now
-          </p>
-          {decisions.map((d) => (
-            <p key={d.name} className="text-sm">
-              <span
-                className={`mr-2 rounded px-1.5 text-[10px] font-bold uppercase ${d.action === "keep" ? "bg-primary/15 text-primary" : d.action === "stop" ? "bg-destructive/15 text-destructive" : "bg-muted text-muted-foreground"}`}
-              >
-                {d.action}
-              </span>
-              <strong>{d.name}</strong> <span className="text-muted-foreground">{d.reason}</span>
-            </p>
+      {data.access.isOwner && (
+        <div className="mb-4 inline-flex rounded-lg bg-muted p-1" role="tablist">
+          {(
+            [
+              ["campaigns", "Your campaigns"],
+              ["meta", "Meta ads"],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={tab === id}
+              className={`rounded-md px-3 py-1 text-sm ${tab === id ? "bg-background font-medium shadow" : "text-muted-foreground"}`}
+              onClick={() => setTab(id)}
+            >
+              {label}
+            </button>
           ))}
-        </section>
-      )}
-
-      {error && (
-        <p role="alert" className="mb-3 text-sm text-destructive">
-          {error}
-        </p>
-      )}
-      {data.ads.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-          No ad campaigns yet. Add one per buyer type and offer.
-        </p>
-      ) : (
-        <div className="overflow-x-auto rounded-lg border border-border">
-          <table className="w-full min-w-[1000px] text-sm">
-            <thead className="bg-muted/50 text-left text-muted-foreground">
-              <tr>
-                <th className="p-2">Campaign</th>
-                <th>Offer</th>
-                <th>Status</th>
-                <th>Daily</th>
-                <th>Spent</th>
-                <th>Leads</th>
-                <th>Replied</th>
-                <th>Reply time</th>
-                <th>Qualified</th>
-                <th>Viewings</th>
-                <th>Won</th>
-                <th>Cost / viewing</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.ads.map((a) => {
-                const r = byName.get(a.name);
-                return (
-                  <tr
-                    key={a.id}
-                    className={`border-t border-border ${best === a.name ? "bg-primary/5" : ""}`}
-                  >
-                    <td className="p-2">
-                      <div className="flex items-center gap-1 font-medium">
-                        {best === a.name && <Trophy className="size-3.5 text-primary" />}
-                        {a.name}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {a.platform}
-                        {a.buyer_type ? ` · ${a.buyer_type.replace("_", " ")}` : ""}
-                        {a.creative_type ? ` · ${a.creative_type}` : ""}
-                        {a.started_at ? ` · from ${a.started_at}` : ""}
-                      </div>
-                    </td>
-                    <td className="max-w-[220px] text-xs">{a.offer}</td>
-                    <td>
-                      <span
-                        className={`rounded px-1.5 text-[10px] font-bold uppercase ${STATUS[a.status as keyof typeof STATUS] ?? STATUS.draft}`}
-                      >
-                        {a.status}
-                      </span>
-                    </td>
-                    <td>{a.daily_budget_aed == null ? "—" : aed(a.daily_budget_aed)}</td>
-                    <td>{aed(a.spend_to_date_aed)}</td>
-                    <td>{r?.leads ?? 0}</td>
-                    <td>{r ? `${r.replied_pct}%` : "—"}</td>
-                    <td>{minutes(r?.avg_first_reply_minutes)}</td>
-                    <td>{r?.qualified ?? 0}</td>
-                    <td>
-                      {r?.viewings_attended ?? 0}
-                      <span className="text-muted-foreground"> / {r?.viewings_booked ?? 0}</span>
-                    </td>
-                    <td>{r?.won ?? 0}</td>
-                    <td>
-                      {r?.cost_per_attended_viewing == null
-                        ? "—"
-                        : aed(r.cost_per_attended_viewing)}
-                    </td>
-                    <td className="pr-2 text-right">
-                      {data.access.isOwner && (
-                        <>
-                          <Button variant="ghost" size="sm" onClick={() => setEditing(a)}>
-                            Edit
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={async () => {
-                              if (
-                                !window.confirm(`Delete ${a.name}? Leads keep their other details.`)
-                              )
-                                return;
-                              setError("");
-                              try {
-                                await remove({ data: a.id });
-                                await refresh();
-                              } catch {
-                                setError("Could not delete the campaign.");
-                              }
-                            }}
-                          >
-                            Delete
-                          </Button>
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          <p className="p-2 text-xs text-muted-foreground">
-            Viewings shows attended / booked. The trophy marks the lowest cost per attended viewing.
-            Portal leads are counted on the Pipeline page under "By source".
-          </p>
         </div>
+      )}
+      {showMeta ? (
+        <MetaAdsSection />
+      ) : (
+        <>
+          <p className="mb-4 text-sm text-muted-foreground">
+            One row per campaign: one buyer type, one offer. Pick the ad on each lead so the numbers
+            below count it. Day-14 rule: stop the worst two, keep the winner, raise budget only if
+            cost per viewing holds.
+          </p>
+
+          {decisions.length > 0 && (
+            <section className="mb-4 rounded-lg border border-border p-3">
+              <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                Day-14 rule: what to do now
+              </p>
+              {decisions.map((d) => (
+                <p key={d.name} className="text-sm">
+                  <span
+                    className={`mr-2 rounded px-1.5 text-[10px] font-bold uppercase ${d.action === "keep" ? "bg-primary/15 text-primary" : d.action === "stop" ? "bg-destructive/15 text-destructive" : "bg-muted text-muted-foreground"}`}
+                  >
+                    {d.action}
+                  </span>
+                  <strong>{d.name}</strong>{" "}
+                  <span className="text-muted-foreground">{d.reason}</span>
+                </p>
+              ))}
+            </section>
+          )}
+
+          {error && (
+            <p role="alert" className="mb-3 text-sm text-destructive">
+              {error}
+            </p>
+          )}
+          {data.ads.length === 0 ? (
+            <p className="rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+              No ad campaigns yet. Add one per buyer type and offer.
+            </p>
+          ) : (
+            <div className="overflow-x-auto rounded-lg border border-border">
+              <table className="w-full min-w-[1000px] text-sm">
+                <thead className="bg-muted/50 text-left text-muted-foreground">
+                  <tr>
+                    <th className="p-2">Campaign</th>
+                    <th>Offer</th>
+                    <th>Status</th>
+                    <th>Daily</th>
+                    <th>Spent</th>
+                    <th>Leads</th>
+                    <th>Replied</th>
+                    <th>Reply time</th>
+                    <th>Qualified</th>
+                    <th>Viewings</th>
+                    <th>Won</th>
+                    <th>Cost / viewing</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.ads.map((a) => {
+                    const r = byName.get(a.name);
+                    return (
+                      <tr
+                        key={a.id}
+                        className={`border-t border-border ${best === a.name ? "bg-primary/5" : ""}`}
+                      >
+                        <td className="p-2">
+                          <div className="flex items-center gap-1 font-medium">
+                            {best === a.name && <Trophy className="size-3.5 text-primary" />}
+                            {a.name}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {a.platform}
+                            {a.buyer_type ? ` · ${a.buyer_type.replace("_", " ")}` : ""}
+                            {a.creative_type ? ` · ${a.creative_type}` : ""}
+                            {a.started_at ? ` · from ${a.started_at}` : ""}
+                          </div>
+                        </td>
+                        <td className="max-w-[220px] text-xs">{a.offer}</td>
+                        <td>
+                          <span
+                            className={`rounded px-1.5 text-[10px] font-bold uppercase ${STATUS[a.status as keyof typeof STATUS] ?? STATUS.draft}`}
+                          >
+                            {a.status}
+                          </span>
+                        </td>
+                        <td>{a.daily_budget_aed == null ? "—" : aed(a.daily_budget_aed)}</td>
+                        <td>{aed(a.spend_to_date_aed)}</td>
+                        <td>{r?.leads ?? 0}</td>
+                        <td>{r ? `${r.replied_pct}%` : "—"}</td>
+                        <td>{minutes(r?.avg_first_reply_minutes)}</td>
+                        <td>{r?.qualified ?? 0}</td>
+                        <td>
+                          {r?.viewings_attended ?? 0}
+                          <span className="text-muted-foreground">
+                            {" "}
+                            / {r?.viewings_booked ?? 0}
+                          </span>
+                        </td>
+                        <td>{r?.won ?? 0}</td>
+                        <td>
+                          {r?.cost_per_attended_viewing == null
+                            ? "—"
+                            : aed(r.cost_per_attended_viewing)}
+                        </td>
+                        <td className="pr-2 text-right">
+                          {data.access.isOwner && (
+                            <>
+                              <Button variant="ghost" size="sm" onClick={() => setEditing(a)}>
+                                Edit
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={async () => {
+                                  if (
+                                    !window.confirm(
+                                      `Delete ${a.name}? Leads keep their other details.`,
+                                    )
+                                  )
+                                    return;
+                                  setError("");
+                                  try {
+                                    await remove({ data: a.id });
+                                    await refresh();
+                                  } catch {
+                                    setError("Could not delete the campaign.");
+                                  }
+                                }}
+                              >
+                                Delete
+                              </Button>
+                            </>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              <p className="p-2 text-xs text-muted-foreground">
+                Viewings shows attended / booked. The trophy marks the lowest cost per attended
+                viewing. Portal leads are counted on the Pipeline page under "By source".
+              </p>
+            </div>
+          )}
+        </>
       )}
 
       {editing && (

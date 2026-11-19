@@ -1,8 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { queryOptions, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { Copy, Plus, Save, Trash2 } from "lucide-react";
+import { Copy, Plus, Save, Send, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,6 +29,9 @@ import {
   type SellerStage,
 } from "@/lib/sellers";
 import { draftSellerMessage, type ReasonPart } from "@/lib/seller-finder";
+import { useMembership } from "@/hooks/use-membership";
+import { pickKey, sellerSelection, setSellerHandoff } from "@/lib/seller-campaign";
+import { prepareSellerCampaign } from "@/lib/seller-campaign.functions";
 
 const boardQuery = queryOptions({ queryKey: ["owners"], queryFn: () => getSellerBoard() });
 
@@ -309,6 +312,54 @@ function LikelyToSell({ data, openOwner }: { data: Board; openOwner: (id: string
   const [failed, setFailed] = useState<string | null>(null);
   const [all, setAll] = useState(false);
   const shown = all ? data.likely : data.likely.slice(0, 8);
+  // "Send as campaign" (owner only): pick people, then the Campaigns page shows cost and who is left out.
+  const { isOwner } = useMembership();
+  const navigate = useNavigate();
+  const prepare = useServerFn(prepareSellerCampaign);
+  const [ticked, setTicked] = useState<Set<string>>(new Set());
+  const [sending, setSending] = useState(false);
+  const [campaignError, setCampaignError] = useState("");
+  const high = data.likely.filter((c) => c.score === "High");
+  const tickAll = (list: typeof data.likely) => {
+    setCampaignError("");
+    setTicked(new Set(list.map(pickKey)));
+  };
+  const toggle = (key: string) => {
+    setCampaignError("");
+    const next = new Set(ticked);
+    if (next.has(key)) next.delete(key);
+    else next.add(key);
+    setTicked(next);
+  };
+  const sameSet = (list: typeof data.likely) =>
+    list.length === ticked.size && list.every((c) => ticked.has(pickKey(c)));
+  const sendAsCampaign = async () => {
+    const mode = sameSet(data.likely) ? "all" : high.length && sameSet(high) ? "high" : "ticked";
+    const { picks, label } = sellerSelection(data.likely, mode, ticked);
+    if (!picks.length) return;
+    setSending(true);
+    setCampaignError("");
+    try {
+      const r = await prepare({ data: { picks, label } });
+      if (!r.leadIds.length) {
+        setCampaignError(
+          t("No one you picked has WhatsApp consent on record, so there is no one to send to."),
+        );
+        return;
+      }
+      setSellerHandoff({
+        label: r.label,
+        leadIds: r.leadIds,
+        picked: r.picked,
+        skipped: r.skipped,
+      });
+      await navigate({ to: "/campaigns" });
+    } catch (e) {
+      setCampaignError(e instanceof Error ? e.message : t("Something went wrong."));
+    } finally {
+      setSending(false);
+    }
+  };
   return (
     <section aria-labelledby="likely-to-sell" className="mb-6">
       <h2 id="likely-to-sell" className="text-sm font-semibold">
@@ -323,6 +374,46 @@ function LikelyToSell({ data, openOwner }: { data: Board; openOwner: (id: string
           {t("Some past deals could not be read, so people may be missing from this list.")}
         </p>
       )}
+      {isOwner && data.likely.length > 0 && (
+        <div className="mb-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => tickAll(data.likely)}>
+              {t("All ({n})", { n: data.likely.length })}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={high.length === 0}
+              onClick={() => tickAll(high)}
+            >
+              {t("Only High ({n})", { n: high.length })}
+            </Button>
+            {ticked.size > 0 && (
+              <Button variant="ghost" size="sm" onClick={() => tickAll([])}>
+                {t("Clear")}
+              </Button>
+            )}
+            <Button
+              size="sm"
+              disabled={sending || ticked.size === 0}
+              onClick={() => void sendAsCampaign()}
+            >
+              <Send className="size-4" />
+              {sending ? t("Preparing…") : t("Send as campaign ({n})", { n: ticked.size })}
+            </Button>
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {t(
+              "Only people who agreed to WhatsApp messages will get it. You see the cost before sending.",
+            )}
+          </p>
+          {campaignError && (
+            <p role="alert" className="mt-1 text-sm text-destructive">
+              {campaignError}
+            </p>
+          )}
+        </div>
+      )}
       {data.likely.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border bg-background px-4 py-3 text-sm text-muted-foreground">
           {t("No one to suggest right now.")}
@@ -335,6 +426,15 @@ function LikelyToSell({ data, openOwner }: { data: Board; openOwner: (id: string
             return (
               <li key={key} className="px-4 py-3">
                 <div className="flex flex-wrap items-start gap-x-4 gap-y-2">
+                  {isOwner && (
+                    <input
+                      type="checkbox"
+                      className="mt-1 size-4"
+                      aria-label={t("Pick {name}", { name: c.name || t("No name") })}
+                      checked={ticked.has(pickKey(c))}
+                      onChange={() => toggle(pickKey(c))}
+                    />
+                  )}
                   <div className="min-w-0 flex-1 basis-56">
                     {c.kind === "owner" ? (
                       <button
